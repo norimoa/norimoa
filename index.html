@@ -18,7 +18,7 @@
   a{color:inherit;text-decoration:none}
   button{font-family:inherit;cursor:pointer}
   img{display:block;max-width:100%}
-  .app{max-width:1180px;margin:0 auto;padding:22px 18px 120px;
+  .app{max-width:1340px;margin:0 auto;padding:22px 18px 120px;
     display:grid;grid-template-columns:240px 1fr 300px;gap:22px;align-items:start}
 
   /* ---------- sidebar ---------- */
@@ -204,6 +204,8 @@
 
   /* ---------- upload modal ---------- */
   .up-modal{max-width:540px;display:flex;flex-direction:column;max-height:88vh}
+  .up-modal.big-modal{max-width:760px;max-height:94vh}
+  .up-modal.big-modal .big-write{min-height:280px}
   .up-body{padding:2px 20px 8px;overflow:auto}
   .up-photo{position:relative;border-radius:12px;overflow:hidden;background:#e9e9ee;margin:14px 0 0}
   .up-photo canvas{width:100%;display:block;cursor:crosshair}
@@ -478,6 +480,9 @@
   .fmt-btn b{font-size:14px}
   .fmt-hint{color:var(--sub);font-size:11.5px}
   .big-write{min-height:220px;font-size:14.5px;line-height:1.7}
+  .sec-write{min-height:72px;font-size:14px;line-height:1.6}
+  .ai-sum-btn{margin-top:9px;border:1px solid #ded7ff;background:#f7f5ff;color:#6c5ce7;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700}
+  .ai-sum-btn:hover{background:#efeaff}
   .add-photo{width:100%;border:1px dashed var(--coral);color:var(--coral);background:#fff8f5;
     border-radius:12px;padding:13px;font-size:14px;font-weight:700;margin-bottom:4px}
   .post .photo{position:relative}
@@ -635,7 +640,7 @@
 <div class="app">
   <!-- ============ SIDEBAR ============ -->
   <aside class="side">
-    <div class="brand">
+    <div class="brand" onclick="go('browse')" title="둘러보기로 이동" style="cursor:pointer">
       <div class="logo">🎪</div>
       <div><b>놀이모아</b><small>놀이 검색 플랫폼</small></div>
     </div>
@@ -665,7 +670,8 @@
     <!-- 둘러보기 -->
     <section class="view" id="v-browse">
       <div class="br-search"><span>🔍</span><input id="brSearch" placeholder="놀이 주제, 해시태그, 선생님 이름으로 검색" oninput="renderBrowseFeed()"></div>
-      <div class="main-head"><div><h1>둘러보기</h1><p>선생님들의 놀이 아이디어를 모았어요</p></div></div>
+      <div class="main-head"><div><h1>둘러보기</h1><p>선생님들의 놀이 아이디어를 모았어요</p></div>
+        <div class="auth-btns" id="browseAuth"></div></div>
       <div id="brFilterBar"></div>
       <div class="br-sec">
         <h4>🗞️ 오늘의 이슈 맞춤 추천 <span class="ai-tag">AI</span></h4>
@@ -904,7 +910,7 @@
 
 <!-- ============ 1단계: 사진 업로드 모달 ============ -->
 <div class="overlay" id="uploadOverlay" onclick="if(event.target===this)closeUpload()">
-  <div class="modal up-modal">
+  <div class="modal up-modal big-modal">
     <div class="modal-head"><b>1단계 · 놀이 사진 올리기</b><button class="x" onclick="closeUpload()">×</button></div>
     <div class="up-body">
       <!-- 사진 + AI 얼굴 인식 -->
@@ -919,7 +925,7 @@
         <div id="photoList"></div>
         <button class="add-photo" onclick="document.getElementById('file').click()">＋ 사진 더 추가</button>
         <div class="sec" style="color:var(--sub);font-size:12.5px;line-height:1.5;margin-top:14px">
-          🛒 구매 물품은 사진의 <b style="color:var(--coral)">주황색 동그라미</b>로 표시돼요. 없으면 사진의 <b>＋ 구매 물품 표시</b>로 직접 추가하세요.<br>
+          🛒 구매 링크가 있으면 사진의 <b>＋ 구매 링크 추가</b>를 눌러 <b style="color:var(--coral)">주황색 동그라미</b>로 표시할 수 있어요. (없으면 그냥 두면 돼요.)<br>
           🔄 <b>회전</b> · ✂️ <b>자르기</b>로 사진을 다듬을 수 있어요.
         </div>
       </div>
@@ -930,7 +936,7 @@
 
 <!-- ============ 2단계: 글 작성 모달 ============ -->
 <div class="overlay" id="writeOverlay" onclick="if(event.target===this)close_('writeOverlay')">
-  <div class="modal up-modal">
+  <div class="modal up-modal big-modal">
     <div class="modal-head">
       <button class="x" onclick="backToPhotos()" title="사진 단계로">‹</button>
       <b>2단계 · 글 작성하기</b>
@@ -943,15 +949,29 @@
         <div class="title-input"><input id="pTitle" placeholder="예: 아이스크림 가게 놀이"><span class="pen">✎</span></div>
       </div>
 
-      <!-- 전체 글 (메인 글) -->
+      <!-- 한 줄 소개 (+AI 요약) -->
       <div class="sec">
-        <div class="sec-label">📝 글 내용 <span class="hint">놀이 전체 소개 (사진별 설명과 별개)</span></div>
-        <div class="fmt-bar">
-          <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="wrapSel('pBody','**')"><b>가</b> 진하게</button>
-          <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="wrapSel('pBody','__')"><u>가</u> 밑줄</button>
-          <span class="fmt-hint">글씨를 드래그해서 선택한 뒤 눌러요</span>
-        </div>
-        <textarea id="pBody" class="photo-desc big-write" placeholder="이 놀이를 전체적으로 소개해주세요. 준비물, 방법, 팁 등을 적어보세요."></textarea>
+        <div class="sec-label">🎯 한 줄 소개 <span class="hint">목록·미리보기에 이 문장이 보여요</span></div>
+        <textarea id="pSummary" class="photo-desc" style="min-height:58px" placeholder="이 놀이를 한두 줄로 소개해주세요."></textarea>
+        <button type="button" class="ai-sum-btn" onclick="aiSummarize()">✨ AI 3줄 요약 자동 만들기</button>
+      </div>
+
+      <!-- 항목별 내용 (칸을 나눠 자연스럽게 짧게) -->
+      <div class="sec">
+        <div class="sec-label">🧺 준비물 <span class="hint">쉼표로 나열 · 선택</span></div>
+        <textarea id="pMaterials" class="photo-desc sec-write" placeholder="예: 긴 스티로폼, 색테이프"></textarea>
+      </div>
+      <div class="sec">
+        <div class="sec-label">▶️ 놀이 방법 <span class="hint">순서대로</span></div>
+        <textarea id="pSteps" class="photo-desc sec-write" placeholder="어떻게 진행했는지 순서대로 적어보세요."></textarea>
+      </div>
+      <div class="sec">
+        <div class="sec-label">🤝 약속·규칙 <span class="hint">한 줄에 하나씩 · 선택</span></div>
+        <textarea id="pRules" class="photo-desc sec-write" placeholder="예: 얼굴은 찌르지 않기 / 한 손만 사용하기"></textarea>
+      </div>
+      <div class="sec">
+        <div class="sec-label">💡 팁·효과 <span class="hint">선택</span></div>
+        <textarea id="pTips" class="photo-desc sec-write" placeholder="이 놀이의 효과나 팁을 자유롭게 적어보세요."></textarea>
       </div>
 
       <!-- 연령 -->
@@ -980,7 +1000,7 @@
       <div class="sec">
         <div class="sec-label">🏷️ 해시태그 <span class="hint">AI 추천 · 직접 수정 가능</span></div>
         <div class="tag-edit" id="tagEdit" onclick="var i=document.getElementById('tagInput');if(i)i.focus()"></div>
-        <div style="font-size:11.5px;color:var(--sub);margin-top:6px">Space 또는 Enter로 태그 추가 · Backspace로 마지막 태그 삭제</div>
+        <div style="font-size:11.5px;color:var(--sub);margin-top:6px">Enter로 태그 추가 (띄어쓰기 가능) · Backspace로 마지막 태그 삭제</div>
       </div>
     </div>
     <div class="up-foot"><button onclick="publishPost()">✓ 업로드 완료</button></div>
@@ -989,7 +1009,7 @@
 
 <!-- ============ 놀이 수정 모달 ============ -->
 <div class="overlay" id="editOverlay" onclick="if(event.target===this)close_('editOverlay')">
-  <div class="modal up-modal">
+  <div class="modal up-modal big-modal">
     <div class="modal-head"><b>✏️ 놀이 수정</b><button class="x" onclick="close_('editOverlay')">×</button></div>
     <div class="up-body">
       <div class="sec"><div class="sec-label">🖌️ 놀이 제목</div><div class="title-input"><input id="eTitle"></div></div>
@@ -1409,15 +1429,17 @@ async function refreshSession(){
   applyAuthUI();
   await loadDbPosts();
 }
+function authBtnsHTML(){
+  return authUser
+    ? `<span style="font-size:13px;color:var(--sub);align-self:center">${esc(profile.nick)}님</span>
+       <button class="btn-line" onclick="logout()">로그아웃</button>`
+    : `<button class="btn-line" onclick="openAuth('login')">로그인</button>
+       <button class="btn-fill" onclick="openAuth('signup')">회원가입</button>`;
+}
+function renderBrowseAuth(){const b=$('#browseAuth');if(b)b.innerHTML=authBtnsHTML();}
 function applyAuthUI(){
-  const box=$('#authBtns');if(!box)return;
-  if(authUser){
-    box.innerHTML=`<span style="font-size:13px;color:var(--sub);align-self:center">${profile.nick}님</span>
-      <button class="btn-line" onclick="logout()">로그아웃</button>`;
-  }else{
-    box.innerHTML=`<button class="btn-line" onclick="openAuth('login')">로그인</button>
-      <button class="btn-fill" onclick="openAuth('signup')">회원가입</button>`;
-  }
+  const box=$('#authBtns');if(box)box.innerHTML=authBtnsHTML();
+  renderBrowseAuth();
   renderProfile();
 }
 
@@ -1457,14 +1479,42 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 /* **굵게** / __밑줄__ 마크업을 안전하게 태그로 변환 (esc 이후에 적용) */
 function fmtRich(s){return s.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/__([^_\n]+)__/g,'<u>$1</u>');}
 function stripFmt(s){return String(s||'').replace(/\*\*([^*\n]+)\*\*/g,'$1').replace(/__([^_\n]+)__/g,'$1');}
-function linkifyTags(text){return fmtRich(esc(text)).replace(/#([^\s#<>.,!?~]+)/g,(m,tag)=>`<a class="htag" onclick="filterByLabel('${tag.replace(/'/g,"\\'")}')">#${tag}</a>`);}
+/* 띄어쓰기가 들어간 '알려진 태그'(카테고리·누리 항목 등)를 통째로 인식 */
+let _knownMW=null;
+function knownMultiwordTags(){
+  if(_knownMW)return _knownMW;
+  const set=new Set();
+  try{(catData||[]).forEach(g=>g.items.forEach(it=>{if(/\s/.test(it))set.add(it);}));}catch(e){}
+  try{(nuriData||[]).forEach(g=>g.items.forEach(it=>{if(/\s/.test(it))set.add(it);}));}catch(e){}
+  try{(catDrawer.home.groups||[]).forEach(g=>g.items.forEach(it=>{if(/\s/.test(it))set.add(it);}));}catch(e){}
+  _knownMW=[...set];
+  return _knownMW;
+}
+function linkifyTags(text, extraTags){
+  let s=fmtRich(esc(text));
+  const store=[];
+  const multi=[...knownMultiwordTags(), ...((extraTags||[]).filter(t=>/\s/.test(t)))];
+  // 긴 것부터 먼저 치환(접두어 충돌 방지)
+  [...new Set(multi)].sort((a,b)=>b.length-a.length).forEach(tag=>{
+    const safe=esc(tag);
+    const idx=store.length, token='\uE000'+idx+'\uE001';
+    const re=new RegExp('#'+safe.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g');
+    s=s.replace(re,token);
+    store.push(`<a class="htag" onclick="filterByLabel('${tag.replace(/'/g,"\\'")}')">#${safe}</a>`);
+  });
+  // 나머지 단일 토큰 해시태그
+  s=s.replace(/#([^\s#<>.,!?~]+)/g,(m,tag)=>`<a class="htag" onclick="filterByLabel('${tag.replace(/'/g,"\\'")}')">#${tag}</a>`);
+  // 자리표시자 복원
+  store.forEach((html,i)=>{s=s.split('\uE000'+i+'\uE001').join(html);});
+  return s;
+}
 /* 선택한 글씨를 **굵게** 또는 __밑줄__ 로 감싸기 */
 /* 피드용 본문 미리보기: 앞 몇 줄만 + 더보기 */
 function descPreview(p,openCall){
   const raw=stripFmt(p.desc||'');
   if(!raw)return '';
   const long = raw.length>70 || /\n/.test(raw);
-  return `<div class="desc clamp">${linkifyTags(p.desc)}</div>`+
+  return `<div class="desc clamp">${linkifyTags(p.desc,p.tags)}</div>`+
     (long?`<button class="more-link" onclick="event.stopPropagation();${openCall}">더보기</button>`:'');
 }
 function wrapSel(id,mark){
@@ -1500,7 +1550,7 @@ function renderPostPage(p){
   $('#postBody').innerHTML=`
     <div class="post-hero">
       <h1 class="ph-title">${esc((p.title||'놀이').replace(/^#/,''))}</h1>
-      ${hashLine?`<div class="ph-hash">${linkifyTags(hashLine)}</div>`:''}
+      ${hashLine?`<div class="ph-hash">${linkifyTags(hashLine,p.tags)}</div>`:''}
       <div class="ph-meta">${p.date||'2025년 7월 18일'} · 👁 조회 ${p.views||'0'}</div>
       <div class="ph-actions" id="phActions"></div>
       ${nuriChips?`<div class="ph-nuri">${nuriChips}</div>`:''}
@@ -1509,7 +1559,7 @@ function renderPostPage(p){
       <div class="av" style="background:${a?a.color:'#ccc'}">${a?a.init:'?'}</div>
       <div><b>${a?a.name:'선생님'}</b><small>${(a&&a.org)||''}</small></div>
     </div>
-    <div class="card post-detail-body">${linkifyTags(p.desc)}</div>
+    <div class="card post-detail-body">${linkifyTags(p.desc,p.tags)}</div>
     <div class="pd-sec">
       <h4>🖼️ 놀이 사진 <span class="hint">사진을 클릭하면 상품 태그를 확인할 수 있어요</span></h4>
       <div class="pd-photos">${photos}</div>
@@ -2200,7 +2250,7 @@ function buildPhotoCard(ph){
       <button class="btn g crop">✂️ 자르기</button>
       <button class="btn v redetect">🤖 얼굴 다시 인식</button>
       <button class="btn g clearface">모자이크 지우기</button>
-      <button class="add-spot addspot">＋ 구매 물품 표시</button>
+      <button class="add-spot addspot">＋ 구매 링크 추가</button>
       <label class="switch"><input type="checkbox" class="mzon" checked> 모자이크</label>
     </div>
     <textarea class="photo-desc" placeholder="이 사진 설명을 적어주세요"></textarea>`;
@@ -2248,7 +2298,7 @@ function buildPhotoCard(ph){
     setAddSpot(ph,false);renderSpotsP(ph);openSpotFormP(ph,ph.spots.length-1);});
   renderCanvasP(ph);
   runDetectP(ph);
-  ph.spots=[{x:50,y:42,name:'',mall:'',url:''}]; // AI가 구매 물품을 인식했다고 가정
+  ph.spots=[]; // 기본은 표시 없음 — '구매 링크 추가' 버튼을 눌러야 표시돼요
   renderSpotsP(ph);
   updatePhotoOrder();
 }
@@ -2344,8 +2394,8 @@ function applyCrop(ph){
 }
 function toggleAddSpotP(ph){setAddSpot(ph,!ph.addSpotMode);}
 function setAddSpot(ph,on){ph.addSpotMode=on;
-  ph.layer.style.pointerEvents=on?'auto':'none';ph.layer.style.cursor=on?'crosshair':'default';
-  ph.addBtn.textContent=on?'✓ 사진에서 물품 위치를 클릭':'＋ 구매 물품 표시';
+  ph.layer.style.pointerEvents=on?'auto':'none';ph.layer.style.cursor=on?'pointer':'default';
+  ph.addBtn.textContent=on?'👆 사진에서 위치를 클릭하세요':'＋ 구매 링크 추가';
 }
 function renderSpotsP(ph){
   ph.layer.querySelectorAll('.marker').forEach(el=>el.remove());
@@ -2451,9 +2501,9 @@ function renderTags(){
   sel.tags.forEach((tg,i)=>{const el=document.createElement('span');el.className='t';
     el.innerHTML=`#${tg} <span class="x">×</span>`;
     el.querySelector('.x').onclick=e=>{e.stopPropagation();sel.tags.splice(i,1);renderTags();};box.appendChild(el);});
-  const inp=document.createElement('input');inp.id='tagInput';inp.placeholder='태그 입력';
+  const inp=document.createElement('input');inp.id='tagInput';inp.placeholder='태그 입력 후 Enter (띄어쓰기 가능)';
   inp.onkeydown=e=>{
-    if((e.key===' '||e.key==='Enter')&&inp.value.trim()){e.preventDefault();
+    if(e.key==='Enter'&&inp.value.trim()){e.preventDefault();
       sel.tags.push(inp.value.trim().replace(/^#/,''));inp.value='';renderTags();$('#tagInput').focus();}
     else if(e.key==='Backspace'&&!inp.value&&sel.tags.length){sel.tags.pop();renderTags();$('#tagInput').focus();}
   };
@@ -2478,12 +2528,40 @@ function backToPhotos(){
 }
 function closeUpload(){$('#uploadOverlay').classList.remove('on');$('#writeOverlay').classList.remove('on');}
 
+/* 항목별 칸을 하나의 글로 합치기 (소제목은 굵게) */
+function composeBody(){
+  const g=id=>($('#'+id)?$('#'+id).value.trim():'');
+  const parts=[];
+  const summary=g('pSummary'), mat=g('pMaterials'), steps=g('pSteps'), rules=g('pRules'), tips=g('pTips');
+  if(summary)parts.push(summary);
+  if(mat)parts.push('**🧺 준비물**\n'+mat);
+  if(steps)parts.push('**▶️ 놀이 방법**\n'+steps);
+  if(rules)parts.push('**🤝 약속·규칙**\n'+rules);
+  if(tips)parts.push('**💡 팁·효과**\n'+tips);
+  return parts.join('\n\n');
+}
+/* 기기 안에서 만드는 간단 3줄 요약(무료·외부전송 없음) */
+function aiSummarize(){
+  const title=$('#pTitle').value.trim();
+  const first=t=>{const m=(t||'').split(/[\n.!?·]/).map(x=>x.trim()).filter(x=>x.length>1);return m[0]||'';};
+  const mat=$('#pMaterials').value.trim(), steps=$('#pSteps').value.trim(), tips=$('#pTips').value.trim();
+  const lines=[];
+  const l1=[title, first(steps)].filter(Boolean).join(' — ');
+  if(l1)lines.push(l1);
+  if(mat)lines.push('준비물: '+mat.split(/[,\n]/).map(x=>x.trim()).filter(Boolean).slice(0,3).join(', '));
+  if(tips)lines.push('효과: '+first(tips));
+  const out=lines.filter(Boolean).slice(0,3).join('\n');
+  if(!out){toast('먼저 제목이나 놀이 방법을 조금 적어주세요');return;}
+  $('#pSummary').value=out;
+  toast('AI가 요약을 만들었어요 · 자유롭게 고쳐도 돼요');
+}
+
 /* 업로드 완료 */
 async function publishPost(){
   if(!photos.length){toast('사진을 먼저 올려주세요');return;}
   if(SB && !authUser){toast('로그인 후 올릴 수 있어요');closeUpload();openAuth('login');return;}
   const title=($('#pTitle').value.trim()||'놀이');
-  const body=$('#pBody').value.trim();               // 전체 글(메인)
+  const body=composeBody();               // 항목별 칸을 합친 전체 글
   const catTags=[...sel.cat].map(k=>k.split('::')[1]);
   const tags=[...new Set([...sel.tags, ...catTags])];
   // 각 사진: 모자이크 적용본 + 사진별 설명 + 사진별 구매표시
@@ -2530,7 +2608,7 @@ async function publishPost(){
 function resetUpload(){
   photos=[];$('#photoList').innerHTML='';closeSpotForm();resetSel();
   $('#drop').style.display='block';$('#photoTop').style.display='none';
-  $('#pTitle').value='';$('#pBody').value='';
+  ['pTitle','pSummary','pMaterials','pSteps','pRules','pTips'].forEach(id=>{const el=$('#'+id);if(el)el.value='';});
 }
 
 /* ---------------- init ---------------- */
@@ -2550,6 +2628,7 @@ renderBell();
 renderFeed();
 renderPopTags();
 renderProfile();
+renderBrowseAuth();
 renderSideCats();
 syncStats();
 if(SB){
