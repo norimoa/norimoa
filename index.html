@@ -73,7 +73,9 @@
     padding:6px 14px;font-size:12.5px;font-weight:600}
   .foll-btn.off{background:var(--coral);color:#fff;border-color:var(--coral)}
   .post h3{color:var(--coral);font-size:17px;margin:12px 0 6px}
-  .post .desc{color:#54545b;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .post .desc{color:#54545b;font-size:14px;line-height:1.6;margin-bottom:6px}
+  .post .desc.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .more-link{border:none;background:none;color:var(--coral);font-size:13px;font-weight:700;padding:0 0 12px;cursor:pointer}
   .post .photo{border-radius:12px;overflow:hidden;background:#e9e9ee}
   .post .photo img{width:100%;height:auto}
   .tags{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 8px}
@@ -165,6 +167,8 @@
   .canvas-wrap canvas{width:100%;display:block;cursor:crosshair}
   .ai-status{margin-top:10px;font-size:13px;color:#6c5ce7;font-weight:600;display:flex;align-items:center;gap:8px}
   .ai-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .crop-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;background:#fff8f5;border:1px solid #f0ddd4;border-radius:10px;padding:9px 11px}
+  .crop-bar .crop-hint{flex:1;min-width:120px;color:#a9776a;font-size:12.5px;font-weight:600}
   .btn{border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600}
   .btn.p{background:var(--coral);color:#fff}
   .btn.g{background:#efeff3;color:#555}
@@ -473,6 +477,7 @@
   .fmt-btn:hover{border-color:var(--coral);color:var(--coral)}
   .fmt-btn b{font-size:14px}
   .fmt-hint{color:var(--sub);font-size:11.5px}
+  .big-write{min-height:220px;font-size:14.5px;line-height:1.7}
   .add-photo{width:100%;border:1px dashed var(--coral);color:var(--coral);background:#fff8f5;
     border-radius:12px;padding:13px;font-size:14px;font-weight:700;margin-bottom:4px}
   .post .photo{position:relative}
@@ -517,6 +522,8 @@
   .pt-mini{color:var(--coral);font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .post-hero{margin:4px 2px 14px}
   .ph-title{font-size:24px;color:var(--coral);line-height:1.3}
+  .ph-hash{margin-top:8px;font-size:14px;color:#8a8a92;line-height:1.5}
+  .ph-hash .htag{color:var(--coral)}
   .ph-meta{color:var(--sub);font-size:13px;margin-top:10px}
   .ph-actions{display:flex;align-items:center;gap:18px;margin-top:14px;padding-bottom:2px}
   .pa-btn{border:none;background:none;color:#70707a;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 2px}
@@ -895,10 +902,10 @@
   </div>
 </div>
 
-<!-- ============ UPLOAD MODAL ============ -->
+<!-- ============ 1단계: 사진 업로드 모달 ============ -->
 <div class="overlay" id="uploadOverlay" onclick="if(event.target===this)closeUpload()">
   <div class="modal up-modal">
-    <div class="modal-head"><b>놀이 사진 업로드</b><button class="x" onclick="closeUpload()">×</button></div>
+    <div class="modal-head"><b>1단계 · 놀이 사진 올리기</b><button class="x" onclick="closeUpload()">×</button></div>
     <div class="up-body">
       <!-- 사진 + AI 얼굴 인식 -->
       <div class="drop" id="drop" onclick="document.getElementById('file').click()">
@@ -911,8 +918,25 @@
         <div class="up-strength">🔒 모자이크 강도 <input type="range" id="pxRange" min="6" max="34" value="16"></div>
         <div id="photoList"></div>
         <button class="add-photo" onclick="document.getElementById('file').click()">＋ 사진 더 추가</button>
+        <div class="sec" style="color:var(--sub);font-size:12.5px;line-height:1.5;margin-top:14px">
+          🛒 구매 물품은 사진의 <b style="color:var(--coral)">주황색 동그라미</b>로 표시돼요. 없으면 사진의 <b>＋ 구매 물품 표시</b>로 직접 추가하세요.<br>
+          🔄 <b>회전</b> · ✂️ <b>자르기</b>로 사진을 다듬을 수 있어요.
+        </div>
       </div>
+    </div>
+    <div class="up-foot"><button onclick="goWrite()">다음: 글 작성하기 →</button></div>
+  </div>
+</div>
 
+<!-- ============ 2단계: 글 작성 모달 ============ -->
+<div class="overlay" id="writeOverlay" onclick="if(event.target===this)close_('writeOverlay')">
+  <div class="modal up-modal">
+    <div class="modal-head">
+      <button class="x" onclick="backToPhotos()" title="사진 단계로">‹</button>
+      <b>2단계 · 글 작성하기</b>
+      <button class="x" onclick="close_('writeOverlay')">×</button>
+    </div>
+    <div class="up-body">
       <!-- 놀이 제목 -->
       <div class="sec">
         <div class="sec-label">🖌️ 놀이 제목</div>
@@ -927,7 +951,7 @@
           <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="wrapSel('pBody','__')"><u>가</u> 밑줄</button>
           <span class="fmt-hint">글씨를 드래그해서 선택한 뒤 눌러요</span>
         </div>
-        <textarea id="pBody" class="photo-desc" style="min-height:90px" placeholder="이 놀이를 전체적으로 소개해주세요. 준비물, 방법, 팁 등을 적어보세요."></textarea>
+        <textarea id="pBody" class="photo-desc big-write" placeholder="이 놀이를 전체적으로 소개해주세요. 준비물, 방법, 팁 등을 적어보세요."></textarea>
       </div>
 
       <!-- 연령 -->
@@ -958,10 +982,6 @@
         <div class="tag-edit" id="tagEdit" onclick="var i=document.getElementById('tagInput');if(i)i.focus()"></div>
         <div style="font-size:11.5px;color:var(--sub);margin-top:6px">Space 또는 Enter로 태그 추가 · Backspace로 마지막 태그 삭제</div>
       </div>
-
-      <div class="sec" style="color:var(--sub);font-size:12.5px;line-height:1.5">
-        🛒 구매 물품은 위 사진의 <b style="color:var(--coral)">주황색 동그라미</b>로 표시돼요. AI가 인식하면 자동으로 뜨고, 없으면 사진의 <b>＋ 구매 물품 표시</b>로 직접 추가하세요.
-      </div>
     </div>
     <div class="up-foot"><button onclick="publishPost()">✓ 업로드 완료</button></div>
   </div>
@@ -978,7 +998,16 @@
           <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="wrapSel('eBody','**')"><b>가</b> 진하게</button>
           <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="wrapSel('eBody','__')"><u>가</u> 밑줄</button>
         </div>
-        <textarea id="eBody" class="photo-desc" style="min-height:90px"></textarea></div>
+        <textarea id="eBody" class="photo-desc big-write"></textarea></div>
+      <div class="sec"><div class="sec-label">🖍️ 연령</div><div class="seg" id="eAgeSeg"></div></div>
+      <div class="sec"><div class="sec-label">🎨 누리과정</div>
+        <div class="chips" id="eNuriChips"></div>
+        <button class="dd-head" id="eNuriHead" onclick="toggleDD('eNuri')">누리과정 항목 선택하기 <span class="chev">▾</span></button>
+        <div class="opt-panel" id="eNuriPanel" style="display:none"></div></div>
+      <div class="sec"><div class="sec-label">🔳 카테고리</div>
+        <div class="chips" id="eCatChips"></div>
+        <button class="dd-head" id="eCatHead" onclick="toggleDD('eCat')">카테고리 선택하기 <span class="chev">▾</span></button>
+        <div class="opt-panel" id="eCatPanel" style="display:none"></div></div>
       <div class="sec"><div class="sec-label">🏷️ 태그 <span class="hint">쉼표로 구분</span></div>
         <input id="eTags" style="width:100%;border:1px solid #eadfd9;border-radius:11px;padding:12px;font-family:inherit;background:#fafafb;font-size:14px"></div>
       <div class="sec"><div class="sec-label">🖼️ 사진별 설명 · 상품 태그</div><div id="eImages"></div></div>
@@ -1129,8 +1158,8 @@ function renderFeed(){
         </div>
         <button class="foll-btn" onclick="event.stopPropagation();toggleFollow('${tt.id}')">${tt.following?'팔로잉':'+ 팔로우'}</button>
       </div>
-      <h3>${p.title}</h3>
-      <div class="desc">${linkifyTags(p.desc)}</div>
+      <h3>${esc((p.title||'놀이').replace(/^#/,''))}</h3>
+      ${descPreview(p,`openFeedPost(${i})`)}
       <div class="photo"><img src="${p.img}" alt="">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}장</span>`:''}</div>
       <div class="tags">${p.tags.map(x=>`<span class="tag" onclick="event.stopPropagation();filterByLabel('${x}')">#${x}</span>`).join('')}</div>
       <div class="views">👁 조회 ${p.views}</div>
@@ -1360,10 +1389,22 @@ async function refreshSession(){
   const {data}=await SB.auth.getUser();
   authUser=data?data.user:null;
   if(authUser){
-    const {data:prof}=await SB.from('profiles').select('*').eq('id',authUser.id).single();
-    if(prof){profile.nick=prof.nickname||profile.nick;profile.role=prof.role||profile.role;
-      profile.roleShort=(prof.role||'').replace(' 교사','')||profile.roleShort;
-      profile.icon=prof.icon||profile.icon;profile.photo=prof.avatar_url||'';}
+    // 가입 시 입력한 닉네임(인증 메타데이터)을 우선 확보
+    const metaNick=(authUser.user_metadata&&authUser.user_metadata.nickname)||'';
+    let prof=null;
+    try{const r=await SB.from('profiles').select('*').eq('id',authUser.id).maybeSingle();prof=r.data;}catch(e){}
+    // 프로필 행이 아직 없으면(가입 시 세션 미형성 등) 지금 만들어 준다
+    if(!prof){
+      const nick=metaNick||'선생님';
+      try{await SB.from('profiles').upsert({id:authUser.id,nickname:nick,role:'교사',icon:'🧑'});}catch(e){}
+      prof={nickname:nick,role:'교사',icon:'🧑',avatar_url:''};
+    }
+    profile.nick=prof.nickname||metaNick||profile.nick;
+    profile.role=prof.role||profile.role;
+    profile.roleShort=(prof.role||'').replace(' 교사','')||profile.roleShort;
+    profile.icon=prof.icon||profile.icon;
+    profile.photo=prof.avatar_url||'';
+    profile.guest=false;
   }
   applyAuthUI();
   await loadDbPosts();
@@ -1390,7 +1431,7 @@ async function loadDbPosts(){
       :[{img:row.image_url,desc:row.description||'',spots:row.spots||[]}];
     return {
       db:true, id:row.id, user_id:row.user_id, emoji:'🎨',
-      title:(row.tags&&row.tags[0])?'#'+row.tags[0]:'#놀이',
+      title:row.title||'놀이',
       desc:row.description||'', img:row.image_url, images:imgs,
       tags:row.tags||[], views:'0', like:0, cmt:0, liked:false, comments:[],
       age:row.age, nuri:row.nuri||[], categories:row.categories||[],
@@ -1418,6 +1459,14 @@ function fmtRich(s){return s.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/
 function stripFmt(s){return String(s||'').replace(/\*\*([^*\n]+)\*\*/g,'$1').replace(/__([^_\n]+)__/g,'$1');}
 function linkifyTags(text){return fmtRich(esc(text)).replace(/#([^\s#<>.,!?~]+)/g,(m,tag)=>`<a class="htag" onclick="filterByLabel('${tag.replace(/'/g,"\\'")}')">#${tag}</a>`);}
 /* 선택한 글씨를 **굵게** 또는 __밑줄__ 로 감싸기 */
+/* 피드용 본문 미리보기: 앞 몇 줄만 + 더보기 */
+function descPreview(p,openCall){
+  const raw=stripFmt(p.desc||'');
+  if(!raw)return '';
+  const long = raw.length>70 || /\n/.test(raw);
+  return `<div class="desc clamp">${linkifyTags(p.desc)}</div>`+
+    (long?`<button class="more-link" onclick="event.stopPropagation();${openCall}">더보기</button>`:'');
+}
 function wrapSel(id,mark){
   const t=document.getElementById(id);if(!t)return;
   const s=t.selectionStart,e=t.selectionEnd,v=t.value;
@@ -1446,10 +1495,12 @@ function renderPostPage(p){
   const nuriChips=(p.nuri||[]).map(n=>`<span class="nuri-chip">${nuriLabel(n)}</span>`).join('');
   const catCards=(p.tags||[]).slice(0,4).map(tg=>`<button class="rel-card" onclick="filterByLabel('${tg}')"><div class="rc-ic">🏷️</div><b>#${tg}</b><span>›</span></button>`).join('');
   const photos=imgs.map((im,idx)=>`<div class="pdp" onclick="openPhotos(_currentPost,${idx})"><img src="${im.img}" alt="">${(im.spots&&im.spots.length)?'<span class="pcount">🏷️ 상품 태그</span>':''}</div>`).join('');
-  $('#ptMini').textContent=(p.tags||[]).map(x=>'#'+x).join(' ');
+  $('#ptMini').textContent=(p.title||'놀이').replace(/^#/,'');
+  const hashLine=(p.tags||[]).map(x=>'#'+x).join(' ');
   $('#postBody').innerHTML=`
     <div class="post-hero">
-      <h1 class="ph-title">${(p.tags||[]).map(x=>'#'+x).join(' ')||p.title}</h1>
+      <h1 class="ph-title">${esc((p.title||'놀이').replace(/^#/,''))}</h1>
+      ${hashLine?`<div class="ph-hash">${linkifyTags(hashLine)}</div>`:''}
       <div class="ph-meta">${p.date||'2025년 7월 18일'} · 👁 조회 ${p.views||'0'}</div>
       <div class="ph-actions" id="phActions"></div>
       ${nuriChips?`<div class="ph-nuri">${nuriChips}</div>`:''}
@@ -1499,6 +1550,36 @@ function sharePost(){toast('공유 링크가 복사되었어요 (데모)');}
 
 /* ===== 놀이 수정 ===== */
 let _editPost=null, _editImages=null;
+let esel={age:'선택 안함',nuri:new Set(),cat:new Set()};
+function renderEAge(){
+  const s=$('#eAgeSeg');if(!s)return;s.innerHTML='';
+  ages.forEach(a=>{const b=document.createElement('button');b.textContent=a;
+    b.className=esel.age===a?'on':'';b.onclick=()=>{esel.age=a;renderEAge();};s.appendChild(b);});
+}
+function renderENuriChips(){const c=$('#eNuriChips');if(!c)return;c.innerHTML='';
+  esel.nuri.forEach(it=>{const el=document.createElement('span');el.className='chip-sel';
+    el.innerHTML=`${it} <span class="x">×</span>`;
+    el.querySelector('.x').onclick=()=>{esel.nuri.delete(it);renderENuri();};c.appendChild(el);});}
+function renderENuriPanel(){const p=$('#eNuriPanel');if(!p)return;p.innerHTML='';
+  nuriData.forEach(grp=>{const g=document.createElement('div');g.className='opt-group';
+    g.innerHTML=`<div class="gl">${grp.g}</div>`;const w=document.createElement('div');w.className='opts';
+    grp.items.forEach(it=>{const on=esel.nuri.has(it);const b=document.createElement('button');
+      b.className='opt'+(on?' on':'');b.textContent=(on?'✓ ':'')+it;
+      b.onclick=()=>{on?esel.nuri.delete(it):esel.nuri.add(it);renderENuri();};w.appendChild(b);});
+    g.appendChild(w);p.appendChild(g);});}
+function renderENuri(){renderENuriChips();renderENuriPanel();}
+function renderECatChips(){const c=$('#eCatChips');if(!c)return;c.innerHTML='';
+  esel.cat.forEach(it=>{const el=document.createElement('span');el.className='chip-sel';
+    el.innerHTML=`${it} <span class="x">×</span>`;
+    el.querySelector('.x').onclick=()=>{esel.cat.delete(it);renderECat();};c.appendChild(el);});}
+function renderECatPanel(){const p=$('#eCatPanel');if(!p)return;p.innerHTML='';
+  catData.forEach(grp=>{const g=document.createElement('div');g.className='opt-group';
+    g.innerHTML=`<div class="gl">${grp.ic} ${grp.g}</div>`;const w=document.createElement('div');w.className='opts';
+    grp.items.forEach(it=>{const on=esel.cat.has(it);const b=document.createElement('button');
+      b.className='opt'+(on?' on':'');b.textContent=(on?'✓ ':'')+it;
+      b.onclick=()=>{on?esel.cat.delete(it):esel.cat.add(it);renderECat();};w.appendChild(b);});
+    g.appendChild(w);p.appendChild(g);});}
+function renderECat(){renderECatChips();renderECatPanel();}
 function openEdit(){
   const p=_currentPost;if(!p||!canEdit(p))return;
   _editPost=p;
@@ -1506,6 +1587,10 @@ function openEdit(){
   $('#eTitle').value=(p.title||'').replace(/^#/,'');
   $('#eBody').value=p.desc||'';
   $('#eTags').value=(p.tags||[]).join(', ');
+  esel.age=p.age||'선택 안함';
+  esel.nuri=new Set(p.nuri||[]);
+  esel.cat=new Set(p.categories||[]);
+  renderEAge();renderENuri();renderECat();
   renderEditImages();
   open_('editOverlay');
 }
@@ -1540,12 +1625,14 @@ async function saveEdit(){
   const images=_editImages.map(im=>({img:im.img,desc:(im.desc||'').trim(),
     spots:im.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:(s.name||'').trim(),mall:(s.mall||'').trim(),
       url:s.url&&!/^https?:\/\//i.test(s.url)?'https://'+s.url:(s.url||'')}))}));
-  p.title=title.startsWith('#')?title:'#'+title;
+  const age=esel.age, nuri=[...esel.nuri], categories=[...esel.cat];
+  p.title=title.replace(/^#/,''); // 실제 제목(해시태그 아님)
   p.desc=body; p.tags=tags.length?tags:p.tags; p.images=images;
+  p.age=age; p.nuri=nuri; p.categories=categories;
   p.img=images[0]?images[0].img:p.img; p.spots=images[0]?images[0].spots:[];
   if(p.db && SB){
-    const {error}=await SB.from('posts').update({title, description:body, tags:p.tags,
-      images, image_url:p.img, spots:p.spots}).eq('id',p.id);
+    const {error}=await SB.from('posts').update({title:p.title, description:body, tags:p.tags,
+      images, image_url:p.img, spots:p.spots, age, nuri, categories}).eq('id',p.id);
     if(error){toast('수정 실패: '+error.message);return;}
     await loadDbPosts();
     const fresh=(window._dbPosts||[]).find(x=>x.id===p.id)||p;
@@ -1939,8 +2026,8 @@ function renderBrowseFeed(){
         </div>
         ${followBtn.replace('onclick="','onclick="event.stopPropagation();')}
       </div>
-      <h3 class="br-hash">${p.tags.map(x=>'#'+x).join(' ')}</h3>
-      <div class="desc">${linkifyTags(p.desc)}</div>
+      <h3>${esc((p.title||'놀이').replace(/^#/,''))}</h3>
+      ${descPreview(p,`openBrowsePost(${i})`)}
       ${photoGrid(p)}
       <div class="tags">${p.tags.map(x=>`<span class="tag" onclick="event.stopPropagation();filterByLabel('${x}')">#${x}</span>`).join('')}</div>
       <div class="views">👁 조회 ${p.views} · ♥ ${(p.like||0).toLocaleString()}</div>
@@ -2103,7 +2190,14 @@ function buildPhotoCard(ph){
     </div>
     <div class="up-photo"><canvas></canvas><div class="markers" style="pointer-events:none"></div></div>
     <div class="ai-status">🤖 얼굴 인식 중…</div>
+    <div class="crop-bar" style="display:none">
+      <span class="crop-hint">✂️ 잘라낼 부분을 사진에서 드래그하세요</span>
+      <button class="btn p cropapply">✓ 자르기 적용</button>
+      <button class="btn g cropcancel">취소</button>
+    </div>
     <div class="ai-controls">
+      <button class="btn g rotate">🔄 회전</button>
+      <button class="btn g crop">✂️ 자르기</button>
       <button class="btn v redetect">🤖 얼굴 다시 인식</button>
       <button class="btn g clearface">모자이크 지우기</button>
       <button class="add-spot addspot">＋ 구매 물품 표시</button>
@@ -2125,15 +2219,26 @@ function buildPhotoCard(ph){
   card.querySelector('.mzon').onchange=e=>{ph.mosaicOn=e.target.checked;renderCanvasP(ph);};
   ph.addBtn.onclick=()=>toggleAddSpotP(ph);
   card.querySelector('.delphoto').onclick=()=>removePhoto(ph);
-  // 얼굴 박스: 눌러서 켜고 끄기 + 빈 곳 드래그로 추가
+  // 회전 / 자르기
+  ph.cropBar=card.querySelector('.crop-bar');
+  card.querySelector('.rotate').onclick=()=>rotatePhoto(ph);
+  card.querySelector('.crop').onclick=()=>startCrop(ph);
+  card.querySelector('.cropapply').onclick=()=>applyCrop(ph);
+  card.querySelector('.cropcancel').onclick=()=>cancelCrop(ph);
+  // 얼굴 박스: 눌러서 켜고 끄기 + 빈 곳 드래그로 추가 (자르기 모드면 자르기 영역 지정)
   ph.cv.addEventListener('pointerdown',e=>{const p=posP(ph,e);
+    if(ph.cropMode){ph.cropRect={x0:p.x,y0:p.y,x1:p.x,y1:p.y};ph.cropping=true;return;}
     const hit=ph.boxes.find(b=>p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h);
     if(hit){hit.on=!hit.on;renderCanvasP(ph);return;}
     ph.drag={x:p.x,y:p.y,cur:p};});
-  ph.cv.addEventListener('pointermove',e=>{if(!ph.drag)return;ph.drag.cur=posP(ph,e);
+  ph.cv.addEventListener('pointermove',e=>{
+    if(ph.cropMode){if(!ph.cropping)return;const p=posP(ph,e);ph.cropRect.x1=p.x;ph.cropRect.y1=p.y;drawCropOverlay(ph);return;}
+    if(!ph.drag)return;ph.drag.cur=posP(ph,e);
     renderCanvasP(ph);const c=ph.ctx;c.strokeStyle='#6c5ce7';c.lineWidth=2;c.setLineDash([5,4]);
     c.strokeRect(ph.drag.x,ph.drag.y,ph.drag.cur.x-ph.drag.x,ph.drag.cur.y-ph.drag.y);c.setLineDash([]);});
-  ph.cv.addEventListener('pointerup',()=>{if(!ph.drag)return;const d=ph.drag;
+  ph.cv.addEventListener('pointerup',()=>{
+    if(ph.cropMode){ph.cropping=false;drawCropOverlay(ph);return;}
+    if(!ph.drag)return;const d=ph.drag;
     const x=Math.min(d.x,d.cur.x),y=Math.min(d.y,d.cur.y),w=Math.abs(d.cur.x-d.x),h=Math.abs(d.cur.y-d.y);
     if(w>12&&h>12)ph.boxes.push({x,y,w,h,on:true});ph.drag=null;renderCanvasP(ph);});
   // 구매표시 추가 모드: 빈 곳 클릭으로 배치
@@ -2193,6 +2298,49 @@ function mosaicP(ph,b){const cv=ph.cv,c=ph.ctx,px=pxStrength;
   const tmp=document.createElement('canvas');tmp.width=sw;tmp.height=sh;
   tmp.getContext('2d').drawImage(cv,x,y,w,h,0,0,sw,sh);
   c.imageSmoothingEnabled=false;c.drawImage(tmp,0,0,sw,sh,x,y,w,h);c.imageSmoothingEnabled=true;
+}
+/* 사진 다듬기 원본을 새 이미지로 교체하고 다시 세팅 */
+function _replaceImg(ph,dataUrl){
+  const im=new Image();
+  im.onload=()=>{
+    ph.img=im;ph.boxes=[];ph.spots=[];ph.cropMode=false;ph.cropRect=null;ph.cropping=false;
+    if(ph.cropBar)ph.cropBar.style.display='none';
+    const maxW=520,sc=Math.min(1,maxW/im.width);
+    ph.cv.width=im.width*sc;ph.cv.height=im.height*sc;
+    renderCanvasP(ph);renderSpotsP(ph);runDetectP(ph);
+  };
+  im.src=dataUrl;
+}
+function rotatePhoto(ph){
+  const w=ph.img.width,h=ph.img.height;
+  const c=document.createElement('canvas');c.width=h;c.height=w;
+  const cx=c.getContext('2d');cx.translate(h/2,w/2);cx.rotate(Math.PI/2);cx.drawImage(ph.img,-w/2,-h/2);
+  _replaceImg(ph,c.toDataURL('image/jpeg',0.92));
+}
+function startCrop(ph){ph.cropMode=true;ph.cropRect=null;ph.cropping=false;
+  if(ph.cropBar)ph.cropBar.style.display='flex';
+  if(ph.status)ph.status.textContent='✂️ 잘라낼 부분을 사진에서 드래그하세요';
+  renderCanvasP(ph);}
+function cancelCrop(ph){ph.cropMode=false;ph.cropRect=null;ph.cropping=false;
+  if(ph.cropBar)ph.cropBar.style.display='none';renderCanvasP(ph);
+  if(ph.status)ph.status.textContent='';}
+function drawCropOverlay(ph){
+  renderCanvasP(ph);const cr=ph.cropRect;if(!cr)return;const c=ph.ctx,cv=ph.cv;
+  const x=Math.min(cr.x0,cr.x1),y=Math.min(cr.y0,cr.y1),w=Math.abs(cr.x1-cr.x0),h=Math.abs(cr.y1-cr.y0);
+  c.save();c.fillStyle='rgba(0,0,0,.45)';
+  c.beginPath();c.rect(0,0,cv.width,cv.height);c.rect(x,y,w,h);c.fill('evenodd');
+  c.strokeStyle='#fff';c.lineWidth=2;c.setLineDash([6,4]);c.strokeRect(x,y,w,h);c.setLineDash([]);c.restore();
+}
+function applyCrop(ph){
+  const cr=ph.cropRect;
+  if(!cr||Math.abs(cr.x1-cr.x0)<10||Math.abs(cr.y1-cr.y0)<10){toast('자를 영역을 드래그해주세요');return;}
+  const scX=ph.img.width/ph.cv.width, scY=ph.img.height/ph.cv.height;
+  const x=Math.min(cr.x0,cr.x1)*scX, y=Math.min(cr.y0,cr.y1)*scY;
+  const w=Math.abs(cr.x1-cr.x0)*scX, h=Math.abs(cr.y1-cr.y0)*scY;
+  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));
+  c.getContext('2d').drawImage(ph.img,x,y,w,h,0,0,c.width,c.height);
+  _replaceImg(ph,c.toDataURL('image/jpeg',0.92));
+  toast('사진을 잘랐어요');
 }
 function toggleAddSpotP(ph){setAddSpot(ph,!ph.addSpotMode);}
 function setAddSpot(ph,on){ph.addSpotMode=on;
@@ -2313,12 +2461,22 @@ function renderTags(){
 }
 /* (구매 물품은 사진 위 주황 동그라미로만 관리 — 별도 목록 없음) */
 
-/* 모달 열기/닫기 */
+/* 모달 열기/닫기 (1단계 사진 → 2단계 글) */
 function openUpload(){
-  renderAge();renderNuri();renderCat();renderTags();
   $('#uploadOverlay').classList.add('on');
 }
-function closeUpload(){$('#uploadOverlay').classList.remove('on');}
+function goWrite(){
+  if(!photos.length){toast('사진을 먼저 올려주세요');return;}
+  if(SB && !authUser){toast('로그인 후 올릴 수 있어요');closeUpload();openAuth('login');return;}
+  renderAge();renderNuri();renderCat();renderTags();
+  $('#uploadOverlay').classList.remove('on');
+  $('#writeOverlay').classList.add('on');
+}
+function backToPhotos(){
+  $('#writeOverlay').classList.remove('on');
+  $('#uploadOverlay').classList.add('on');
+}
+function closeUpload(){$('#uploadOverlay').classList.remove('on');$('#writeOverlay').classList.remove('on');}
 
 /* 업로드 완료 */
 async function publishPost(){
