@@ -18,7 +18,7 @@
   a{color:inherit;text-decoration:none}
   button{font-family:inherit;cursor:pointer}
   img{display:block;max-width:100%}
-  .app{max-width:1340px;margin:0 auto;padding:22px 18px 120px;
+  .app{max-width:1500px;margin:0 auto;padding:22px 18px 120px;
     display:grid;grid-template-columns:240px 1fr 300px;gap:22px;align-items:start}
 
   /* ---------- sidebar ---------- */
@@ -481,6 +481,13 @@
   .fmt-hint{color:var(--sub);font-size:11.5px}
   .big-write{min-height:220px;font-size:14.5px;line-height:1.7}
   .sec-write{min-height:72px;font-size:14px;line-height:1.6}
+  .rich{width:100%;border:1px solid #eadfd9;border-radius:11px;padding:12px 13px;font-size:14.5px;
+    font-family:inherit;background:#fafafb;min-height:54px;line-height:1.7;outline:none;overflow:auto;
+    white-space:pre-wrap;word-break:break-word}
+  .rich:focus{border-color:var(--coral);background:#fff}
+  .rich.big-write{min-height:240px}
+  .rich:empty:before{content:attr(data-ph);color:#b9b4c4;pointer-events:none}
+  .rich b,.rich strong{font-weight:800}
   .ai-sum-btn{margin-top:9px;border:1px solid #ded7ff;background:#f7f5ff;color:#6c5ce7;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700}
   .ai-sum-btn:hover{background:#efeaff}
   .add-photo{width:100%;border:1px dashed var(--coral);color:var(--coral);background:#fff8f5;
@@ -935,12 +942,12 @@
 </div>
 
 <!-- ============ 2단계: 글 작성 모달 ============ -->
-<div class="overlay" id="writeOverlay" onclick="if(event.target===this)close_('writeOverlay')">
+<div class="overlay" id="writeOverlay" onclick="if(event.target===this)closeWrite()">
   <div class="modal up-modal big-modal">
     <div class="modal-head">
-      <button class="x" onclick="backToPhotos()" title="사진 단계로">‹</button>
-      <b>2단계 · 글 작성하기</b>
-      <button class="x" onclick="close_('writeOverlay')">×</button>
+      <button class="x" id="writeBack" onclick="backToPhotos()" title="사진 단계로">‹</button>
+      <b id="writeTitle">2단계 · 글 작성하기</b>
+      <button class="x" onclick="closeWrite()">×</button>
     </div>
     <div class="up-body">
       <!-- 놀이 제목 -->
@@ -949,29 +956,16 @@
         <div class="title-input"><input id="pTitle" placeholder="예: 아이스크림 가게 놀이"><span class="pen">✎</span></div>
       </div>
 
-      <!-- 한 줄 소개 (+AI 요약) -->
+      <!-- 전체 글 (자유 서술) -->
       <div class="sec">
-        <div class="sec-label">🎯 한 줄 소개 <span class="hint">목록·미리보기에 이 문장이 보여요</span></div>
-        <textarea id="pSummary" class="photo-desc" style="min-height:58px" placeholder="이 놀이를 한두 줄로 소개해주세요."></textarea>
-        <button type="button" class="ai-sum-btn" onclick="aiSummarize()">✨ AI 3줄 요약 자동 만들기</button>
-      </div>
-
-      <!-- 항목별 내용 (칸을 나눠 자연스럽게 짧게) -->
-      <div class="sec">
-        <div class="sec-label">🧺 준비물 <span class="hint">쉼표로 나열 · 선택</span></div>
-        <textarea id="pMaterials" class="photo-desc sec-write" placeholder="예: 긴 스티로폼, 색테이프"></textarea>
-      </div>
-      <div class="sec">
-        <div class="sec-label">▶️ 놀이 방법 <span class="hint">순서대로</span></div>
-        <textarea id="pSteps" class="photo-desc sec-write" placeholder="어떻게 진행했는지 순서대로 적어보세요."></textarea>
-      </div>
-      <div class="sec">
-        <div class="sec-label">🤝 약속·규칙 <span class="hint">한 줄에 하나씩 · 선택</span></div>
-        <textarea id="pRules" class="photo-desc sec-write" placeholder="예: 얼굴은 찌르지 않기 / 한 손만 사용하기"></textarea>
-      </div>
-      <div class="sec">
-        <div class="sec-label">💡 팁·효과 <span class="hint">선택</span></div>
-        <textarea id="pTips" class="photo-desc sec-write" placeholder="이 놀이의 효과나 팁을 자유롭게 적어보세요."></textarea>
+        <div class="sec-label">📝 글 내용 <span class="hint">놀이 전체 소개 (사진별 설명과 별개)</span></div>
+        <div class="fmt-bar">
+          <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="richCmd('bold')"><b>가</b> 진하게</button>
+          <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="richCmd('underline')"><u>가</u> 밑줄</button>
+          <span class="fmt-hint">글씨 선택 후 클릭 · 단축키 Ctrl+B / Ctrl+U</span>
+        </div>
+        <div id="pBody" class="rich big-write" contenteditable="true" data-ph="이 놀이를 자유롭게 소개해주세요. 준비물, 방법, 팁 등을 적어보세요."></div>
+        <button type="button" class="ai-sum-btn" onclick="autoTidy('pBody')">🪄 AI 다듬기 · 보기 좋게 자동 정리</button>
       </div>
 
       <!-- 연령 -->
@@ -1002,8 +996,14 @@
         <div class="tag-edit" id="tagEdit" onclick="var i=document.getElementById('tagInput');if(i)i.focus()"></div>
         <div style="font-size:11.5px;color:var(--sub);margin-top:6px">Enter로 태그 추가 (띄어쓰기 가능) · Backspace로 마지막 태그 삭제</div>
       </div>
+
+      <!-- 사진별 설명·상품태그 (수정할 때만 표시) -->
+      <div class="sec" id="writeImagesSec" style="display:none">
+        <div class="sec-label">🖼️ 사진별 설명 · 상품 태그</div>
+        <div id="writeImages"></div>
+      </div>
     </div>
-    <div class="up-foot"><button onclick="publishPost()">✓ 업로드 완료</button></div>
+    <div class="up-foot"><button id="writeSubmit" onclick="submitWrite()">✓ 업로드 완료</button></div>
   </div>
 </div>
 
@@ -1015,10 +1015,12 @@
       <div class="sec"><div class="sec-label">🖌️ 놀이 제목</div><div class="title-input"><input id="eTitle"></div></div>
       <div class="sec"><div class="sec-label">📝 글 내용 <span class="hint">전체 소개 (사진 설명과 별개)</span></div>
         <div class="fmt-bar">
-          <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="wrapSel('eBody','**')"><b>가</b> 진하게</button>
-          <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="wrapSel('eBody','__')"><u>가</u> 밑줄</button>
+          <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="richCmd('bold')"><b>가</b> 진하게</button>
+          <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="richCmd('underline')"><u>가</u> 밑줄</button>
+          <span class="fmt-hint">단축키 Ctrl+B / Ctrl+U</span>
         </div>
-        <textarea id="eBody" class="photo-desc big-write"></textarea></div>
+        <div id="eBody" class="rich big-write" contenteditable="true" data-ph="놀이 내용을 적어주세요."></div>
+        <button type="button" class="ai-sum-btn" onclick="autoTidy('eBody')">🪄 AI 다듬기 · 보기 좋게 자동 정리</button></div>
       <div class="sec"><div class="sec-label">🖍️ 연령</div><div class="seg" id="eAgeSeg"></div></div>
       <div class="sec"><div class="sec-label">🎨 누리과정</div>
         <div class="chips" id="eNuriChips"></div>
@@ -1586,7 +1588,8 @@ function renderPostActions(){
     <button class="pa-btn like ${p.liked?'on':''}" onclick="togglePostLike()"><span class="hi">${p.liked?'♥':'♡'}</span> <b>${(p.like||0).toLocaleString()}</b></button>
     <button class="pa-btn ${saved?'on':''}" onclick="togglePostSave()">${saved?'✅ 저장됨':'🔖 저장'}</button>
     <button class="pa-btn" onclick="sharePost()">↗ 공유</button>
-    ${canEdit(p)?`<button class="pa-btn" onclick="openEdit()">✏️ 수정</button>`:''}`;
+    ${canEdit(p)?`<button class="pa-btn" onclick="openEdit()">✏️ 수정</button>
+      <button class="pa-btn" onclick="deletePost()" style="color:#d64545">🗑 삭제</button>`:''}`;
 }
 function togglePostLike(){const p=_currentPost;if(!p)return;p.liked=!p.liked;p.like=(p.like||0)+(p.liked?1:-1);renderPostActions();if(p.liked)notifyAuthor(p,'like');}
 function togglePostSave(){const p=_currentPost;if(!p)return;
@@ -1630,22 +1633,55 @@ function renderECatPanel(){const p=$('#eCatPanel');if(!p)return;p.innerHTML='';
       b.onclick=()=>{on?esel.cat.delete(it):esel.cat.add(it);renderECat();};w.appendChild(b);});
     g.appendChild(w);p.appendChild(g);});}
 function renderECat(){renderECatChips();renderECatPanel();}
+/* 카테고리 라벨 → sel.cat 복합키 */
+function catLabelsToKeys(labels){
+  const keys=[];
+  (labels||[]).forEach(lab=>{let found=null;
+    catData.forEach((g,gi)=>{if(found)return;if(g.items.includes(lab))found=gi+'::'+lab;});
+    keys.push(found||('c::'+lab));});
+  return keys;
+}
+/* 글 작성 모달을 '업로드' 모드 / '수정' 모드로 전환 */
+function setWriteMode(edit){
+  const t=$('#writeTitle');if(t)t.textContent=edit?'✏️ 놀이 수정':'2단계 · 글 작성하기';
+  const bk=$('#writeBack');if(bk)bk.style.display=edit?'none':'';
+  const sub=$('#writeSubmit');if(sub)sub.textContent=edit?'✓ 수정 완료':'✓ 업로드 완료';
+  const sec=$('#writeImagesSec');if(sec)sec.style.display=edit?'':'none';
+}
+function submitWrite(){ if(_editPost) saveEdit(); else publishPost(); }
+function closeWrite(){ _editPost=null; setWriteMode(false); close_('writeOverlay'); }
+/* 수정: 업로드(글 작성) 창과 '완전히 동일한' 창을 열어요 */
 function openEdit(){
   const p=_currentPost;if(!p||!canEdit(p))return;
   _editPost=p;
   _editImages=imagesOf(p).map(im=>({img:im.img,desc:im.desc||'',spots:(im.spots||[]).map(s=>({...s}))}));
-  $('#eTitle').value=(p.title||'').replace(/^#/,'');
-  $('#eBody').value=p.desc||'';
-  $('#eTags').value=(p.tags||[]).join(', ');
-  esel.age=p.age||'선택 안함';
-  esel.nuri=new Set(p.nuri||[]);
-  esel.cat=new Set(p.categories||[]);
-  renderEAge();renderENuri();renderECat();
+  $('#pTitle').value=(p.title||'').replace(/^#/,'');
+  $('#pBody').innerHTML=marksToRich(p.desc||'');
+  sel={age:p.age||'선택 안함', nuri:new Set(p.nuri||[]), cat:new Set(catLabelsToKeys(p.categories||[])), tags:[...(p.tags||[])]};
+  renderAge();renderNuri();renderCat();renderTags();
   renderEditImages();
-  open_('editOverlay');
+  setWriteMode(true);
+  $('#uploadOverlay').classList.remove('on');
+  open_('writeOverlay');
+}
+function deletePost(){
+  const p=_currentPost;if(!p||!canEdit(p))return;
+  if(!confirm('이 놀이글을 삭제할까요? 삭제하면 되돌릴 수 없어요.'))return;
+  (async()=>{
+    if(p.db && SB){
+      const {error}=await SB.from('posts').delete().eq('id',p.id);
+      if(error){toast('삭제 실패: '+error.message);return;}
+      await loadDbPosts();
+    }else{
+      const i=posts.indexOf(p);if(i>=0)posts.splice(i,1);
+      const si=savedPosts.indexOf(p);if(si>=0)savedPosts.splice(si,1);
+    }
+    toast('삭제되었어요');
+    go('browse');
+  })();
 }
 function renderEditImages(){
-  const box=$('#eImages');box.innerHTML='';
+  const box=$('#writeImages');if(!box)return;box.innerHTML='';
   _editImages.forEach((im,idx)=>{
     const spotsHtml=im.spots.map((s,si)=>`
       <div class="espot">
@@ -1669,14 +1705,15 @@ function renderEditImages(){
 }
 async function saveEdit(){
   const p=_editPost;if(!p)return;
-  const title=$('#eTitle').value.trim()||'놀이';
-  const body=$('#eBody').value.trim();
-  const tags=$('#eTags').value.split(',').map(s=>s.trim().replace(/^#/,'')).filter(Boolean);
+  const title=$('#pTitle').value.trim()||'놀이';
+  const body=richToMarks($('#pBody'));
+  const catTags=[...sel.cat].map(k=>k.split('::')[1]);
+  const tags=[...new Set([...(sel.tags||[]), ...catTags])];
   const images=_editImages.map(im=>({img:im.img,desc:(im.desc||'').trim(),
     spots:im.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:(s.name||'').trim(),mall:(s.mall||'').trim(),
       url:s.url&&!/^https?:\/\//i.test(s.url)?'https://'+s.url:(s.url||'')}))}));
-  const age=esel.age, nuri=[...esel.nuri], categories=[...esel.cat];
-  p.title=title.replace(/^#/,''); // 실제 제목(해시태그 아님)
+  const age=sel.age, nuri=[...sel.nuri], categories=catTags;
+  p.title=title.replace(/^#/,'');
   p.desc=body; p.tags=tags.length?tags:p.tags; p.images=images;
   p.age=age; p.nuri=nuri; p.categories=categories;
   p.img=images[0]?images[0].img:p.img; p.spots=images[0]?images[0].spots:[];
@@ -1686,9 +1723,9 @@ async function saveEdit(){
     if(error){toast('수정 실패: '+error.message);return;}
     await loadDbPosts();
     const fresh=(window._dbPosts||[]).find(x=>x.id===p.id)||p;
-    close_('editOverlay');openPost(fresh);toast('수정되었어요 (저장됨)');return;
+    _editPost=null;setWriteMode(false);close_('writeOverlay');openPost(fresh);toast('수정되었어요 (저장됨)');return;
   }
-  close_('editOverlay');renderPostPage(p);renderFeed();
+  _editPost=null;setWriteMode(false);close_('writeOverlay');renderPostPage(p);renderFeed();
   if($('#v-browse').classList.contains('on'))renderBrowseFeed();
   toast('수정되었어요');
 }
@@ -2513,11 +2550,13 @@ function renderTags(){
 
 /* 모달 열기/닫기 (1단계 사진 → 2단계 글) */
 function openUpload(){
+  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; _editPost=null; }
   $('#uploadOverlay').classList.add('on');
 }
 function goWrite(){
   if(!photos.length){toast('사진을 먼저 올려주세요');return;}
   if(SB && !authUser){toast('로그인 후 올릴 수 있어요');closeUpload();openAuth('login');return;}
+  _editPost=null; setWriteMode(false);
   renderAge();renderNuri();renderCat();renderTags();
   $('#uploadOverlay').classList.remove('on');
   $('#writeOverlay').classList.add('on');
@@ -2528,32 +2567,85 @@ function backToPhotos(){
 }
 function closeUpload(){$('#uploadOverlay').classList.remove('on');$('#writeOverlay').classList.remove('on');}
 
-/* 항목별 칸을 하나의 글로 합치기 (소제목은 굵게) */
-function composeBody(){
-  const g=id=>($('#'+id)?$('#'+id).value.trim():'');
-  const parts=[];
-  const summary=g('pSummary'), mat=g('pMaterials'), steps=g('pSteps'), rules=g('pRules'), tips=g('pTips');
-  if(summary)parts.push(summary);
-  if(mat)parts.push('**🧺 준비물**\n'+mat);
-  if(steps)parts.push('**▶️ 놀이 방법**\n'+steps);
-  if(rules)parts.push('**🤝 약속·규칙**\n'+rules);
-  if(tips)parts.push('**💡 팁·효과**\n'+tips);
-  return parts.join('\n\n');
+/* ===== 리치 텍스트(진하게/밑줄 실시간 표시) ===== */
+function richCmd(cmd){try{document.execCommand('styleWithCSS',false,false);}catch(e){}document.execCommand(cmd,false,null);}
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&!e.altKey){
+    const k=e.key.toLowerCase();
+    if(k==='b'||k==='u'){
+      const el=document.activeElement;
+      if(el&&el.classList&&el.classList.contains('rich')){e.preventDefault();richCmd(k==='b'?'bold':'underline');}
+    }
+  }
+});
+/* 리치 편집 내용 → 저장용 마커(**굵게**, __밑줄__) */
+function richToMarks(root){
+  if(!root)return '';
+  let out='';
+  const sBold=el=>{const w=(el.style&&el.style.fontWeight)||'';return w==='bold'||w==='bolder'||/^[6-9]00$/.test(w);};
+  const sU=el=>{const d=(el.style&&(el.style.textDecoration||el.style.textDecorationLine))||'';return /underline/.test(d);};
+  (function walk(node,b,u){
+    node.childNodes.forEach(n=>{
+      if(n.nodeType===3){const t=n.nodeValue.replace(/\u00a0/g,' ');if(!t)return;
+        out+=(b?'**':'')+(u?'__':'')+t+(u?'__':'')+(b?'**':'');}
+      else if(n.nodeType===1){const tag=n.tagName;
+        if(tag==='BR'){out+='\n';return;}
+        const block=(tag==='DIV'||tag==='P');
+        if(block&&out&&!out.endsWith('\n'))out+='\n';
+        walk(n,b||tag==='B'||tag==='STRONG'||sBold(n),u||tag==='U'||sU(n));
+      }
+    });
+  })(root,false,false);
+  return out.replace(/\n{3,}/g,'\n\n').trim();
 }
-/* 기기 안에서 만드는 간단 3줄 요약(무료·외부전송 없음) */
-function aiSummarize(){
-  const title=$('#pTitle').value.trim();
-  const first=t=>{const m=(t||'').split(/[\n.!?·]/).map(x=>x.trim()).filter(x=>x.length>1);return m[0]||'';};
-  const mat=$('#pMaterials').value.trim(), steps=$('#pSteps').value.trim(), tips=$('#pTips').value.trim();
-  const lines=[];
-  const l1=[title, first(steps)].filter(Boolean).join(' — ');
-  if(l1)lines.push(l1);
-  if(mat)lines.push('준비물: '+mat.split(/[,\n]/).map(x=>x.trim()).filter(Boolean).slice(0,3).join(', '));
-  if(tips)lines.push('효과: '+first(tips));
-  const out=lines.filter(Boolean).slice(0,3).join('\n');
-  if(!out){toast('먼저 제목이나 놀이 방법을 조금 적어주세요');return;}
-  $('#pSummary').value=out;
-  toast('AI가 요약을 만들었어요 · 자유롭게 고쳐도 돼요');
+/* 저장 마커 → 리치 편집 HTML */
+function marksToRich(text){
+  let h=esc(text||'');
+  h=h.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/__([^_\n]+)__/g,'<u>$1</u>');
+  return h.replace(/\n/g,'<br>');
+}
+function composeBody(){return richToMarks($('#pBody'));}
+/* 무료 자동 정리: 문장은 그대로, 소제목 굵게 + 목록 '-' + 문단 간격 정리 */
+function autoTidy(id){
+  const el=$('#'+id); if(!el)return;
+  const text=richToMarks(el);
+  if(!text.trim()){toast('먼저 글 내용을 적어주세요');return;}
+  const clean=s=>s.replace(/\*\*/g,'').replace(/__/g,'').trim();
+  const LABELS=['준비물','재료','방법','놀이방법','놀이 방법','활동방법','과정','순서','활동순서','약속','규칙','약속과 규칙','주의','주의사항','팁','효과','기대효과','활동목표','목표','대상','연령','대상연령','소개','한줄소개'];
+  const labelRe=new RegExp('^('+LABELS.map(l=>l.replace(/ /g,'\\s?')).join('|')+')\\s*(?:[:：]\\s*(.*))?$');
+  let lines=text.split('\n').map(s=>s.replace(/\s+$/,''));
+  while(lines.length&&!lines[0].trim())lines.shift();
+  while(lines.length&&!lines[lines.length-1].trim())lines.pop();
+  const out=[];
+  const blank=()=>{if(out.length&&out[out.length-1]!=='')out.push('');};
+  let firstDone=false;
+  for(let i=0;i<lines.length;i++){
+    const t=lines[i].trim();
+    if(!t){blank();continue;}
+    const bare=clean(t);
+    const lm=bare.match(labelRe);
+    const bm=t.match(/^\s*([-•*・]|\d+[.)])\s+(.*)$/);
+    if(lm){
+      blank();
+      out.push('**'+lm[1].trim()+'**');
+      const rest=(lm[2]||'').trim();
+      if(rest){
+        const items=rest.split(/[,，·]/).map(x=>x.trim()).filter(Boolean);
+        if(items.length>1)items.forEach(it=>out.push('- '+it));
+        else out.push(rest);
+      }
+      firstDone=true; continue;
+    }
+    if(bm){ out.push('- '+bm[2].trim()); firstDone=true; continue; }
+    if(!firstDone){
+      firstDone=true;
+      if(bare.length<=22 && lines.filter(x=>x.trim()).length>1){ out.push('**'+bare+'**'); blank(); continue; }
+    }
+    out.push(t);
+  }
+  const res=out.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+  el.innerHTML=marksToRich(res);
+  toast('보기 좋게 정리했어요 · 자유롭게 더 고쳐도 돼요');
 }
 
 /* 업로드 완료 */
@@ -2608,7 +2700,8 @@ async function publishPost(){
 function resetUpload(){
   photos=[];$('#photoList').innerHTML='';closeSpotForm();resetSel();
   $('#drop').style.display='block';$('#photoTop').style.display='none';
-  ['pTitle','pSummary','pMaterials','pSteps','pRules','pTips'].forEach(id=>{const el=$('#'+id);if(el)el.value='';});
+  $('#pTitle').value=''; const pb=$('#pBody'); if(pb)pb.innerHTML='';
+  _editPost=null; setWriteMode(false);
 }
 
 /* ---------------- init ---------------- */
