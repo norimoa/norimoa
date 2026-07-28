@@ -1317,7 +1317,8 @@ async function checkNick(){
   if(!v){st.textContent='';st.className='nick-status';return;}
   if(v.length<2){st.textContent='2자 이상 입력해주세요';st.className='nick-status warn';return;}
   st.textContent='확인 중…';st.className='nick-status warn';
-  let taken=takenNicks.map(x=>x.toLowerCase()).includes(v.toLowerCase());
+  // 데모 모드에서만 예시 닉네임을 막고, 실제 모드에서는 서버(DB)에 실제 등록된 닉네임만 중복 처리
+  let taken = (!SB) && takenNicks.map(x=>x.toLowerCase()).includes(v.toLowerCase());
   if(SB && !taken){try{const {data}=await SB.from('profiles').select('nickname').ilike('nickname',v);if(data&&data.length)taken=true;}catch(e){}}
   if($('#authNick').value.trim()!==v)return; // 그새 값이 바뀌면 무시
   if(taken){st.textContent='이미 사용 중인 닉네임이에요';st.className='nick-status no';}
