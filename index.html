@@ -965,7 +965,10 @@
           <span class="fmt-hint">글씨 선택 후 클릭 · 단축키 Ctrl+B / Ctrl+U</span>
         </div>
         <div id="pBody" class="rich big-write" contenteditable="true" data-ph="이 놀이를 자유롭게 소개해주세요. 준비물, 방법, 팁 등을 적어보세요."></div>
-        <button type="button" class="ai-sum-btn" onclick="autoTidy('pBody')">🪄 AI 다듬기 · 보기 좋게 자동 정리</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px">
+          <button type="button" class="ai-sum-btn" onclick="autoTidy('pBody')">🪄 AI 다듬기 · 보기 좋게 자동 정리</button>
+          <button type="button" class="ai-sum-btn" onclick="aiSuggestTags()">🎯 AI 추천 · 누리과정·카테고리·태그 자동 선택</button>
+        </div>
       </div>
 
       <!-- 연령 -->
@@ -1777,9 +1780,13 @@ function themeFolderOf(p){
   for(const c of themeCats()){if(tags.includes(c))return c;}
   return (p.tags&&p.tags[0])||'기타';
 }
+function myUploadedPosts(){
+  if(SB) return (window._dbPosts||[]).filter(p=>authUser && p.user_id===authUser.id);
+  return posts.filter(p=>p.tid==='me');
+}
 const COL={
-  saved:  {posts:()=>savedPosts,                custom:()=>customSaved,  setCustom:v=>customSaved=v,  row:'#savedPlaysRow'},
-  upload: {posts:()=>posts.filter(p=>p.tid==='me'), custom:()=>customUpload, setCustom:v=>customUpload=v, row:'#myPlaysRow'},
+  saved:  {posts:()=>savedPosts,          custom:()=>customSaved,  setCustom:v=>customSaved=v,  row:'#savedPlaysRow'},
+  upload: {posts:()=>myUploadedPosts(),    custom:()=>customUpload, setCustom:v=>customUpload=v, row:'#myPlaysRow'},
 };
 function assignedCtx(ctx){const s=new Set();COL[ctx].custom().forEach(f=>f.posts.forEach(p=>s.add(p)));return s;}
 function folderTile(cover,count,name,badgeCls,badgeTxt){
@@ -1933,7 +1940,7 @@ function renderDetail(){
   const im=_dImgs[_dIdx]||{};
   $('#detailImg').src=im.img||'';
   $('#detailTitle').textContent=_dTitle+(_dImgs.length>1?`  (${_dIdx+1}/${_dImgs.length})`:'');
-  $('#detailDesc').innerHTML=linkifyTags(im.desc||_dBaseDesc||'');
+  $('#detailDesc').innerHTML=(im.desc&&im.desc.trim())?linkifyTags(im.desc):'';
   const ph=$('#detailPhoto');
   ph.querySelectorAll('.marker,.spot-pop').forEach(el=>el.remove());
   (im.spots||[]).forEach(s=>{
@@ -2046,10 +2053,17 @@ function renderIssues(){
   const iss=_issues[curIssue];
   const d=new Date();
   $('#issueNote').textContent=`✨ 오늘(${d.getMonth()+1}월 ${d.getDate()}일) 기준, AI가 '${iss.label}'에 맞춰 골랐어요`;
-  const matches=allPosts().filter(p=>(p.tags||[]).some(x=>iss.tags.includes(x)));
-  const list=matches.length?matches.slice(0,4):allPosts().slice(0,3);
+  // 이슈 태그를 태그·카테고리 모두에서 확인해 '관련 놀이만' 추림 (관련 없으면 안 띄움)
+  const matches=allPosts().filter(p=>{
+    const bag=(p.tags||[]).concat(p.categories||[]);
+    return iss.tags.some(x=>bag.includes(x));
+  });
   const rec=$('#brRecommend');rec.innerHTML='';
-  list.forEach(p=>rec.appendChild(miniCardPost(p)));
+  if(matches.length){
+    matches.slice(0,8).forEach(p=>rec.appendChild(miniCardPost(p)));
+  }else{
+    rec.innerHTML=`<div class="empty" style="grid-column:1/-1">아직 '${iss.label}'에 맞는 놀이가 없어요. 관련 놀이를 올려보세요!</div>`;
+  }
 }
 function miniCard(c){
   const el=document.createElement('div');el.className='mini-card';
@@ -2476,7 +2490,7 @@ const catData=[
 ];
 const ages=['선택 안함','0~2세','3세','4세','5세'];
 let sel;
-function resetSel(){sel={age:'선택 안함',nuri:new Set(['창의적으로 표현하기']),cat:new Set(['1::미술','0::여름']),tags:['물감','핑거페인팅','감각','여름']};}
+function resetSel(){sel={age:'선택 안함',nuri:new Set(),cat:new Set(),tags:[]};}
 resetSel();
 
 /* 연령 */
@@ -2558,6 +2572,8 @@ function goWrite(){
   if(SB && !authUser){toast('로그인 후 올릴 수 있어요');closeUpload();openAuth('login');return;}
   _editPost=null; setWriteMode(false);
   renderAge();renderNuri();renderCat();renderTags();
+  // 글 내용이 있고 아직 아무것도 안 골랐으면 자동 추천
+  if(richToMarks($('#pBody')).trim() && !sel.nuri.size && !sel.cat.size && !(sel.tags&&sel.tags.length)) aiSuggestTags(true);
   $('#uploadOverlay').classList.remove('on');
   $('#writeOverlay').classList.add('on');
 }
@@ -2605,6 +2621,78 @@ function marksToRich(text){
   return h.replace(/\n/g,'<br>');
 }
 function composeBody(){return richToMarks($('#pBody'));}
+/* ===== 글 내용 기반 자동 추천 (누리과정·카테고리·해시태그) ===== */
+const AI_CAT={
+  '여름':['여름','물놀이','물총','수박','얼음','바다','수영','더위','모래','아이스크림','부채','선풍기','비눗방울'],
+  '겨울':['겨울','눈','눈사람','썰매','크리스마스','장갑','목도리','팥죽','동지','고드름'],
+  '봄':['봄','꽃','나비','벚꽃','새싹','씨앗','개나리','진달래','나들이','소풍','민들레'],
+  '가을':['가을','낙엽','단풍','도토리','고구마','허수아비','추수','코스모스','열매','밤'],
+  '나와 가족':['가족','엄마','아빠','형제','자매','할머니','할아버지','얼굴','내 몸','감정'],
+  '우리 동네':['동네','마을','이웃','시장','가게','경찰','소방관','우체국','병원놀이'],
+  '건강과 안전':['건강','안전','양치','손씻기','신호등','교통안전','소방','대피','지진'],
+  '동식물':['동물','식물','강아지','고양이','토끼','물고기','화분','새싹 관찰','달팽이'],
+  '교통기관':['자동차','버스','기차','비행기','자전거','교통기관','트럭'],
+  '우주':['우주','별','달','행성','로켓','태양','지구'],
+  '물':['물','비','강','수증기','물방울'],
+  '공룡':['공룡','티라노','화석','쥐라기'],
+  '곤충':['곤충','개미','벌','무당벌레','잠자리','매미','거미'],
+  '명절':['명절','설날','추석','한복','윷놀이','송편','세배','제기'],
+  '기념일':['어린이날','어버이날','스승의날','생일','핼러윈','핼로윈','크리스마스'],
+  '미술':['그림','물감','색칠','만들기','꾸미기','점토','클레이','콜라주','붓','크레파스','오리기','종이접기','핑거페인팅'],
+  '신체':['달리기','점프','체육','운동','대근육','균형','줄넘기','펜싱','씨름','공놀이','몸으로'],
+  '역할':['역할놀이','가게놀이','소꿉','흉내','인형','직업놀이','병원놀이'],
+  '쌓기':['쌓기','블록','레고','성 만들기','탑'],
+  '언어':['글자','한글','동화','이야기 나누기','낱말','책읽기'],
+  '수·조작':['숫자','세기','퍼즐','도형','분류','측정','패턴'],
+  '과학·탐구':['과학','실험','관찰','탐구','돋보기','자석','색깔 변화','녹는','현미경'],
+  '음악':['노래','악기','리듬','멜로디','새노래','연주'],
+  '바깥놀이':['바깥놀이','산책','운동장','흙놀이','자연물'],
+  '감각놀이':['감각','촉감','오감','밀가루','촉감놀이','슬라임'],
+  '요리':['요리','반죽','샌드위치','쿠키','화채','비빔밥','만들어 먹'],
+  '게임':['게임','규칙','대결','경기','보드게임','술래'],
+  '전통놀이':['전통놀이','윷놀이','제기','팽이','투호','딱지','공기놀이'],
+  '준비물 없는 놀이':['준비물 없','맨몸','빈손'],
+  '비/눈 오는 날':['비 오는 날','눈 오는 날','실내놀이','장마'],
+  '혼자놀이':['혼자'],
+  '행사·발표회':['발표회','행사','공연','전시'],
+  'AI·디지털':['코딩','디지털','로봇','태블릿','ai '],
+  '생태':['생태','텃밭'],
+  '환경교육':['재활용','분리수거','환경보호','지구를']
+};
+const AI_NURI={
+  '창의적으로 표현하기':['그림','물감','만들기','꾸미기','점토','노래','악기','춤','미술','음악','콜라주','연주'],
+  '아름다움 찾아보기':['아름다','예쁜','색깔','자연물','감상'],
+  '예술 감상하기':['감상','전시','공연','작품'],
+  '신체활동 즐기기':['달리기','점프','체육','운동','대근육','균형','줄넘기','몸으로','공놀이','신체'],
+  '건강하게 생활하기':['건강','양치','손씻기','골고루','위생'],
+  '안전하게 생활하기':['안전','교통','신호등','대피','소방'],
+  '책과 이야기 즐기기':['동화','이야기','책읽기','그림책'],
+  '읽기와 쓰기에 관심 가지기':['글자','한글','낱말','쓰기','읽기'],
+  '듣기와 말하기':['말하기','발표','대화','이야기 나누기'],
+  '더불어 생활하기':['친구','협동','함께','나눔','규칙','양보'],
+  '나를 알고 존중하기':['나','내 몸','감정','얼굴','자신'],
+  '사회에 관심 가지기':['동네','직업','전통','명절','우리나라','세계','이웃'],
+  '탐구과정 즐기기':['실험','관찰','탐구','돋보기','자석','예상'],
+  '생활 속에서 탐구하기':['숫자','세기','측정','도형','분류','패턴'],
+  '자연과 더불어 살기':['동물','식물','자연','생태','곤충','텃밭']
+};
+function aiSuggestTags(silent){
+  const text=(($('#pTitle').value||'')+' '+(richToMarks($('#pBody'))||'')).toLowerCase();
+  if(!text.trim()){ if(!silent)toast('먼저 제목이나 글 내용을 적어주세요'); return; }
+  const has=arr=>arr.some(k=>text.includes(k.toLowerCase()));
+  const cats=[]; for(const l in AI_CAT){ if(has(AI_CAT[l])) cats.push(l); }
+  const nuri=new Set(); for(const it in AI_NURI){ if(has(AI_NURI[it])) nuri.add(it); }
+  // 태그: 본문에 등장한 구체 키워드 먼저, 그다음 카테고리
+  const tags=[]; const allKw=[...new Set(Object.values(AI_CAT).flat())];
+  allKw.forEach(k=>{ if(text.includes(k.toLowerCase()) && k.length>=2 && !tags.includes(k)) tags.push(k); });
+  cats.forEach(c=>{ if(!tags.includes(c)) tags.push(c); });
+  if(!cats.length && !nuri.size && !tags.length){ if(!silent)toast('내용에서 특징을 못 찾았어요 · 직접 골라주세요'); return; }
+  if(cats.length) sel.cat=new Set(catLabelsToKeys(cats.slice(0,6)));
+  if(nuri.size) sel.nuri=nuri;
+  if(tags.length) sel.tags=tags.slice(0,6);
+  renderNuri();renderCat();renderTags();
+  if(!silent)toast('내용에 맞춰 골라봤어요 · 원하면 자유롭게 수정하세요');
+}
 /* 무료 자동 정리: 문장은 그대로, 소제목 굵게 + 목록 '-' + 문단 간격 정리 */
 function autoTidy(id){
   const el=$('#'+id); if(!el)return;
