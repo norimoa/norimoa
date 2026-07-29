@@ -1495,9 +1495,32 @@ async function loadDbPosts(){
         photo:row.author_avatar||((authUser&&row.user_id===authUser.id)?profile.photo:'')||''}
     };
   });
+  await loadUserData();   // 폴더·저장한 놀이 복원 (새 글 로드 후 참조 갱신)
   syncStats();
   if($('#v-browse').classList.contains('on'))renderBrowseFeed();
   if($('#v-my').classList.contains('on'))renderMyPage();
+}
+/* ===== 마이페이지 저장(폴더·저장한 놀이) — Supabase 계정별 동기화 ===== */
+async function saveUserData(){
+  if(!(SB && authUser))return;
+  const data={
+    saved: savedPosts.map(p=>p.id).filter(Boolean),
+    upFolders: customUpload.map(f=>({name:f.name, ids:f.posts.map(p=>p.id).filter(Boolean)})),
+    savFolders: customSaved.map(f=>({name:f.name, ids:f.posts.map(p=>p.id).filter(Boolean)}))
+  };
+  try{ await SB.from('user_data').upsert({user_id:authUser.id, data}); }
+  catch(e){ console.warn('마이페이지 저장 오류:', e.message||e); }
+}
+async function loadUserData(){
+  if(!(SB && authUser))return;
+  let data=null;
+  try{ const r=await SB.from('user_data').select('data').eq('user_id',authUser.id).maybeSingle(); data=r&&r.data&&r.data.data; }catch(e){}
+  if(!data)return;
+  const map={}; allPosts().forEach(p=>{ if(p.id)map[p.id]=p; });
+  savedPosts=(data.saved||[]).map(id=>map[id]).filter(Boolean);
+  customUpload=(data.upFolders||[]).map(f=>({id:'f'+(_folderSeq++), name:f.name, posts:(f.ids||[]).map(id=>map[id]).filter(Boolean)}));
+  customSaved=(data.savFolders||[]).map(f=>({id:'f'+(_folderSeq++), name:f.name, posts:(f.ids||[]).map(id=>map[id]).filter(Boolean)}));
+  if($('#v-my')&&$('#v-my').classList.contains('on'))renderMyPage();
 }
 
 /* ================= 놀이 상세 페이지 ================= */
@@ -1633,6 +1656,7 @@ function togglePostSave(){const p=_currentPost;if(!p)return;
   if(i>=0)savedPosts.splice(i,1); else savedPosts.unshift(p);
   renderPostActions();
   if($('#v-my').classList.contains('on'))renderMyFolders();
+  saveUserData();
   toast(i>=0?'저장을 취소했어요':'저장했어요 · 마이페이지 → 저장한 놀이에서 볼 수 있어요');
 }
 function sharePost(){toast('공유 링크가 복사되었어요 (데모)');}
@@ -1843,7 +1867,8 @@ function renderFolderRow(ctx, editable, container){
   rest.forEach(p=>{const k=themeFolderOf(p);(groups[k]=groups[k]||[]).push(p);});
   Object.keys(groups).forEach(theme=>{const arr=groups[theme];
     const el=folderTile(`<img src="${arr[0].img}" alt="">`,arr.length,theme,'ai-badge2','✨ AI 분류');
-    el.onclick=()=>showPlays(`🗂️ ${theme} · AI 자동 분류`, arr.slice());box.appendChild(el);});
+    el.onclick=editable?()=>openAiFolder(ctx,theme,arr):()=>showPlays(`🗂️ ${theme} · AI 자동 분류`, arr.slice());
+    box.appendChild(el);});
   if(editable){const add=document.createElement('div');add.className='folder';
     add.innerHTML=`<div class="fimg fnew">＋</div><div class="ft" style="color:var(--coral)">새 폴더</div>`;
     add.onclick=()=>openNewFolder(ctx);box.appendChild(add);}
@@ -1858,12 +1883,34 @@ function tpostEl(p, removeFn){
   if(removeFn){el.querySelector('.tp-x').onclick=e=>{e.stopPropagation();removeFn();};}
   return el;
 }
-function showPlays(title, arr){   // 읽기 전용 (AI 폴더 · 프로필에서 열람)
+function showPlays(title, arr){   // 읽기 전용 (프로필에서 열람)
   $('#folderTitle').innerHTML=title;$('#folderActions').innerHTML='';
   const g=$('#folderPosts');g.innerHTML='';
   if(!arr.length)g.innerHTML='<div class="empty">비어 있어요</div>';
   arr.forEach(p=>g.appendChild(tpostEl(p)));
   open_('folderOverlay');
+}
+/* AI 자동 폴더: 보기 + '폴더 편집'으로 내 폴더로 전환(이름 변경·관리 가능) */
+let _aiFolder=null;
+function openAiFolder(ctx, theme, arr){
+  _aiFolder={ctx, theme, arr:arr.slice()};
+  $('#folderTitle').innerHTML=`🗂️ ${esc(theme)} <span class="fsub">· ${arr.length}개 · ✨AI 자동 분류</span>`;
+  $('#folderActions').innerHTML=`<button class="fa-btn p" onclick="materializeAiFolder()">✎ 폴더 편집 (이름 변경·놀이 관리)</button>
+    <span class="fa-hint">편집하면 내 폴더가 돼요</span>`;
+  const g=$('#folderPosts');g.innerHTML='';
+  if(!arr.length)g.innerHTML='<div class="empty">비어 있어요</div>';
+  arr.forEach(p=>g.appendChild(tpostEl(p)));
+  open_('folderOverlay');
+}
+function materializeAiFolder(){
+  if(!_aiFolder)return;
+  const {ctx, theme, arr}=_aiFolder;
+  const id='f'+(_folderSeq++);
+  COL[ctx].custom().push({id, name:theme, posts:arr.slice()});
+  _aiFolder=null;
+  renderMyFolders();saveUserData();
+  openNewFolder(ctx, id);   // 이름부터 정하고 → 저장하면 관리 화면으로
+  toast('내 폴더로 바꿨어요 · 폴더 이름을 정해주세요');
 }
 function openCustomFolder(ctx, id){   // 편집 가능 (드래그 순서변경 포함)
   _curCtx=ctx;_curFolder=id;const col=COL[ctx], f=col.custom().find(x=>x.id===id);if(!f)return;
@@ -1876,13 +1923,13 @@ function openCustomFolder(ctx, id){   // 편집 가능 (드래그 순서변경 �
   const g=$('#folderPosts');g.innerHTML='';
   if(!f.posts.length)g.innerHTML='<div class="empty">아직 비어 있어요. ＋ 놀이 담기로 넣어보세요.</div>';
   f.posts.forEach((p,idx)=>{
-    const el=tpostEl(p,()=>{f.posts=f.posts.filter(x=>x!==p);openCustomFolder(ctx,id);renderMyFolders();});
+    const el=tpostEl(p,()=>{f.posts=f.posts.filter(x=>x!==p);openCustomFolder(ctx,id);renderMyFolders();saveUserData();});
     el.draggable=true;
     el.addEventListener('dragstart',e=>{_dragFrom=idx;e.dataTransfer.effectAllowed='move';el.classList.add('dragging');});
     el.addEventListener('dragend',()=>el.classList.remove('dragging'));
     el.addEventListener('dragover',e=>e.preventDefault());
     el.addEventListener('drop',e=>{e.preventDefault();if(_dragFrom==null||_dragFrom===idx)return;
-      const it=f.posts.splice(_dragFrom,1)[0];f.posts.splice(idx,0,it);_dragFrom=null;openCustomFolder(ctx,id);renderMyFolders();});
+      const it=f.posts.splice(_dragFrom,1)[0];f.posts.splice(idx,0,it);_dragFrom=null;openCustomFolder(ctx,id);renderMyFolders();saveUserData();});
     g.appendChild(el);
   });
   open_('folderOverlay');
@@ -1899,10 +1946,11 @@ function submitFolder(){
   const col=COL[_newCtx];
   if(_renameId){const f=col.custom().find(x=>x.id===_renameId);if(f)f.name=name;close_('newFolderOverlay');renderMyFolders();openCustomFolder(_newCtx,_renameId);}
   else{const id='f'+(_folderSeq++);col.custom().push({id,name,posts:[]});close_('newFolderOverlay');renderMyFolders();openCustomFolder(_newCtx,id);}
+  saveUserData();
 }
 function deleteFolder(ctx,id){
   COL[ctx].setCustom(COL[ctx].custom().filter(x=>x.id!==id));
-  close_('folderOverlay');renderMyFolders();
+  close_('folderOverlay');renderMyFolders();saveUserData();
   toast('폴더를 삭제했어요 (놀이는 그대로 있어요)');
 }
 function openPicker(){renderPicker();open_('pickerOverlay');}
@@ -1913,10 +1961,10 @@ function renderPicker(){
   list.forEach(p=>{const inF=f.posts.includes(p);const a=authorOf(p);
     const row=document.createElement('div');row.className='pick-row'+(inF?' on':'');
     row.innerHTML=`<img src="${p.img}" alt=""><div class="pk"><b>${p.title}</b><small>${a?esc(a.name):''}</small></div><span class="chk">${inF?'✓':''}</span>`;
-    row.onclick=()=>{const i=f.posts.indexOf(p);if(i>=0)f.posts.splice(i,1);else f.posts.push(p);renderPicker();};
+    row.onclick=()=>{const i=f.posts.indexOf(p);if(i>=0)f.posts.splice(i,1);else f.posts.push(p);renderPicker();saveUserData();};
     box.appendChild(row);});
 }
-function closePicker(){close_('pickerOverlay');openCustomFolder(_curCtx,_curFolder);renderMyFolders();}
+function closePicker(){close_('pickerOverlay');openCustomFolder(_curCtx,_curFolder);renderMyFolders();saveUserData();}
 function renderRelGrid(sel,list,empty){
   const box=$(sel);if(!box)return;box.innerHTML='';
   if(!list.length){box.innerHTML=`<div class="empty">${empty}</div>`;return;}
