@@ -628,13 +628,22 @@
   .ph-title{font-size:24px;color:var(--coral-tx);line-height:1.3}
   .ph-hash{margin-top:8px;font-size:14px;color:#8a8a92;line-height:1.5}
   .ph-hash .htag{color:var(--coral-tx)}
-  .ph-meta{color:var(--sub);font-size:13px;margin-top:10px}
-  .ph-actions{display:flex;align-items:center;gap:18px;margin-top:14px;padding-bottom:2px}
-  .pa-btn{border:none;background:none;color:#70707a;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 2px}
+  .ph-meta{color:var(--sub);font-size:13px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .ph-meta .ph-date{margin-left:auto;white-space:nowrap}
+  .ph-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:14px;padding-bottom:2px;flex-wrap:wrap}
+  .pa-btn{border:none;background:none;color:#4a4a52;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 2px}
   .pa-btn:hover{color:var(--coral-tx)}
-  .pa-btn.like .hi{font-size:18px;line-height:1}
-  .pa-btn.like.on{color:var(--coral-tx)}
+  .pa-btn.like .hi{display:inline-flex}
+  .pa-btn.like.on{color:#e0355f}
   .pa-btn.on{color:var(--coral-tx)}
+  /* 아이콘 전용 액션 버튼 (저장·공유·수정·삭제) */
+  .pa-ico{border:1px solid #e7dcd6;background:#fff;color:#5a5a62;width:38px;height:38px;border-radius:10px;
+    display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:all .12s}
+  .pa-ico:hover{border-color:#c9bcb4;background:#faf6f4;color:#2c2c31}
+  .pa-ico.on{background:#3a3a3f;border-color:#3a3a3f;color:#fff}
+  .pa-ico.del:hover{border-color:#e2a3a3;color:#d64545;background:#fdf2f2}
+  .pa-ico svg,.pa-btn svg{width:19px;height:19px;display:block}
+  .pa-btn.like svg{width:20px;height:20px}
   .ph-nuri{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
   .nuri-chip{background:#eef2ff;color:#5b6bd6;font-size:12.5px;padding:6px 12px;border-radius:14px;font-weight:600}
   .author-card{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;margin-bottom:14px}
@@ -1735,7 +1744,7 @@ async function loadDbPosts(){
       :[{img:row.image_url,desc:row.description||'',spots:row.spots||[]}];
     return {
       db:true, id:row.id, user_id:row.user_id, emoji:'🎨',
-      title:row.title||'놀이',
+      title:row.title||'놀이', date:fmtDate(row.created_at),
       desc:row.description||'', img:row.image_url, images:imgs,
       tags:row.tags||[], views:'0', like:0, cmt:0, liked:false, comments:[],
       age:row.age, nuri:row.nuri||[], categories:row.categories||[], attachments:row.attachments||[], refs:row.refs||[],
@@ -1866,6 +1875,8 @@ function authorRelated(p){const l=allPosts().filter(q=>q!==p&&sameAuthor(q,p));c
 function otherRelated(p){return allPosts().filter(q=>q!==p&&!sameAuthor(q,p)&&shareTag(q,p));}
 function nuriLabel(item){for(const g of nuriData){if(g.items.includes(item))return g.g+' &gt; '+item;}return item;}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+/* 업로드 날짜 표시 (예: 2026. 7. 29.) */
+function fmtDate(ts){ if(!ts)return ''; try{const d=new Date(ts); if(isNaN(d))return ''; return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.`;}catch(e){return '';} }
 /* 해시태그는 띄어쓰기 없이 (카테고리 '나와 가족' → 태그 '나와가족') */
 function noSpace(s){return String(s||'').replace(/\s+/g,'');}
 function tagQ(s){return noSpace(s).replace(/'/g,"\\'");}
@@ -1956,7 +1967,7 @@ function renderPostPage(p){
     <div class="post-hero">
       <h1 class="ph-title">${esc((p.title||'놀이').replace(/^#/,''))}</h1>
       ${hashLine?`<div class="ph-hash">${linkifyTags(hashLine,p.tags)}</div>`:''}
-      <div class="ph-meta">${p.date||''}${p.date?' · ':''}👁 조회 <span id="phViews">${p.views||'0'}</span></div>
+      <div class="ph-meta"><span>👁 조회 <span id="phViews">${p.views||'0'}</span></span>${p.date?`<span class="ph-date">📅 ${esc(p.date)}</span>`:''}</div>
       <div class="ph-actions" id="phActions"></div>
       ${nuriChips?`<div class="ph-nuri">${nuriChips}</div>`:''}
     </div>
@@ -1989,18 +2000,26 @@ function renderPostPage(p){
   renderRelGrid('#otherRel', otherRelated(p), '아직 관련 글이 없어요');
 }
 function canEdit(p){return p?(p.db?!!(SB&&authUser&&p.user_id===authUser.id):p.tid==='me'):false;}
+/* 깔끔한 흑백(라인) 아이콘 */
+const ICO={
+  heart:(f)=>`<svg viewBox="0 0 24 24" fill="${f?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21l8.84-8.61a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+  bookmark:(f)=>`<svg viewBox="0 0 24 24" fill="${f?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
+  share:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`,
+  edit:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>`,
+  trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`
+};
 function renderPostActions(){
   const p=_currentPost, box=$('#phActions');if(!p||!box)return;
   const saved=isSaved(p);
   box.innerHTML=`
-    <button class="pa-btn like ${p.liked?'on':''}" onclick="togglePostLike()"><span class="hi">${p.liked?'♥':'♡'}</span> <b>${(p.like||0).toLocaleString()}</b></button>
-    <button class="pa-btn ${saved?'on':''}" onclick="togglePostSave()">${saved?'✅ 저장됨':'🔖 저장'}</button>
-    <button class="pa-btn" onclick="sharePost()">↗ 공유</button>
-    ${canEdit(p)?`<button class="pa-btn" onclick="openEdit()">✏️ 수정</button>
-      <button class="pa-btn" onclick="deletePost()" style="color:#d64545">🗑 삭제</button>`:''}`;
+    <button class="pa-btn like ${p.liked?'on':''}" onclick="togglePostLike()" title="좋아요"><span class="hi">${ICO.heart(p.liked)}</span> <b>${(p.like||0).toLocaleString()}</b></button>
+    <button class="pa-ico ${saved?'on':''}" onclick="togglePostSave()" title="${saved?'저장됨':'저장'}">${ICO.bookmark(saved)}</button>
+    <button class="pa-ico" onclick="sharePost()" title="공유">${ICO.share}</button>
+    ${canEdit(p)?`<button class="pa-ico" onclick="openEdit()" title="수정">${ICO.edit}</button>
+      <button class="pa-ico del" onclick="deletePost()" title="삭제">${ICO.trash}</button>`:''}`;
   const cl=$('#cmtLikeBtn');
   if(cl){cl.className='pa-btn like'+(p.liked?' on':'');
-    cl.innerHTML=`<span class="hi">${p.liked?'♥':'♡'}</span> 좋아요 <b>${(p.like||0).toLocaleString()}</b>`;}
+    cl.innerHTML=`<span class="hi">${ICO.heart(p.liked)}</span> 좋아요 <b>${(p.like||0).toLocaleString()}</b>`;}
 }
 async function togglePostLike(){
   const p=_currentPost;if(!p)return;
@@ -3087,6 +3106,19 @@ function mosaicP(ph,b){const cv=ph.cv,c=ph.ctx,px=pxStrength;
   tmp.getContext('2d').drawImage(cv,x,y,w,h,0,0,sw,sh);
   c.imageSmoothingEnabled=false;c.drawImage(tmp,0,0,sw,sh,x,y,w,h);c.imageSmoothingEnabled=true;
 }
+/* 저장·업로드용: 모자이크는 적용하되 보라색 외곽선은 '없이' 그린 이미지 (실제 게시물엔 테두리 안 보이게) */
+function cleanPhotoDataURL(ph, quality){
+  const s=document.createElement('canvas'); s.width=ph.cv.width; s.height=ph.cv.height;
+  const c=s.getContext('2d'); c.drawImage(ph.img,0,0,s.width,s.height);
+  if(ph.mosaicOn!==false)(ph.boxes||[]).filter(b=>b.on).forEach(b=>{
+    const px=pxStrength,x=Math.max(0,b.x|0),y=Math.max(0,b.y|0),w=Math.min(s.width-x,b.w|0),h=Math.min(s.height-y,b.h|0);
+    if(w<=0||h<=0)return;const sw=Math.max(1,Math.round(w/px)),sh=Math.max(1,Math.round(h/px));
+    const tmp=document.createElement('canvas');tmp.width=sw;tmp.height=sh;
+    tmp.getContext('2d').drawImage(s,x,y,w,h,0,0,sw,sh);
+    c.imageSmoothingEnabled=false;c.drawImage(tmp,0,0,sw,sh,x,y,w,h);c.imageSmoothingEnabled=true;
+  });
+  return s.toDataURL('image/jpeg', quality||0.9);
+}
 /* 사진 다듬기 원본을 새 이미지로 교체하고 다시 세팅 */
 function _replaceImg(ph,dataUrl){
   const im=new Image();
@@ -3429,7 +3461,7 @@ function saveDraft(){
   const body=richToMarks($('#pBody'));
   // 사진: 현재 화면(모자이크 반영본) + 설명 + 구매표시 저장
   const photoData=photos.map(ph=>{
-    let img=''; try{ img=(ph.cv&&ph.cv.width)?ph.cv.toDataURL('image/jpeg',0.7):((ph.img&&ph.img.src)||''); }catch(e){ img=(ph.img&&ph.img.src)||''; }
+    let img=''; try{ img=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,0.7):((ph.img&&ph.img.src)||''); }catch(e){ img=(ph.img&&ph.img.src)||''; }
     return { img, desc:(ph.desc||'').trim(), spots:(ph.spots||[]).filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url})) };
   });
   const draft={
@@ -3534,7 +3566,7 @@ function renderWritePhotoStrip(){
   strip.innerHTML='';
   photos.forEach((ph,idx)=>{
     let src='';
-    try{ src=(ph.cv&&ph.cv.width)?ph.cv.toDataURL('image/jpeg',.8):(ph.img&&ph.img.src)||''; }catch(e){ src=(ph.img&&ph.img.src)||''; }
+    try{ src=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,.8):(ph.img&&ph.img.src)||''; }catch(e){ src=(ph.img&&ph.img.src)||''; }
     const hasSpot=(ph.spots&&ph.spots.length)?'<span class="wp-badge" title="구매 링크 있음">🛒</span>':'';
     const d=document.createElement('div');
     d.className='wp-thumb';
@@ -3826,7 +3858,7 @@ async function publishPost(){
   const tags=[...new Set([...sel.tags, ...catLabels, ...photoTags].map(noSpace).filter(Boolean))]; // 해시태그(띄어쓰기 없음)
   // 각 사진: 모자이크 적용본 + 사진별 설명 + 사진별 구매표시
   const images=photos.map(ph=>({
-    img:ph.cv.toDataURL('image/jpeg',0.9),
+    img:cleanPhotoDataURL(ph,0.9),   // 보라색 테두리 없이 모자이크만 적용된 이미지
     desc:(ph.desc||'').trim(),
     spots:ph.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url}))
   }));
@@ -3863,7 +3895,7 @@ async function publishPost(){
 
   // ── 데모 저장(로컬) ─────────────────────────────────
   const demoAtts=await uploadAttachments();
-  posts.unshift({tid:'me',title:title.startsWith('#')?title:'#'+title,desc:topDesc,
+  posts.unshift({tid:'me',title:title.startsWith('#')?title:'#'+title,desc:topDesc, date:fmtDate(Date.now()),
     img:images[0].img, images, tags:tags.length?tags:['새놀이'], nuri:[...sel.nuri], categories:catLabels,
     views:'0',like:0,cmt:0,liked:false,emoji:'🎨', spots:images[0].spots, attachments:demoAtts, refs:postRefs.slice()});
   toast(`놀이 ${images.length}장 업로드! (데모)`);
