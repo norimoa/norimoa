@@ -348,6 +348,7 @@
   .photo.grid.g2{grid-template-columns:1fr 1fr}
   .photo.grid.g3{grid-template-columns:1fr 1fr 1fr}
   .photo.grid.g4{grid-template-columns:1fr 1fr}
+  @media(min-width:760px){ .photo.grid.g4{grid-template-columns:1fr 1fr 1fr 1fr} } /* 넓은 화면: 4장 한 줄 */
   .photo.grid .pg-cell{position:relative;aspect-ratio:1/1;background:#e9e9ee;overflow:hidden}
   .photo.grid .pg-cell img{width:100%;height:100%;object-fit:cover}
   .photo.grid .more-ph{position:absolute;inset:0;background:rgba(0,0,0,.55);color:#fff;
@@ -1203,7 +1204,7 @@ function renderFeed(){
     el.onclick=()=>openFeedPost(i);  // 카드 어디를 눌러도 상세로
     el.innerHTML=`
       <div class="post-top">
-        <div class="whoclick" onclick="event.stopPropagation();openTeacher('${tt.id}')">
+        <div class="whoclick" onclick="event.stopPropagation();openAuthor(window._feed[${i}])">
           <div class="av" style="${avStyle(tt)}">${avInner(tt)}</div>
           <div class="who"><b>${tt.name}</b><small>${tt.org}</small></div>
         </div>
@@ -1617,7 +1618,7 @@ function renderPostPage(p){
       <div class="ph-actions" id="phActions"></div>
       ${nuriChips?`<div class="ph-nuri">${nuriChips}</div>`:''}
     </div>
-    <div class="card author-card" ${a&&a.id?`onclick="openTeacher('${a.id}')"`:''}>
+    <div class="card author-card" onclick="openAuthor(_currentPost)">
       <div class="av" style="${avStyle(a)}">${avInner(a)}</div>
       <div><b>${a?a.name:'선생님'}</b><small>${(a&&a.org)||''}</small></div>
     </div>
@@ -2208,17 +2209,16 @@ function renderBrowseFeed(){
     :'<div class="placeholder"><div class="big">🌱</div>아직 올라온 놀이가 없어요.<br>업로드에서 첫 놀이를 올려보세요!</div>';return;}
   list.forEach((p,i)=>{
     const a=authorOf(p);
-    const whoClick=p.db?'':`onclick="openTeacher('${a.id}')"`;
-    const followBtn=p.db?'':`<button class="foll-btn ${a.following?'':'off'}" onclick="toggleFollow('${a.id}');renderBrowseFeed()">${a.following?'팔로잉':'+ 팔로우'}</button>`;
+    const followBtn=p.db?'':`<button class="foll-btn ${a.following?'':'off'}" onclick="event.stopPropagation();toggleFollow('${a.id}');renderBrowseFeed()">${a.following?'팔로잉':'+ 팔로우'}</button>`;
     const el=document.createElement('div');el.className='card post clickable';
     el.onclick=()=>openBrowsePost(i);  // 카드 어디를 눌러도 상세로
     el.innerHTML=`
       <div class="post-top">
-        <div class="whoclick" ${whoClick?whoClick.replace('onclick="','onclick="event.stopPropagation();'):''}>
+        <div class="whoclick" onclick="event.stopPropagation();openAuthor(window._browse[${i}])">
           <div class="av" style="${avStyle(a)}">${avInner(a)}</div>
           <div class="who"><b>${a.name}</b><small>${a.org||''}</small></div>
         </div>
-        ${followBtn.replace('onclick="','onclick="event.stopPropagation();')}
+        ${followBtn}
       </div>
       <h3>${esc((p.title||'놀이').replace(/^#/,''))}</h3>
       ${descPreview(p,`openBrowsePost(${i})`)}
@@ -2293,6 +2293,21 @@ function renderSideCats(){
     `</div></div>`).join('');
 }
 /* 선생님 프로필 모달 */
+/* 프로필 방문: 데모 선생님이면 openTeacher, 실제 글쓴이면 그 사람 프로필 */
+function openAuthor(p){
+  if(!p)return;
+  if(!p.db && p.tid){ openTeacher(p.tid); return; }
+  const a=p.author||{};
+  const tp=(window._dbPosts||[]).filter(x=>x.user_id===p.user_id);
+  $('#teacherHead').innerHTML=`<div class="av" style="${avStyle(a)}">${avInner(a)}</div>
+    <div class="tinfo"><b>${esc(a.name||'선생님')}</b><small>${esc(a.org||'')} · 게시물 ${tp.length}</small></div>`;
+  const body=$('#teacherPosts');body.innerHTML='';
+  const upSec=document.createElement('div');upSec.className='prof-sec';
+  upSec.innerHTML='<h4>📁 올린 놀이</h4><div class="folder-row prof-row"></div>';
+  body.appendChild(upSec);
+  renderAiFolderRow(upSec.querySelector('.folder-row'), tp);
+  open_('teacherOverlay');
+}
 function openTeacher(tid){
   const tt=t(tid);if(!tt)return;
   const tp=posts.filter(p=>p.tid===tid);
