@@ -491,6 +491,23 @@
   .fmt-hint{color:var(--sub);font-size:11.5px}
   .big-write{min-height:220px;font-size:14.5px;line-height:1.7}
   .sec-write{min-height:72px;font-size:14px;line-height:1.6}
+  /* 본문 안 URL 자동 링크 */
+  a.linkurl{color:#c04a6e;text-decoration:underline;word-break:break-all;cursor:pointer}
+  a.linkurl:hover{opacity:.8}
+  /* 2단계 글 작성 · 올린 사진 한 줄 미리보기 */
+  .wp-strip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px}
+  .wp-thumb{position:relative;flex:0 0 auto;width:96px;height:96px;border-radius:12px;overflow:hidden;
+    border:2px solid #eadfd8;cursor:pointer;background:#f2ece8;transition:border-color .15s,transform .1s}
+  .wp-thumb:hover{border-color:var(--coral);transform:translateY(-2px)}
+  .wp-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .wp-thumb .wp-no{position:absolute;top:5px;left:5px;background:rgba(0,0,0,.55);color:#fff;
+    font-size:11px;font-weight:700;border-radius:7px;padding:1px 7px}
+  .wp-thumb .wp-edit{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);color:#fff;
+    font-size:10.5px;text-align:center;padding:3px 0;opacity:0;transition:opacity .15s}
+  .wp-thumb:hover .wp-edit{opacity:1}
+  .wp-thumb .wp-badge{position:absolute;top:5px;right:5px;font-size:12px}
+  .photo-card.flash{animation:cardFlash 1.4s ease}
+  @keyframes cardFlash{0%,100%{box-shadow:none}20%,60%{box-shadow:0 0 0 3px var(--coral)}}
   .rich{width:100%;border:1px solid #e7dcd6;border-radius:11px;padding:12px 13px;font-size:14.5px;
     font-family:inherit;background:#fafafb;min-height:54px;line-height:1.7;outline:none;overflow:auto;
     white-space:pre-wrap;word-break:break-word}
@@ -539,6 +556,9 @@
   .teacher-head .tinfo{flex:1}
   .teacher-head .tinfo b{font-size:16px}
   .teacher-head .tinfo small{display:block;color:var(--sub);font-size:12.5px;margin-top:2px}
+  .prof-stats{display:flex;gap:16px;margin-top:6px}
+  .prof-stats span{font-size:12px;color:var(--sub)}
+  .prof-stats b{font-size:14px;color:var(--ink)}
   .teacher-posts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px 20px}
   .tpost{position:relative;border-radius:12px;overflow:hidden;background:#e9e9ee;cursor:pointer}
   .tpost img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
@@ -976,6 +996,12 @@
         <div class="title-input"><input id="pTitle" placeholder="예: 아이스크림 가게 놀이"><span class="pen">✎</span></div>
       </div>
 
+      <!-- 방금 올린 사진 한 줄 미리보기 (누르면 그 사진 편집) -->
+      <div class="sec" id="writePhotoStripSec" style="display:none">
+        <div class="sec-label">📷 올린 사진 <span class="hint">사진을 누르면 회전·자르기·구매 링크·설명을 수정할 수 있어요</span></div>
+        <div id="writePhotoStrip" class="wp-strip"></div>
+      </div>
+
       <!-- 전체 글 (자유 서술) -->
       <div class="sec">
         <div class="sec-label">📝 글 내용</div>
@@ -1196,45 +1222,58 @@ function t(id){return teachers.find(x=>x.id===id);}
 /* ---------------- render feed ---------------- */
 function renderFeed(){
   const wrap=$('#feed');wrap.innerHTML='';
-  const filtered=posts.filter(p=>t(p.tid).following);
+  const filtered = SB
+    ? (window._dbPosts||[]).filter(p=>myFollowing.has(p.user_id))
+    : posts.filter(p=>t(p.tid).following);
   window._feed=filtered;
   filtered.forEach((p,i)=>{
-    const tt=t(p.tid);
+    const a=authorOf(p);
+    const isMe = !!((p.user_id&&authUser&&p.user_id===authUser.id)||(a&&a.id==='me'));
+    const followBtn = isMe ? '' : (SB
+      ? `<button class="foll-btn" onclick="event.stopPropagation();toggleFollowUser('${p.user_id}').then(renderFeed)">${myFollowing.has(p.user_id)?'팔로잉':'+ 팔로우'}</button>`
+      : `<button class="foll-btn" onclick="event.stopPropagation();toggleFollow('${a.id}')">${a.following?'팔로잉':'+ 팔로우'}</button>`);
     const el=document.createElement('div');el.className='card post clickable';
-    el.onclick=()=>openFeedPost(i);  // 카드 어디를 눌러도 상세로
+    el.onclick=()=>openFeedPost(i);
     el.innerHTML=`
       <div class="post-top">
         <div class="whoclick" onclick="event.stopPropagation();openAuthor(window._feed[${i}])">
-          <div class="av" style="${avStyle(tt)}">${avInner(tt)}</div>
-          <div class="who"><b>${tt.name}</b><small>${tt.org}</small></div>
+          <div class="av" style="${avStyle(a)}">${avInner(a)}</div>
+          <div class="who"><b>${esc(a.name)}</b><small>${esc(a.org||'')}</small></div>
         </div>
-        <button class="foll-btn" onclick="event.stopPropagation();toggleFollow('${tt.id}')">${tt.following?'팔로잉':'+ 팔로우'}</button>
+        ${followBtn}
       </div>
       <h3>${esc((p.title||'놀이').replace(/^#/,''))}</h3>
       ${descPreview(p,`openFeedPost(${i})`)}
-      <div class="photo"><img src="${p.img}" alt="">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}장</span>`:''}</div>
-      <div class="tags">${p.tags.map(x=>`<span class="tag" onclick="event.stopPropagation();filterByLabel('${tagQ(x)}')">#${esc(noSpace(x))}</span>`).join('')}</div>
-      <div class="views">👁 조회 ${p.views}</div>
+      ${photoGrid(p)}
+      <div class="tags">${(p.tags||[]).map(x=>`<span class="tag" onclick="event.stopPropagation();filterByLabel('${tagQ(x)}')">#${esc(noSpace(x))}</span>`).join('')}</div>
+      <div class="views">👁 조회 ${p.views||'0'} · ♥ ${(p.like||0).toLocaleString()}</div>
       <div class="post-foot" onclick="event.stopPropagation()">
-        <button class="${p.liked?'liked':''}" onclick="likePost(${i},this)">${p.liked?'❤️':'🤍'} <span>${p.like.toLocaleString()}</span></button>
-        <button>💬 댓글 ${p.cmt.toLocaleString()}</button>
+        <button onclick="openFeedPost(${i})" class="more" style="margin-left:0">자세히 보기 ›</button>
+        <button style="margin-left:auto">💬 ${(p.cmt||0).toLocaleString()}</button>
         <button>🔗 공유</button>
-        <button class="more" onclick="openFeedPost(${i})">자세히 보기 ›</button>
       </div>`;
     wrap.appendChild(el);
   });
   if(!filtered.length)wrap.innerHTML='<div class="placeholder"><div class="big">👋</div>팔로우한 선생님의 최신 놀이가 여기에 모여요.<br>둘러보기에서 마음에 드는 선생님을 팔로우해보세요!</div>';
   renderStories();
-  const n=teachers.filter(x=>x.following).length;
+  const n = SB ? myFollowing.size : teachers.filter(x=>x.following).length;
   $('#followCount').textContent=`${n}명 팔로우 중`;
 }
 function renderStories(){
   const s=$('#stories');s.innerHTML='';
-  teachers.filter(x=>x.following).forEach(tt=>{
-    const d=document.createElement('div');d.className='story';
-    d.innerHTML=`<div class="ring" onclick="openFollowing()"><div class="av" style="background:${tt.color}">${tt.init}</div></div><small>${tt.name.replace(' 선생님','')}</small>`;
-    s.appendChild(d);
-  });
+  if(SB){
+    const seen=new Set();
+    (window._dbPosts||[]).forEach(p=>{ if(myFollowing.has(p.user_id)&&!seen.has(p.user_id)){seen.add(p.user_id);
+      const a=authorOf(p); const d=document.createElement('div');d.className='story';
+      d.innerHTML=`<div class="ring"><div class="av" style="${avStyle(a)}">${avInner(a)}</div></div><small>${esc((a.name||'').replace(' 선생님',''))}</small>`;
+      d.querySelector('.ring').onclick=()=>openAuthor(p); s.appendChild(d); }});
+  }else{
+    teachers.filter(x=>x.following).forEach(tt=>{
+      const d=document.createElement('div');d.className='story';
+      d.innerHTML=`<div class="ring" onclick="openFollowing()"><div class="av" style="background:${tt.color}">${tt.init}</div></div><small>${tt.name.replace(' 선생님','')}</small>`;
+      s.appendChild(d);
+    });
+  }
   const add=document.createElement('div');add.className='story add';
   add.innerHTML=`<div class="ring" onclick="openFollowing()"><div class="av">+</div></div><small>더보기</small>`;
   s.appendChild(add);
@@ -1265,8 +1304,28 @@ function switchSocial(tab){socialTab=tab;
   $('#tabFollowing').classList.toggle('on',tab==='following');
   renderSocial();
 }
-function renderSocial(){
-  const box=$('#socialRows');box.innerHTML='';
+async function renderSocial(){
+  const box=$('#socialRows');
+  if(SB && authUser){
+    box.innerHTML='<div class="empty">불러오는 중…</div>';
+    let ids=[];
+    if(socialTab==='following'){ ids=[...myFollowing]; }
+    else { try{const {data}=await SB.from('follows').select('follower_id').eq('following_id',authUser.id);ids=(data||[]).map(r=>r.follower_id);}catch(e){} }
+    if(!ids.length){box.innerHTML=`<div class="empty">${socialTab==='following'?'아직 팔로우한 선생님이 없어요':'아직 팔로워가 없어요'}</div>`;return;}
+    let profs=[]; try{const r=await SB.from('profiles').select('id,nickname,role,icon,avatar_url').in('id',ids);profs=r.data||[];}catch(e){}
+    box.innerHTML='';
+    profs.forEach(pr=>{
+      const av={icon:pr.icon,photo:pr.avatar_url,init:(pr.nickname||'선')[0],color:'#86736b'};
+      const r=document.createElement('div');r.className='foll-row';
+      r.innerHTML=`<div class="av" style="${avStyle(av)}">${avInner(av)}</div>
+        <div class="info"><b>${esc(pr.nickname||'선생님')}</b><small>${esc((pr.role||'').replace(' 교사',''))}</small></div>
+        <button class="sr-btn" data-uid="${pr.id}">${myFollowing.has(pr.id)?'언팔로우':'+ 팔로우'}</button>`;
+      r.querySelector('.sr-btn').onclick=()=>toggleFollowUser(pr.id).then(()=>{renderSocial();renderFeed();});
+      box.appendChild(r);
+    });
+    return;
+  }
+  box.innerHTML='';
   if(socialTab==='followers'){
     followers.forEach((f,i)=>{
       const r=document.createElement('div');r.className='foll-row';
@@ -1313,6 +1372,43 @@ function avatarHTML(size){return profile.photo?`<img src="${profile.photo}">`:pr
 /* 글쓴이 아바타: 설정한 프로필 사진 > 아이콘 > 대표글자 순으로 표시 */
 function avStyle(a){return (a&&a.photo)?'background:#eee;overflow:hidden':(a&&a.icon)?'background:#f3ddd6':`background:${(a&&a.color)||'#ccc'}`;}
 function avInner(a){return (a&&a.photo)?`<img src="${a.photo}" style="width:100%;height:100%;object-fit:cover">`:(a&&a.icon)?a.icon:((a&&a.init)||'?');}
+/* 지금 로그인한 나의 아바타 객체 (댓글·답글 입력창용) */
+function myAv(){return {photo:profile.photo||'',icon:profile.icon||'',color:'#5b8def',init:(profile.nick||'나')[0]};}
+
+/* ===== 크롬 자동완성(이메일·이름 등) 차단 =====
+   로그인·비밀번호 칸만 자동완성 허용, 나머지 모든 글자 입력칸은 막아요.
+   (readonly → 포커스 때 해제 트릭 + autocomplete off, 동적 생성 칸도 자동 적용) */
+const AF_ALLOW = new Set(['authEmail','authPw']); // 여기만 자동완성 허용
+function hardenInput(inp){
+  if(!inp || inp.dataset.af) return;
+  const type=(inp.getAttribute('type')||'text').toLowerCase();
+  if(type!=='text' && type!=='search') return;          // file/range/checkbox/password 제외
+  if(AF_ALLOW.has(inp.id)) return;                       // 로그인 칸 제외
+  inp.dataset.af='1';
+  inp.setAttribute('autocomplete','off');
+  inp.setAttribute('autocorrect','off');
+  inp.setAttribute('autocapitalize','off');
+  inp.setAttribute('spellcheck','false');
+  if(!inp.getAttribute('name')) inp.setAttribute('name','nolimoa-'+(inp.id||'field')+'-'+(hardenInput._n=(hardenInput._n||0)+1));
+  if(!inp.hasAttribute('readonly')){
+    inp.setAttribute('readonly','readonly');
+    const off=()=>inp.removeAttribute('readonly');
+    inp.addEventListener('focus',off);
+    inp.addEventListener('pointerdown',off);
+  }
+}
+function hardenAutofill(root){
+  root=root||document;
+  if(root.matches && root.matches('input')) hardenInput(root);
+  if(root.querySelectorAll) root.querySelectorAll('input').forEach(hardenInput);
+}
+try{
+  hardenAutofill(document);
+  const _afObs=new MutationObserver(muts=>{
+    muts.forEach(m=>m.addedNodes && m.addedNodes.forEach(n=>{ if(n.nodeType===1) hardenAutofill(n); }));
+  });
+  _afObs.observe(document.documentElement,{childList:true,subtree:true});
+}catch(e){}
 function renderProfile(){
   const guest=isGuest();
   const nick=guest?'게스트':profile.nick;
@@ -1342,9 +1438,12 @@ function renderMyPage(){
 function syncStats(){
   if(!SB)return; // 데모는 하드코딩 숫자 유지
   const my=(window._dbPosts||[]).filter(p=>authUser&&p.user_id===authUser.id).length;
-  const vals=[String(my),'0','0']; // 게시물 / 팔로워 / 팔로잉 (팔로우 기능은 다음 단계)
+  const vals=[String(my),'0',String(myFollowing.size)]; // 게시물 / 팔로워(아래 비동기) / 팔로잉
   document.querySelectorAll('.pc-stats > div > b').forEach((b,i)=>b.textContent=vals[i]);
   document.querySelectorAll('.right .stats > div > b').forEach((b,i)=>b.textContent=vals[i]);
+  if(authUser) countFollows('following_id',authUser.id).then(fw=>{
+    document.querySelectorAll('.pc-stats > div:nth-child(2) > b, .right .stats > div:nth-child(2) > b').forEach(b=>b.textContent=fw);
+  });
 }
 
 /* ---------------- 프로필 편집 ---------------- */
@@ -1368,6 +1467,7 @@ function renderRoleGrid(){
     b.className=peSel.role===r?'on':'';b.onclick=()=>{peSel.role=r;renderRoleGrid();};box.appendChild(b);});
 }
 document.addEventListener('DOMContentLoaded',()=>{
+  try{hardenAutofill(document);}catch(e){}
   const pf=$('#peFile');
   if(pf)pf.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;
     const r=new FileReader();r.onload=()=>{peSel.photo=r.result;renderPeAvatar();renderPeIcons();};r.readAsDataURL(f);});
@@ -1429,7 +1529,7 @@ async function doAuth(){
     await refreshSession();
   }catch(e){toast('오류: '+(e.message||e));}
 }
-async function logout(){if(SB)await SB.auth.signOut();authUser=null;
+async function logout(){if(SB)await SB.auth.signOut();authUser=null;myFollowing=new Set();
   profile={nick:'게스트',role:'',roleShort:'',icon:'🧑',photo:'',guest:true};
   applyAuthUI();if($('#v-my').classList.contains('on'))renderMyPage();toast('로그아웃되었어요');}
 async function googleAuth(){
@@ -1498,7 +1598,10 @@ async function loadDbPosts(){
         photo:row.author_avatar||((authUser&&row.user_id===authUser.id)?profile.photo:'')||''}
     };
   });
+  await loadEngagement(); // 좋아요·댓글·조회수 집계
   await loadUserData();   // 폴더·저장한 놀이 복원 (새 글 로드 후 참조 갱신)
+  await loadFollows();    // 내 팔로잉 목록 복원
+  await loadNotifs();     // 알림 불러오기
   syncStats();
   if($('#v-browse').classList.contains('on'))renderBrowseFeed();
   if($('#v-my').classList.contains('on'))renderMyPage();
@@ -1524,6 +1627,86 @@ async function loadUserData(){
   customUpload=(data.upFolders||[]).map(f=>({id:'f'+(_folderSeq++), name:f.name, posts:(f.ids||[]).map(id=>map[id]).filter(Boolean)}));
   customSaved=(data.savFolders||[]).map(f=>({id:'f'+(_folderSeq++), name:f.name, posts:(f.ids||[]).map(id=>map[id]).filter(Boolean)}));
   if($('#v-my')&&$('#v-my').classList.contains('on'))renderMyPage();
+}
+/* ===== 진짜 팔로우 (Supabase) ===== */
+let myFollowing=new Set();
+async function loadFollows(){
+  myFollowing=new Set();
+  if(!(SB && authUser))return;
+  try{const {data}=await SB.from('follows').select('following_id').eq('follower_id',authUser.id);
+    (data||[]).forEach(r=>myFollowing.add(r.following_id));}catch(e){}
+}
+function isFollowingUser(uid){return myFollowing.has(uid);}
+async function followUser(uid){
+  if(!(SB && authUser)||!uid||uid===authUser.id)return;
+  myFollowing.add(uid);
+  try{await SB.from('follows').upsert({follower_id:authUser.id,following_id:uid}); createNotif(uid,'follow',null);}catch(e){}
+}
+async function unfollowUser(uid){
+  if(!(SB && authUser)||!uid)return;
+  myFollowing.delete(uid);
+  try{await SB.from('follows').delete().eq('follower_id',authUser.id).eq('following_id',uid);}catch(e){}
+}
+async function toggleFollowUser(uid){
+  if(!(SB && authUser)){toast('로그인 후 팔로우할 수 있어요');return;}
+  if(myFollowing.has(uid))await unfollowUser(uid); else await followUser(uid);
+  syncStats();
+}
+async function countFollows(col,uid){
+  if(!(SB && uid))return 0;
+  try{const {count}=await SB.from('follows').select('*',{count:'exact',head:true}).eq(col,uid);return count||0;}catch(e){return 0;}
+}
+async function updateProfFollowCounts(uid){
+  const fw=await countFollows('following_id',uid);  // uid를 팔로우하는 사람 수
+  const fg=await countFollows('follower_id',uid);   // uid가 팔로우하는 수
+  const e1=$('#pfFollowers'); if(e1)e1.textContent=fw;
+  const e2=$('#pfFollowing'); if(e2)e2.textContent=fg;
+}
+/* ===== 좋아요·댓글·알림·조회수 (Supabase) ===== */
+function whenText(ts){
+  if(!ts)return '방금';
+  try{const d=new Date(ts),s=Math.floor((new Date()-d)/1000);
+    if(s<60)return '방금'; if(s<3600)return Math.floor(s/60)+'분 전'; if(s<86400)return Math.floor(s/3600)+'시간 전';
+    if(s<604800)return Math.floor(s/86400)+'일 전'; return `${d.getMonth()+1}월 ${d.getDate()}일`;}catch(e){return '';}
+}
+/* 글마다 좋아요/댓글/조회수 집계 (loadDbPosts에서 호출) */
+async function loadEngagement(){
+  if(!SB)return;
+  const like={}, mine=new Set(), cmt={}, view={};
+  try{const {data}=await SB.from('likes').select('post_id,user_id');(data||[]).forEach(r=>{like[r.post_id]=(like[r.post_id]||0)+1;if(authUser&&r.user_id===authUser.id)mine.add(r.post_id);});}catch(e){}
+  try{const {data}=await SB.from('comments').select('post_id');(data||[]).forEach(r=>cmt[r.post_id]=(cmt[r.post_id]||0)+1);}catch(e){}
+  try{const {data}=await SB.from('post_views').select('post_id');(data||[]).forEach(r=>view[r.post_id]=(view[r.post_id]||0)+1);}catch(e){}
+  (window._dbPosts||[]).forEach(p=>{p.like=like[p.id]||0;p.liked=mine.has(p.id);p.cmt=cmt[p.id]||0;p.views=String(view[p.id]||0);});
+}
+/* 알림 생성: 상대에게(내가 아닐 때만) */
+async function createNotif(recipient, kind, postId, text){
+  if(!(SB && authUser) || !recipient || recipient===authUser.id) return;
+  try{await SB.from('notifications').insert({user_id:recipient,actor_id:authUser.id,actor_name:profile.nick,actor_icon:profile.icon||'',kind,post_id:postId||null,text:text||null});}catch(e){}
+}
+async function loadNotifs(){
+  if(!(SB && authUser))return;
+  try{const {data}=await SB.from('notifications').select('*').eq('user_id',authUser.id).order('created_at',{ascending:false}).limit(50);
+    notifications=(data||[]).map(r=>({id:r.id,init:(r.actor_name||'선')[0],name:r.actor_name||'선생님',icon:r.actor_icon,color:'#86736b',kind:r.kind,postId:r.post_id,when:whenText(r.created_at),read:r.read,text:r.text}));
+    renderBell(); if($('#notifOverlay').classList.contains('on'))renderNotifList();}catch(e){}
+}
+/* 댓글 불러오기 (대댓글 중첩) */
+async function loadComments(p){
+  if(!(SB && p && p.db)){ if(p&&!p.comments)p.comments=[]; return; }
+  try{
+    const {data}=await SB.from('comments').select('*').eq('post_id',p.id).order('created_at',{ascending:true});
+    const rows=data||[], mk=r=>({id:r.id,userId:r.user_id,name:r.author_name,icon:r.author_icon,photo:r.author_avatar,init:(r.author_name||'선')[0],color:'#86736b',when:whenText(r.created_at),text:r.text,replies:[]});
+    const top=rows.filter(r=>!r.parent_id).map(mk), byId={}; top.forEach(c=>byId[c.id]=c);
+    rows.filter(r=>r.parent_id).forEach(r=>{const par=byId[r.parent_id];if(par)par.replies.push(mk(r));});
+    p.comments=top;
+  }catch(e){ if(!p.comments)p.comments=[]; }
+}
+/* 조회수 기록 */
+async function recordView(p){
+  if(!(SB && authUser && p && p.db))return;
+  try{ await SB.from('post_views').upsert({post_id:p.id,user_id:authUser.id});
+    const {count}=await SB.from('post_views').select('*',{count:'exact',head:true}).eq('post_id',p.id);
+    if(count!=null){ p.views=String(count); const e=$('#phViews'); if(e)e.textContent=count; }
+  }catch(e){}
 }
 
 /* ================= 놀이 상세 페이지 ================= */
@@ -1556,6 +1739,15 @@ function knownMultiwordTags(){
 function linkifyTags(text, extraTags){
   let s=fmtRich(esc(text));
   const store=[];
+  // URL 자동 링크 (http/https/www) — 태그 처리 전에 자리표시자로 보호
+  s=s.replace(/(\bhttps?:\/\/[^\s<>"']+|\bwww\.[^\s<>"']+)/g,(m)=>{
+    let url=m, tail='';
+    const mt=url.match(/[)\].,!?;:'"]+$/); if(mt){tail=mt[0];url=url.slice(0,-tail.length);}
+    const href=/^www\./.test(url)?('http://'+url):url;
+    const idx=store.length, token=''+idx+'';
+    store.push(`<a class="linkurl" href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>`+tail);
+    return token;
+  });
   const multi=[...knownMultiwordTags(), ...((extraTags||[]).filter(t=>/\s/.test(t)))];
   // 긴 것부터 먼저 치환(접두어 충돌 방지)
   [...new Set(multi)].sort((a,b)=>b.length-a.length).forEach(tag=>{
@@ -1599,6 +1791,7 @@ function openPost(p){
   if(cur && cur.id!=='v-post')_postBack=cur.id.replace('v-','');
   close_('teacherOverlay');
   renderPostPage(p);
+  if(SB && p.db){ loadComments(p).then(()=>{if(_currentPost===p)renderComments(p);}); recordView(p); }
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   $('#v-post').classList.add('on');window.scrollTo(0,0);
 }
@@ -1614,7 +1807,7 @@ function renderPostPage(p){
     <div class="post-hero">
       <h1 class="ph-title">${esc((p.title||'놀이').replace(/^#/,''))}</h1>
       ${hashLine?`<div class="ph-hash">${linkifyTags(hashLine,p.tags)}</div>`:''}
-      <div class="ph-meta">${p.date||'2025년 7월 18일'} · 👁 조회 ${p.views||'0'}</div>
+      <div class="ph-meta">${p.date||''}${p.date?' · ':''}👁 조회 <span id="phViews">${p.views||'0'}</span></div>
       <div class="ph-actions" id="phActions"></div>
       ${nuriChips?`<div class="ph-nuri">${nuriChips}</div>`:''}
     </div>
@@ -1634,8 +1827,8 @@ function renderPostPage(p){
         <button class="pa-btn like" id="cmtLikeBtn" onclick="togglePostLike()"><span class="hi">♡</span> 좋아요 <b>0</b></button>
       </div>
       <div id="cmtList"></div>
-      <div class="cmt-input"><div class="av sm" style="background:#5b8def">${(profile.nick||'윤')[0]}</div>
-        <input id="cmtInput" placeholder="댓글 달기…" onkeydown="if(event.key==='Enter')addComment()"><button onclick="addComment()">등록</button></div>
+      <div class="cmt-input"><div class="av sm" style="${avStyle(myAv())}">${avInner(myAv())}</div>
+        <input id="cmtInput" type="text" name="nolimoa-comment-field" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="댓글 달기…" onkeydown="if(event.key==='Enter')addComment()"><button onclick="addComment()">등록</button></div>
     </div>
     <div class="pd-sec"><h4>🏷️ 관련</h4><div class="rel-cards">${catCards}</div></div>
     <div class="pd-sec"><h4>🎨 ${a?a.name:'글쓴이'}의 관련 놀이</h4><div class="rel-grid" id="authorRel"></div></div>
@@ -1659,7 +1852,19 @@ function renderPostActions(){
   if(cl){cl.className='pa-btn like'+(p.liked?' on':'');
     cl.innerHTML=`<span class="hi">${p.liked?'♥':'♡'}</span> 좋아요 <b>${(p.like||0).toLocaleString()}</b>`;}
 }
-function togglePostLike(){const p=_currentPost;if(!p)return;p.liked=!p.liked;p.like=(p.like||0)+(p.liked?1:-1);renderPostActions();if(p.liked)notifyAuthor(p,'like');}
+async function togglePostLike(){
+  const p=_currentPost;if(!p)return;
+  if(SB){
+    if(!authUser){toast('로그인 후 좋아요할 수 있어요');return;}
+    p.liked=!p.liked; p.like=(p.like||0)+(p.liked?1:-1); renderPostActions();
+    try{
+      if(p.liked){ await SB.from('likes').upsert({post_id:p.id,user_id:authUser.id}); createNotif(p.user_id,'like',p.id); }
+      else { await SB.from('likes').delete().eq('post_id',p.id).eq('user_id',authUser.id); }
+    }catch(e){}
+    return;
+  }
+  p.liked=!p.liked;p.like=(p.like||0)+(p.liked?1:-1);renderPostActions();if(p.liked)notifyAuthor(p,'like');
+}
 function togglePostSave(){const p=_currentPost;if(!p)return;
   const i=savedPosts.indexOf(p);
   if(i>=0)savedPosts.splice(i,1); else savedPosts.unshift(p);
@@ -1815,20 +2020,25 @@ function seedNotifs(){
 }
 function unreadCount(){return notifications.filter(n=>!n.read).length;}
 function renderBell(){const bd=$('#bellBadge');if(!bd)return;const c=unreadCount();bd.textContent=c;bd.style.display=c?'grid':'none';}
-function openNotif(){renderNotifList();open_('notifOverlay');notifications.forEach(n=>n.read=true);renderBell();}
+async function openNotif(){
+  renderNotifList();open_('notifOverlay');notifications.forEach(n=>n.read=true);renderBell();
+  if(SB && authUser){ try{await SB.from('notifications').update({read:true}).eq('user_id',authUser.id).eq('read',false);}catch(e){} }
+}
+function notifPost(n){ return n.post || (n.postId ? allPosts().find(p=>p.id===n.postId) : null); }
 function renderNotifList(){
   const box=$('#notifList');box.innerHTML='';
   if(!notifications.length){box.innerHTML='<div class="empty">새 알림이 없어요</div>';return;}
   notifications.forEach(n=>{
-    const t=n.post?`'${n.post.title}'`:'';
+    const post=notifPost(n);
+    const t=post?`'${(post.title||'놀이').replace(/^#/,'')}'`:'';
     const txt=n.kind==='like'?`님이 회원님의 ${t} 놀이를 좋아합니다`
       :n.kind==='comment'?`님이 ${t}에 댓글: "${esc(n.text||'')}"`
       :`님이 회원님을 팔로우하기 시작했어요`;
     const ic=n.kind==='like'?'❤️':n.kind==='comment'?'💬':'➕';
     const el=document.createElement('div');el.className='notif-row'+(n.read?'':' unread');
-    el.innerHTML=`<div class="av" style="background:${n.color}">${n.init}</div>
-      <div class="nb"><p><b>${n.name}</b>${txt}</p><small>${n.when}</small></div><span class="nt-ic">${ic}</span>`;
-    if(n.post)el.onclick=()=>{close_('notifOverlay');openPost(n.post);};
+    el.innerHTML=`<div class="av" style="${avStyle(n)}">${avInner(n)}</div>
+      <div class="nb"><p><b>${esc(n.name)}</b>${txt}</p><small>${n.when}</small></div><span class="nt-ic">${ic}</span>`;
+    if(post)el.onclick=()=>{close_('notifOverlay');openPost(post);};
     box.appendChild(el);
   });
 }
@@ -1837,7 +2047,7 @@ function notifyAuthor(post, kind, text){
   if(a.id==='me'){ // 내 글이면 내 알림함에 표시(데모)
     notifications.unshift({init:(profile.nick||'윤')[0],name:profile.nick,color:'#5b8def',kind,post,when:'방금',read:false,text});
     renderBell();
-  } else { toast(`${a.name}에게 알림을 보냈어요`); }
+  }
 }
 
 /* ===== 폴더 시스템 (올린 놀이 · 저장한 놀이 공용) ===== */
@@ -1989,32 +2199,48 @@ function renderComments(p){
   const box=$('#cmtList');if(!box)return;box.innerHTML='';
   if(!p.comments.length){box.innerHTML='<div class="empty" style="padding:14px 4px">아직 댓글이 없어요. 첫 댓글을 남겨보세요!</div>';return;}
   p.comments.forEach((c,ci)=>{
-    const replies=(c.replies||[]).map(rp=>`<div class="reply"><div class="av sm" style="background:${rp.color}">${rp.init}</div>
-      <div class="rb"><b>${rp.name}</b> <span class="when">${rp.when}</span><p>${esc(rp.text)}</p></div></div>`).join('');
+    const replies=(c.replies||[]).map(rp=>`<div class="reply"><div class="av sm" style="${avStyle(rp)}">${avInner(rp)}</div>
+      <div class="rb"><b>${esc(rp.name)}</b> <span class="when">${rp.when}</span><p>${esc(rp.text)}</p></div></div>`).join('');
     const el=document.createElement('div');el.className='cmt-row';
-    el.innerHTML=`<div class="av" style="background:${c.color}">${c.init}</div>
+    el.innerHTML=`<div class="av" style="${avStyle(c)}">${avInner(c)}</div>
       <div class="cb"><b>${c.name}</b><span class="when">${c.when}</span><p>${esc(c.text)}</p>
         <button class="reply-btn" onclick="toggleReply(${ci})">답글</button>
         <div class="replies">${replies}</div>
         <div class="reply-input" id="ri${ci}" style="display:none">
-          <input placeholder="답글 달기…" onkeydown="if(event.key==='Enter')addReply(${ci})"><button onclick="addReply(${ci})">등록</button></div>
+          <input type="text" name="nolimoa-reply-field" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="답글 달기…" onkeydown="if(event.key==='Enter')addReply(${ci})"><button onclick="addReply(${ci})">등록</button></div>
       </div>`;
     box.appendChild(el);
   });
 }
 function toggleReply(ci){const el=$('#ri'+ci);if(el)el.style.display=el.style.display==='none'?'flex':'none';}
-function addReply(ci){
+async function addReply(ci){
   const el=$('#ri'+ci);if(!el)return;const inp=el.querySelector('input');const v=inp.value.trim();if(!v||!_currentPost)return;
-  const c=_currentPost.comments[ci];c.replies=c.replies||[];
-  c.replies.push({init:(profile.nick||'윤')[0],name:profile.nick,color:'#5b8def',when:'방금',text:v});
-  renderComments(_currentPost);toast('답글을 남겼어요');
+  const p=_currentPost, c=p.comments[ci];
+  if(SB){
+    if(!authUser){toast('로그인 후 답글을 남길 수 있어요');return;}
+    inp.value='';
+    try{ await SB.from('comments').insert({post_id:p.id,user_id:authUser.id,parent_id:c.id,text:v,author_name:profile.nick,author_icon:profile.icon||'',author_avatar:profile.photo||''});
+      createNotif(c.userId,'comment',p.id,v); }catch(e){}
+    await loadComments(p); renderComments(p); return;
+  }
+  c.replies=c.replies||[];
+  c.replies.push({photo:profile.photo||'',icon:profile.icon||'',init:(profile.nick||'나')[0],name:profile.nick,color:'#5b8def',when:'방금',text:v});
+  inp.value='';renderComments(p);
 }
-function addComment(){
+async function addComment(){
   const inp=$('#cmtInput');if(!inp||!inp.value.trim()||!_currentPost)return;
-  _currentPost.comments=_currentPost.comments||[];
-  _currentPost.comments.push({init:(profile.nick||'윤')[0],name:profile.nick,color:'#5b8def',when:'방금',text:inp.value.trim(),replies:[]});
-  const v=inp.value.trim();inp.value='';renderComments(_currentPost);
-  notifyAuthor(_currentPost,'comment',v);toast('댓글을 남겼어요');
+  const v=inp.value.trim(); const p=_currentPost;
+  if(SB){
+    if(!authUser){toast('로그인 후 댓글을 남길 수 있어요');return;}
+    inp.value='';
+    try{ await SB.from('comments').insert({post_id:p.id,user_id:authUser.id,text:v,author_name:profile.nick,author_icon:profile.icon||'',author_avatar:profile.photo||''});
+      createNotif(p.user_id,'comment',p.id,v); }catch(e){}
+    p.cmt=(p.cmt||0)+1;
+    await loadComments(p); renderComments(p); return;
+  }
+  p.comments=p.comments||[];
+  p.comments.push({photo:profile.photo||'',icon:profile.icon||'',init:(profile.nick||'나')[0],name:profile.nick,color:'#5b8def',when:'방금',text:v,replies:[]});
+  inp.value='';renderComments(p);notifyAuthor(p,'comment',v);
 }
 function openPhotos(p,idx){_openDetail(p,idx||0);}
 
@@ -2128,13 +2354,33 @@ function pickTodayIssues(){
   return issues;
 }
 let _issues=[], curIssue=0, browseFilter='';
+function renderWeekPop(){
+  const panel=$('#weekPopPanel');if(!panel)return;
+  if(!SB)return; // 데모는 하드코딩 유지
+  const like={}; (window._dbPosts||[]).forEach(p=>(p.tags||[]).forEach(t=>{like[t]=(like[t]||0)+(p.like||0)+1;}));
+  const top=Object.keys(like).sort((a,b)=>like[b]-like[a]).slice(0,5);
+  let html='<h4>🔥 이번 주 인기</h4>';
+  if(!top.length){ html+='<div class="empty" style="padding:8px 0">아직 인기 태그가 없어요</div>'; }
+  else top.forEach((t,i)=>{ const sum=(window._dbPosts||[]).filter(p=>(p.tags||[]).includes(t)).reduce((a,p)=>a+(p.like||0),0);
+    html+=`<div class="rank" onclick="filterByLabel('${tagQ(t)}')"><span class="n">${i+1}</span><span class="ic">🏷️</span><span class="t">#${esc(noSpace(t))}</span><span class="h">♥ ${sum.toLocaleString()}</span></div>`; });
+  panel.innerHTML=html;
+}
 function renderBrowse(){
   renderIssues();
   const pop=$('#brPopular');pop.innerHTML='';
-  brPopular.forEach(c=>pop.appendChild(miniCard(c)));
+  if(SB){
+    const top=(window._dbPosts||[]).slice().sort((a,b)=>(b.like||0)-(a.like||0)).slice(0,3);
+    if(top.length) top.forEach(p=>pop.appendChild(miniCardPost(p)));
+    else pop.innerHTML='<div class="empty" style="grid-column:1/-1">아직 인기 놀이가 없어요</div>';
+    const dl=document.querySelector('#popularSec .br-date'); if(dl){const d=new Date();dl.textContent=`${d.getMonth()+1}월 ${d.getDate()}일 기준`;}
+  } else {
+    brPopular.forEach(c=>pop.appendChild(miniCard(c)));
+  }
   const tg=$('#brTags');tg.innerHTML='';
-  brTagList.forEach(tag=>{const s=document.createElement('button');s.className='br-tag';s.textContent='#'+noSpace(tag);
+  const tags = SB ? popularTags(10) : brTagList;
+  tags.forEach(tag=>{const s=document.createElement('button');s.className='br-tag';s.textContent='#'+noSpace(tag);
     s.onclick=()=>filterByLabel(tag);tg.appendChild(s);});
+  renderWeekPop();
   renderBrowseFeed();
 }
 function renderIssues(){
@@ -2209,7 +2455,10 @@ function renderBrowseFeed(){
     :'<div class="placeholder"><div class="big">🌱</div>아직 올라온 놀이가 없어요.<br>업로드에서 첫 놀이를 올려보세요!</div>';return;}
   list.forEach((p,i)=>{
     const a=authorOf(p);
-    const followBtn=p.db?'':`<button class="foll-btn ${a.following?'':'off'}" onclick="event.stopPropagation();toggleFollow('${a.id}');renderBrowseFeed()">${a.following?'팔로잉':'+ 팔로우'}</button>`;
+    const isMine = !!(p.user_id&&authUser&&p.user_id===authUser.id);
+    const followBtn = p.db
+      ? ((SB&&authUser&&p.user_id&&!isMine)?`<button class="foll-btn ${myFollowing.has(p.user_id)?'':'off'}" onclick="event.stopPropagation();toggleFollowUser('${p.user_id}').then(renderBrowseFeed)">${myFollowing.has(p.user_id)?'팔로잉':'+ 팔로우'}</button>`:'')
+      : `<button class="foll-btn ${a.following?'':'off'}" onclick="event.stopPropagation();toggleFollow('${a.id}');renderBrowseFeed()">${a.following?'팔로잉':'+ 팔로우'}</button>`;
     const el=document.createElement('div');el.className='card post clickable';
     el.onclick=()=>openBrowsePost(i);  // 카드 어디를 눌러도 상세로
     el.innerHTML=`
@@ -2293,19 +2542,43 @@ function renderSideCats(){
     `</div></div>`).join('');
 }
 /* 선생님 프로필 모달 */
+/* 프로필 헤더 스탯: 본인은 마이페이지와 동일한 팔로워/팔로잉, 남은 0 */
+function profStats(isMe){
+  let fw='0', fg='0';
+  if(isMe){const b=document.querySelectorAll('.pc-stats > div > b');if(b.length>=3){fw=b[1].textContent;fg=b[2].textContent;}}
+  return {fw,fg};
+}
+function profStatsHTML(n,isMe){
+  const s=profStats(isMe);
+  return `<div class="prof-stats"><span><b>${n}</b> 게시물</span><span><b>${s.fw}</b> 팔로워</span><span><b>${s.fg}</b> 팔로잉</span></div>`;
+}
 /* 프로필 방문: 데모 선생님이면 openTeacher, 실제 글쓴이면 그 사람 프로필 */
 function openAuthor(p){
   if(!p)return;
   if(!p.db && p.tid){ openTeacher(p.tid); return; }
   const a=p.author||{};
+  const isMe = !!(authUser && p.user_id===authUser.id);
   const tp=(window._dbPosts||[]).filter(x=>x.user_id===p.user_id);
+  const canFollow = !!(SB && authUser && p.user_id && !isMe);
+  const followBtn = canFollow
+    ? `<button class="foll-btn ${myFollowing.has(p.user_id)?'':'off'}" id="profFollowBtn">${myFollowing.has(p.user_id)?'팔로잉':'+ 팔로우'}</button>` : '';
+  const statsHTML = `<div class="prof-stats"><span><b>${tp.length}</b> 게시물</span><span><b id="pfFollowers">–</b> 팔로워</span><span><b id="pfFollowing">–</b> 팔로잉</span></div>`;
   $('#teacherHead').innerHTML=`<div class="av" style="${avStyle(a)}">${avInner(a)}</div>
-    <div class="tinfo"><b>${esc(a.name||'선생님')}</b><small>${esc(a.org||'')} · 게시물 ${tp.length}</small></div>`;
+    <div class="tinfo"><b>${esc(a.name||'선생님')}</b><small>${esc(a.org||'')}</small>${statsHTML}</div>${followBtn}`;
+  const fb=$('#profFollowBtn'); if(fb)fb.onclick=()=>toggleFollowUser(p.user_id).then(()=>{openAuthor(p);renderFeed();});
+  if(SB && p.user_id) updateProfFollowCounts(p.user_id);
   const body=$('#teacherPosts');body.innerHTML='';
   const upSec=document.createElement('div');upSec.className='prof-sec';
   upSec.innerHTML='<h4>📁 올린 놀이</h4><div class="folder-row prof-row"></div>';
   body.appendChild(upSec);
-  renderAiFolderRow(upSec.querySelector('.folder-row'), tp);
+  if(isMe){ renderFolderRow('upload', false, upSec.querySelector('.folder-row')); } // 내 프로필: 마이페이지와 동일한 폴더
+  else { renderAiFolderRow(upSec.querySelector('.folder-row'), tp); }               // 다른 사람: 주제별 AI 분류
+  if(isMe){
+    const svSec=document.createElement('div');svSec.className='prof-sec';
+    svSec.innerHTML='<h4>🔖 저장한 놀이</h4><div class="folder-row prof-row"></div>';
+    body.appendChild(svSec);
+    renderFolderRow('saved', false, svSec.querySelector('.folder-row'));
+  }
   open_('teacherOverlay');
 }
 function openTeacher(tid){
@@ -2313,7 +2586,7 @@ function openTeacher(tid){
   const tp=posts.filter(p=>p.tid===tid);
   const followBtn=tt.me?'':`<button class="foll-btn ${tt.following?'':'off'}" onclick="toggleFollow('${tt.id}');openTeacher('${tt.id}')">${tt.following?'팔로잉':'+ 팔로우'}</button>`;
   $('#teacherHead').innerHTML=`<div class="av" style="${avStyle(tt)}">${avInner(tt)}</div>
-    <div class="tinfo"><b>${tt.name}</b><small>${tt.org} · 게시물 ${tp.length}</small></div>${followBtn}`;
+    <div class="tinfo"><b>${tt.name}</b><small>${tt.org}</small>${profStatsHTML(tp.length,!!tt.me)}</div>${followBtn}`;
   const body=$('#teacherPosts');body.innerHTML='';
   // 올린 놀이 (폴더)
   const upSec=document.createElement('div');upSec.className='prof-sec';
@@ -2339,10 +2612,15 @@ function renderAiFolderRow(box, list){   // 다른 선생님 프로필: 주제�
   if(!list.length)box.innerHTML='<div class="empty">아직 올린 놀이가 없어요</div>';
 }
 /* 인기 태그(우측) 렌더 */
+function popularTags(n){
+  const f={}; (window._dbPosts||[]).forEach(p=>(p.tags||[]).forEach(t=>{f[t]=(f[t]||0)+1;}));
+  return Object.keys(f).sort((a,b)=>f[b]-f[a]).slice(0,n||8);
+}
 function renderPopTags(){
   const box=$('#popTags');if(!box)return;box.innerHTML='';
-  ['여름','감각','미술','과학 실험','소근육','협동','실내','환경 구성'].forEach(tag=>{
-    const s=document.createElement('span');s.textContent='#'+noSpace(tag);s.onclick=()=>filterByLabel(tag);box.appendChild(s);});
+  let tags = SB ? popularTags(8) : ['여름','감각','미술','과학 실험','소근육','협동','실내','환경 구성'];
+  if(!tags.length) tags=['여름','미술','감각'];
+  tags.forEach(tag=>{const s=document.createElement('span');s.textContent='#'+noSpace(tag);s.onclick=()=>filterByLabel(tag);box.appendChild(s);});
 }
 
 /* ---------------- nav ---------------- */
@@ -2736,8 +3014,40 @@ function goWrite(){
   renderAge();renderNuri();renderCat();renderTags();
   // 글 내용이 있고 아직 아무것도 안 골랐으면 자동 추천
   if(richToMarks($('#pBody')).trim() && !sel.nuri.size && !sel.cat.size && !(sel.tags&&sel.tags.length)) aiSuggestTags(true);
+  renderWritePhotoStrip();
   $('#uploadOverlay').classList.remove('on');
   $('#writeOverlay').classList.add('on');
+}
+/* 2단계 글 작성 창: 방금 올린 사진들을 한 줄로 미리보기 */
+function renderWritePhotoStrip(){
+  const sec=$('#writePhotoStripSec'), strip=$('#writePhotoStrip');
+  if(!sec||!strip)return;
+  if(_editPost||!photos.length){ sec.style.display='none'; strip.innerHTML=''; return; }
+  sec.style.display='';
+  strip.innerHTML='';
+  photos.forEach((ph,idx)=>{
+    let src='';
+    try{ src=(ph.cv&&ph.cv.width)?ph.cv.toDataURL('image/jpeg',.8):(ph.img&&ph.img.src)||''; }catch(e){ src=(ph.img&&ph.img.src)||''; }
+    const hasSpot=(ph.spots&&ph.spots.length)?'<span class="wp-badge" title="구매 링크 있음">🛒</span>':'';
+    const d=document.createElement('div');
+    d.className='wp-thumb';
+    d.title=`${idx+1}번째 사진 · 눌러서 편집`;
+    d.onclick=()=>editWritePhoto(idx);
+    d.innerHTML=`<span class="wp-no">${idx+1}</span>${hasSpot}${src?`<img src="${src}" alt="">`:''}<span class="wp-edit">✎ 편집</span>`;
+    strip.appendChild(d);
+  });
+}
+/* 미리보기 사진을 누르면 → 사진 편집 단계로 돌아가 그 사진으로 스크롤 */
+function editWritePhoto(idx){
+  backToPhotos();
+  const ph=photos[idx];
+  if(ph&&ph.el){
+    setTimeout(()=>{
+      try{ ph.el.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ ph.el.scrollIntoView(); }
+      ph.el.classList.remove('flash'); void ph.el.offsetWidth; ph.el.classList.add('flash');
+      setTimeout(()=>ph.el&&ph.el.classList.remove('flash'),1500);
+    },140);
+  }
 }
 function backToPhotos(){
   $('#writeOverlay').classList.remove('on');
@@ -2992,9 +3302,7 @@ if(SB){
   // 실제 서비스 모드: 데모(예시) 데이터를 모두 비우고, DB에서 채워요.
   posts.length=0; followers.length=0; savedPosts=[]; notifications=[];
   for(let i=teachers.length-1;i>=0;i--) if(teachers[i].id!=='me') teachers.splice(i,1);
-  // 집계형 데모 섹션(가짜 인기)은 숨김 — 실제 인기 집계는 다음 단계에서
-  const wp=$('#weekPopPanel');if(wp)wp.style.display='none';
-  const ps=$('#popularSec');if(ps)ps.style.display='none';
+  // 인기 섹션은 실제 데이터로 채워짐(renderBrowse/renderWeekPop) — 표시 유지
 }else{
   // 데모 모드(키 없음): 예시 데이터로 미리보기
   savedPosts=posts.filter(p=>['#얼음 구출 놀이','#수박 수영장','#물감 불기 그림','#가을 낙엽 콜라주'].includes(p.title));
