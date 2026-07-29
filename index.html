@@ -693,7 +693,7 @@
 
     <!-- 둘러보기 -->
     <section class="view on" id="v-browse">
-      <div class="br-search"><span>🔍</span><input id="brSearch" placeholder="놀이 주제, 해시태그, 선생님 이름으로 검색" oninput="renderBrowseFeed()"></div>
+      <div class="br-search"><span>🔍</span><input id="brSearch" type="text" name="nolimoa-search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="놀이 주제, 해시태그, 선생님 이름으로 검색" oninput="renderBrowseFeed()"></div>
       <div class="main-head"><div><h1>둘러보기</h1><p>선생님들의 놀이 아이디어를 모았어요</p></div>
         <div class="auth-btns" id="browseAuth"></div></div>
       <div id="brFilterBar"></div>
@@ -1210,7 +1210,7 @@ function renderFeed(){
       <h3>${esc((p.title||'놀이').replace(/^#/,''))}</h3>
       ${descPreview(p,`openFeedPost(${i})`)}
       <div class="photo"><img src="${p.img}" alt="">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}장</span>`:''}</div>
-      <div class="tags">${p.tags.map(x=>`<span class="tag" onclick="event.stopPropagation();filterByLabel('${x}')">#${x}</span>`).join('')}</div>
+      <div class="tags">${p.tags.map(x=>`<span class="tag" onclick="event.stopPropagation();filterByLabel('${tagQ(x)}')">#${esc(noSpace(x))}</span>`).join('')}</div>
       <div class="views">👁 조회 ${p.views}</div>
       <div class="post-foot" onclick="event.stopPropagation()">
         <button class="${p.liked?'liked':''}" onclick="likePost(${i},this)">${p.liked?'❤️':'🤍'} <span>${p.like.toLocaleString()}</span></button>
@@ -1490,7 +1490,9 @@ async function loadDbPosts(){
       tags:row.tags||[], views:'0', like:0, cmt:0, liked:false, comments:[],
       age:row.age, nuri:row.nuri||[], categories:row.categories||[], attachments:row.attachments||[],
       spots:imgs[0].spots||[], author:{name:row.author_name||'선생님',org:row.author_role||'',
-        init:(row.author_name||'선')[0], color:'#f2653b', icon:row.author_icon||'', photo:row.author_avatar||''}
+        init:(row.author_name||'선')[0], color:'#f2653b',
+        icon:row.author_icon||((authUser&&row.user_id===authUser.id)?profile.icon:'')||'',
+        photo:row.author_avatar||((authUser&&row.user_id===authUser.id)?profile.photo:'')||''}
     };
   });
   syncStats();
@@ -1508,6 +1510,9 @@ function authorRelated(p){const l=allPosts().filter(q=>q!==p&&sameAuthor(q,p));c
 function otherRelated(p){return allPosts().filter(q=>q!==p&&!sameAuthor(q,p)&&shareTag(q,p));}
 function nuriLabel(item){for(const g of nuriData){if(g.items.includes(item))return g.g+' &gt; '+item;}return item;}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+/* 해시태그는 띄어쓰기 없이 (카테고리 '나와 가족' → 태그 '나와가족') */
+function noSpace(s){return String(s||'').replace(/\s+/g,'');}
+function tagQ(s){return noSpace(s).replace(/'/g,"\\'");}
 /* **굵게** / __밑줄__ 마크업을 안전하게 태그로 변환 (esc 이후에 적용) */
 function fmtRich(s){return s.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/__([^_\n]+)__/g,'<u>$1</u>');}
 function stripFmt(s){return String(s||'').replace(/\*\*([^*\n]+)\*\*/g,'$1').replace(/__([^_\n]+)__/g,'$1');}
@@ -1575,10 +1580,10 @@ function postBack(){go(_postBack);}
 function renderPostPage(p){
   const a=authorOf(p), imgs=imagesOf(p);
   const nuriChips=(p.nuri||[]).map(n=>`<span class="nuri-chip">${nuriLabel(n)}</span>`).join('');
-  const catCards=(p.tags||[]).slice(0,4).map(tg=>`<button class="rel-card" onclick="filterByLabel('${tg}')"><div class="rc-ic">🏷️</div><b>#${tg}</b><span>›</span></button>`).join('');
+  const catCards=(p.tags||[]).slice(0,4).map(tg=>`<button class="rel-card" onclick="filterByLabel('${tagQ(tg)}')"><div class="rc-ic">🏷️</div><b>#${esc(noSpace(tg))}</b><span>›</span></button>`).join('');
   const photos=imgs.map((im,idx)=>`<div class="pdp" onclick="openPhotos(_currentPost,${idx})"><img src="${im.img}" alt="">${(im.spots&&im.spots.length)?'<span class="pcount">🏷️ 상품 태그</span>':''}</div>`).join('');
   $('#ptMini').textContent=(p.title||'놀이').replace(/^#/,'');
-  const hashLine=(p.tags||[]).map(x=>'#'+x).join(' ');
+  const hashLine=(p.tags||[]).map(x=>'#'+noSpace(x)).join(' ');
   $('#postBody').innerHTML=`
     <div class="post-hero">
       <h1 class="ph-title">${esc((p.title||'놀이').replace(/^#/,''))}</h1>
@@ -1739,12 +1744,13 @@ async function saveEdit(){
   const p=_editPost;if(!p)return;
   const title=$('#pTitle').value.trim()||'놀이';
   const body=richToMarks($('#pBody'));
-  const catTags=[...sel.cat].map(k=>k.split('::')[1]);
-  const tags=[...new Set([...(sel.tags||[]), ...catTags])];
+  syncBodyTags(true);
+  const catLabels=[...sel.cat].map(k=>k.split('::')[1]);          // 카테고리(띄어쓰기 유지)
+  const tags=[...new Set([...(sel.tags||[]), ...catLabels].map(noSpace).filter(Boolean))]; // 해시태그(띄어쓰기 없음)
   const images=_editImages.map(im=>({img:im.img,desc:(im.desc||'').trim(),
     spots:im.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:(s.name||'').trim(),mall:(s.mall||'').trim(),
       url:s.url&&!/^https?:\/\//i.test(s.url)?'https://'+s.url:(s.url||'')}))}));
-  const age=sel.age, nuri=[...sel.nuri], categories=catTags;
+  const age=sel.age, nuri=[...sel.nuri], categories=catLabels;
   let atts; try{ atts=await uploadAttachments(); }catch(e){ toast('첨부파일 업로드 실패: '+(e.message||e)); return; }
   p.title=title.replace(/^#/,'');
   p.desc=body; p.tags=tags.length?tags:p.tags; p.images=images;
@@ -2069,7 +2075,7 @@ function renderBrowse(){
   const pop=$('#brPopular');pop.innerHTML='';
   brPopular.forEach(c=>pop.appendChild(miniCard(c)));
   const tg=$('#brTags');tg.innerHTML='';
-  brTagList.forEach(tag=>{const s=document.createElement('button');s.className='br-tag';s.textContent='#'+tag;
+  brTagList.forEach(tag=>{const s=document.createElement('button');s.className='br-tag';s.textContent='#'+noSpace(tag);
     s.onclick=()=>filterByLabel(tag);tg.appendChild(s);});
   renderBrowseFeed();
 }
@@ -2111,9 +2117,9 @@ function authorOf(p){return p.author?p.author:t(p.tid);}
 /* 라벨(카테고리/태그)로 관련 놀이 필터 — 태그·제목·카테고리·누리 모두 확인 */
 function matchesFilter(p,label){
   if(!label)return true;
-  const L=label.toLowerCase();
-  const inArr=a=>(a||[]).some(x=>String(x).toLowerCase().includes(L));
-  return inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||(p.title||'').toLowerCase().includes(L);
+  const L=noSpace(label.toLowerCase()); // 공백 무시 → '#나와가족'이 '나와 가족' 카테고리와 매칭
+  const inArr=a=>(a||[]).some(x=>noSpace(String(x).toLowerCase()).includes(L));
+  return inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||noSpace((p.title||'').toLowerCase()).includes(L);
 }
 function filterByLabel(label){
   ['detailOverlay','teacherOverlay','catOverlay','socialOverlay'].forEach(id=>close_(id));
@@ -2139,7 +2145,7 @@ function renderBrowseFeed(){
     return (p.title+p.desc+p.tags.join(' ')+((a&&a.name)||'')).toLowerCase().includes(q.toLowerCase());});
   window._browse=list;
   const fb=$('#brFilterBar');
-  fb.innerHTML=browseFilter?`<div class="filter-chip">카테고리: #${browseFilter} <span onclick="clearBrowseFilter()">✕</span></div>`:'';
+  fb.innerHTML=browseFilter?`<div class="filter-chip">#${esc(noSpace(browseFilter))} <span onclick="clearBrowseFilter()">✕</span></div>`:'';
   if(!list.length){box.innerHTML=(browseFilter||q)
     ?'<div class="placeholder"><div class="big">🔍</div>조건에 맞는 놀이가 없어요</div>'
     :'<div class="placeholder"><div class="big">🌱</div>아직 올라온 놀이가 없어요.<br>업로드에서 첫 놀이를 올려보세요!</div>';return;}
@@ -2160,7 +2166,7 @@ function renderBrowseFeed(){
       <h3>${esc((p.title||'놀이').replace(/^#/,''))}</h3>
       ${descPreview(p,`openBrowsePost(${i})`)}
       ${photoGrid(p)}
-      <div class="tags">${p.tags.map(x=>`<span class="tag" onclick="event.stopPropagation();filterByLabel('${x}')">#${x}</span>`).join('')}</div>
+      <div class="tags">${p.tags.map(x=>`<span class="tag" onclick="event.stopPropagation();filterByLabel('${tagQ(x)}')">#${esc(noSpace(x))}</span>`).join('')}</div>
       <div class="views">👁 조회 ${p.views} · ♥ ${(p.like||0).toLocaleString()}</div>
       <div class="post-foot" onclick="event.stopPropagation()">
         <button onclick="openBrowsePost(${i})" class="more" style="margin-left:0">자세히 보기 ›</button>
@@ -2264,7 +2270,7 @@ function renderAiFolderRow(box, list){   // 다른 선생님 프로필: 주제�
 function renderPopTags(){
   const box=$('#popTags');if(!box)return;box.innerHTML='';
   ['여름','감각','미술','과학 실험','소근육','협동','실내','환경 구성'].forEach(tag=>{
-    const s=document.createElement('span');s.textContent='#'+tag;s.onclick=()=>filterByLabel(tag);box.appendChild(s);});
+    const s=document.createElement('span');s.textContent='#'+noSpace(tag);s.onclick=()=>filterByLabel(tag);box.appendChild(s);});
 }
 
 /* ---------------- nav ---------------- */
@@ -2634,12 +2640,12 @@ function toggleDD(which){
 function renderTags(){
   const box=$('#tagEdit');box.innerHTML='';
   sel.tags.forEach((tg,i)=>{const el=document.createElement('span');el.className='t';
-    el.innerHTML=`#${tg} <span class="x">×</span>`;
+    el.innerHTML=`#${esc(noSpace(tg))} <span class="x">×</span>`;
     el.querySelector('.x').onclick=e=>{e.stopPropagation();sel.tags.splice(i,1);renderTags();};box.appendChild(el);});
-  const inp=document.createElement('input');inp.id='tagInput';inp.placeholder='태그 입력 후 Enter (띄어쓰기 가능)';
+  const inp=document.createElement('input');inp.id='tagInput';inp.placeholder='태그 입력 후 Enter (띄어쓰기는 자동으로 붙어요)';
   inp.onkeydown=e=>{
     if(e.key==='Enter'&&inp.value.trim()){e.preventDefault();
-      sel.tags.push(inp.value.trim().replace(/^#/,''));inp.value='';renderTags();$('#tagInput').focus();}
+      const t=noSpace(inp.value.trim().replace(/^#/,''));if(t&&!sel.tags.includes(t))sel.tags.push(t);inp.value='';renderTags();$('#tagInput').focus();}
     else if(e.key==='Backspace'&&!inp.value&&sel.tags.length){sel.tags.pop();renderTags();$('#tagInput').focus();}
   };
   box.appendChild(inp);
@@ -2707,20 +2713,23 @@ function marksToRich(text){
 }
 function composeBody(){return richToMarks($('#pBody'));}
 /* 글 내용에 쓴 #해시태그를 맨 아래 해시태그 칸으로 자동 수집 (인스타처럼) */
-function extractHashtags(text){
-  const out=[]; const re=/#([^\s#<>.,!?~*]+)/g; let m;
+function extractHashtags(text, includeLast){
+  // includeLast=false: 뒤에 띄어쓰기/#/줄바꿈이 온 '완성된' 해시태그만 (타이핑 중인 마지막 건 제외)
+  const out=[];
+  const re = includeLast ? /#([^\s#<>.,!?~*]+)/g : /#([^\s#<>.,!?~*]+)(?=[\s#])/g;
+  let m;
   while((m=re.exec(text||''))){ if(m[1]&&!out.includes(m[1])) out.push(m[1]); }
   return out;
 }
-function syncBodyTags(){
+function syncBodyTags(final){
   if(!sel)return;
   const el=$('#pBody'); if(!el)return;
-  const found=extractHashtags(el.innerText||el.textContent||'');
+  const found=extractHashtags(el.innerText||el.textContent||'', final===true);
   let changed=false;
   found.forEach(t=>{ if(!sel.tags.includes(t)){ sel.tags.push(t); changed=true; } });
   if(changed) renderTags();
 }
-(function(){const pb=document.getElementById('pBody');if(pb)pb.addEventListener('input',syncBodyTags);})();
+(function(){const pb=document.getElementById('pBody');if(pb)pb.addEventListener('input',()=>syncBodyTags(false));})();
 /* ===== 글 내용 기반 자동 추천 (누리과정·카테고리·해시태그) ===== */
 const AI_CAT={
   '여름':['여름','물놀이','물총','수박','얼음','바다','수영','더위','모래','아이스크림','부채','선풍기','비눗방울'],
@@ -2789,7 +2798,7 @@ function aiSuggestTags(silent){
   if(!cats.length && !nuri.size && !tags.length){ if(!silent)toast('내용에서 특징을 못 찾았어요 · 직접 골라주세요'); return; }
   if(cats.length) sel.cat=new Set(catLabelsToKeys(cats.slice(0,6)));
   if(nuri.size) sel.nuri=nuri;
-  if(tags.length) sel.tags=tags.slice(0,6);
+  if(tags.length) sel.tags=[...new Set(tags.map(noSpace).filter(Boolean))].slice(0,6);
   renderNuri();renderCat();renderTags();
   if(!silent)toast('내용에 맞춰 골라봤어요 · 원하면 자유롭게 수정하세요');
 }
@@ -2842,8 +2851,9 @@ async function publishPost(){
   if(SB && !authUser){toast('로그인 후 올릴 수 있어요');closeUpload();openAuth('login');return;}
   const title=($('#pTitle').value.trim()||'놀이');
   const body=composeBody();               // 항목별 칸을 합친 전체 글
-  const catTags=[...sel.cat].map(k=>k.split('::')[1]);
-  const tags=[...new Set([...sel.tags, ...catTags])];
+  syncBodyTags(true);                     // 본문 맨 끝 해시태그까지 마저 수집
+  const catLabels=[...sel.cat].map(k=>k.split('::')[1]);          // 카테고리(띄어쓰기 유지)
+  const tags=[...new Set([...sel.tags, ...catLabels].map(noSpace).filter(Boolean))]; // 해시태그(띄어쓰기 없음)
   // 각 사진: 모자이크 적용본 + 사진별 설명 + 사진별 구매표시
   const images=photos.map(ph=>({
     img:ph.cv.toDataURL('image/jpeg',0.9),
@@ -2869,7 +2879,7 @@ async function publishPost(){
       const {error}=await SB.from('posts').insert({
         user_id:authUser.id, title, description:topDesc, tags,
         image_url:uploaded[0].img, images:uploaded,
-        age:sel.age, nuri:[...sel.nuri], categories:catTags, spots:uploaded[0].spots,
+        age:sel.age, nuri:[...sel.nuri], categories:catLabels, spots:uploaded[0].spots,
         attachments:atts,
         author_name:profile.nick, author_role:profile.roleShort||profile.role,
         author_icon:profile.icon||'', author_avatar:profile.photo||'' });
@@ -2884,7 +2894,7 @@ async function publishPost(){
   // ── 데모 저장(로컬) ─────────────────────────────────
   const demoAtts=await uploadAttachments();
   posts.unshift({tid:'me',title:title.startsWith('#')?title:'#'+title,desc:topDesc,
-    img:images[0].img, images, tags:tags.length?tags:['새놀이'], nuri:[...sel.nuri],
+    img:images[0].img, images, tags:tags.length?tags:['새놀이'], nuri:[...sel.nuri], categories:catLabels,
     views:'0',like:0,cmt:0,liked:false,emoji:'🎨', spots:images[0].spots, attachments:demoAtts});
   toast(`놀이 ${images.length}장 업로드! (데모)`);
   resetUpload();closeUpload();go('browse');renderBrowse();
