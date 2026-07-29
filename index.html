@@ -693,7 +693,7 @@
 
     <!-- 둘러보기 -->
     <section class="view on" id="v-browse">
-      <div class="br-search"><span>🔍</span><input id="brSearch" type="text" name="nolimoa-search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="놀이 주제, 해시태그, 선생님 이름으로 검색" oninput="renderBrowseFeed()"></div>
+      <div class="br-search"><span>🔍</span><input id="brSearch" type="search" name="nolimoa-search-field" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="놀이 주제, 해시태그, 선생님 이름으로 검색" oninput="renderBrowseFeed()"></div>
       <div class="main-head"><div><h1>둘러보기</h1><p>선생님들의 놀이 아이디어를 모았어요</p></div>
         <div class="auth-btns" id="browseAuth"></div></div>
       <div id="brFilterBar"></div>
@@ -1695,6 +1695,7 @@ function openEdit(){
   $('#pBody').innerHTML=marksToRich(p.desc||'');
   sel={age:p.age||'선택 안함', nuri:new Set(p.nuri||[]), cat:new Set(catLabelsToKeys(p.categories||[])), tags:[...(p.tags||[])]};
   attachments=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url}));
+  _bodyTagSet=new Set();
   renderAge();renderNuri();renderCat();renderTags();renderAttachList();
   renderEditImages();
   setWriteMode(true);
@@ -2654,7 +2655,7 @@ function renderTags(){
 
 /* 모달 열기/닫기 (1단계 사진 → 2단계 글) */
 function openUpload(){
-  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); _editPost=null; }
+  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); _bodyTagSet=new Set(); _editPost=null; }
   $('#uploadOverlay').classList.add('on');
 }
 function goWrite(){
@@ -2721,15 +2722,23 @@ function extractHashtags(text, includeLast){
   while((m=re.exec(text||''))){ if(m[1]&&!out.includes(m[1])) out.push(m[1]); }
   return out;
 }
+let _bodyTagSet=new Set();  // 본문에서 뽑은 태그들 (조합 중 조각은 다음 동기화에서 자동 제거)
 function syncBodyTags(final){
   if(!sel)return;
   const el=$('#pBody'); if(!el)return;
-  const found=extractHashtags(el.innerText||el.textContent||'', final===true);
-  let changed=false;
-  found.forEach(t=>{ if(!sel.tags.includes(t)){ sel.tags.push(t); changed=true; } });
-  if(changed) renderTags();
+  const fresh=extractHashtags(el.innerText||el.textContent||'', final===true).map(noSpace).filter(Boolean);
+  const freshSet=new Set(fresh);
+  // 이전에 본문에서 넣었던 태그 중 지금 본문에 없는 건 제거(= 조합 중 생긴 조각 정리)
+  sel.tags=(sel.tags||[]).filter(t=> !_bodyTagSet.has(t) || freshSet.has(t));
+  // 완성된 본문 태그 추가
+  fresh.forEach(t=>{ if(!sel.tags.includes(t)) sel.tags.push(t); });
+  _bodyTagSet=freshSet;
+  renderTags();
 }
-(function(){const pb=document.getElementById('pBody');if(pb)pb.addEventListener('input',()=>syncBodyTags(false));})();
+(function(){const pb=document.getElementById('pBody');if(pb){
+  pb.addEventListener('input',e=>{ if(e && e.isComposing) return; syncBodyTags(false); }); // 한글 조합 중엔 건너뜀
+  pb.addEventListener('compositionend',()=>syncBodyTags(false));                            // 조합 끝나면 반영
+}})();
 /* ===== 글 내용 기반 자동 추천 (누리과정·카테고리·해시태그) ===== */
 const AI_CAT={
   '여름':['여름','물놀이','물총','수박','얼음','바다','수영','더위','모래','아이스크림','부채','선풍기','비눗방울'],
@@ -2903,7 +2912,7 @@ function resetUpload(){
   photos=[];$('#photoList').innerHTML='';closeSpotForm();resetSel();
   $('#drop').style.display='block';$('#photoTop').style.display='none';
   $('#pTitle').value=''; const pb=$('#pBody'); if(pb)pb.innerHTML='';
-  attachments=[]; renderAttachList();
+  attachments=[]; renderAttachList(); _bodyTagSet=new Set();
   _editPost=null; setWriteMode(false);
 }
 
@@ -2927,6 +2936,7 @@ renderProfile();
 renderBrowseAuth();
 renderSideCats();
 syncStats();
+(function(){const bs=$('#brSearch');if(bs){bs.value='';setTimeout(()=>{if(bs.value&&document.activeElement!==bs)bs.value='';},400);}})();
 renderBrowse(); // 새로고침 시 기본 화면 = 둘러보기
 if(SB){
   refreshSession();
