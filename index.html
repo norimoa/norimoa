@@ -679,7 +679,7 @@
   <!-- ============ MAIN ============ -->
   <main>
     <!-- 구독 (following) -->
-    <section class="view on" id="v-sub">
+    <section class="view" id="v-sub">
       <div class="main-head">
         <div>
           <h1>팔로잉</h1>
@@ -692,7 +692,7 @@
     </section>
 
     <!-- 둘러보기 -->
-    <section class="view" id="v-browse">
+    <section class="view on" id="v-browse">
       <div class="br-search"><span>🔍</span><input id="brSearch" placeholder="놀이 주제, 해시태그, 선생님 이름으로 검색" oninput="renderBrowseFeed()"></div>
       <div class="main-head"><div><h1>둘러보기</h1><p>선생님들의 놀이 아이디어를 모았어요</p></div>
         <div class="auth-btns" id="browseAuth"></div></div>
@@ -788,9 +788,9 @@
 
 <!-- ============ BOTTOM NAV ============ -->
 <nav class="nav">
-  <button data-v="browse" onclick="go('browse')">
+  <button data-v="browse" class="on" onclick="go('browse')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>둘러보기</button>
-  <button data-v="sub" class="on" onclick="go('sub')">
+  <button data-v="sub" onclick="go('sub')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>팔로잉</button>
   <button data-v="upload" onclick="openUpload()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>업로드</button>
@@ -975,11 +975,10 @@
 
       <!-- 전체 글 (자유 서술) -->
       <div class="sec">
-        <div class="sec-label">📝 글 내용 <span class="hint">놀이 전체 소개 (사진별 설명과 별개)</span></div>
+        <div class="sec-label">📝 글 내용</div>
         <div class="fmt-bar">
           <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="richCmd('bold')"><b>가</b> 진하게</button>
           <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="richCmd('underline')"><u>가</u> 밑줄</button>
-          <span class="fmt-hint">글씨 선택 후 클릭 · 단축키 Ctrl+B / Ctrl+U</span>
         </div>
         <div id="pBody" class="rich big-write" contenteditable="true" data-ph="이 놀이를 자유롭게 소개해주세요. 준비물, 방법, 팁 등을 적어보세요."></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px">
@@ -1203,7 +1202,7 @@ function renderFeed(){
     el.innerHTML=`
       <div class="post-top">
         <div class="whoclick" onclick="event.stopPropagation();openTeacher('${tt.id}')">
-          <div class="av" style="background:${tt.color}">${tt.init}</div>
+          <div class="av" style="${avStyle(tt)}">${avInner(tt)}</div>
           <div class="who"><b>${tt.name}</b><small>${tt.org}</small></div>
         </div>
         <button class="foll-btn" onclick="event.stopPropagation();toggleFollow('${tt.id}')">${tt.following?'팔로잉':'+ 팔로우'}</button>
@@ -1308,6 +1307,9 @@ const savedPlays=[
   {title:'저장 — 감각 탐색',tag:'감각',count:9,img:'https://images.unsplash.com/photo-1545558014-8692077e9b5c?w=400&q=70'},
 ];
 function avatarHTML(size){return profile.photo?`<img src="${profile.photo}">`:profile.icon;}
+/* 글쓴이 아바타: 설정한 프로필 사진 > 아이콘 > 대표글자 순으로 표시 */
+function avStyle(a){return (a&&a.photo)?'background:#eee;overflow:hidden':(a&&a.icon)?'background:#ffe7dd':`background:${(a&&a.color)||'#ccc'}`;}
+function avInner(a){return (a&&a.photo)?`<img src="${a.photo}" style="width:100%;height:100%;object-fit:cover">`:(a&&a.icon)?a.icon:((a&&a.init)||'?');}
 function renderProfile(){
   const guest=isGuest();
   const nick=guest?'게스트':profile.nick;
@@ -1319,7 +1321,7 @@ function renderProfile(){
   if(rsAv)rsAv.innerHTML=guest?'🔒':avatarHTML();
   if(rsName)rsName.textContent=nick;
   if(rsRole)rsRole.textContent=role;
-  const me=t('me');if(me)me.name=profile.nick;
+  const me=t('me');if(me){me.name=profile.nick;me.icon=profile.icon;me.photo=profile.photo;}
   // 프로필 편집 버튼은 로그인 후에만
   const peb=document.querySelector('.profile-card .btn-line');if(peb)peb.style.display=guest?'none':'';
   syncStats();
@@ -1488,7 +1490,7 @@ async function loadDbPosts(){
       tags:row.tags||[], views:'0', like:0, cmt:0, liked:false, comments:[],
       age:row.age, nuri:row.nuri||[], categories:row.categories||[], attachments:row.attachments||[],
       spots:imgs[0].spots||[], author:{name:row.author_name||'선생님',org:row.author_role||'',
-        init:(row.author_name||'선')[0], color:'#f2653b'}
+        init:(row.author_name||'선')[0], color:'#f2653b', icon:row.author_icon||'', photo:row.author_avatar||''}
     };
   });
   syncStats();
@@ -1586,7 +1588,7 @@ function renderPostPage(p){
       ${nuriChips?`<div class="ph-nuri">${nuriChips}</div>`:''}
     </div>
     <div class="card author-card" ${a&&a.id?`onclick="openTeacher('${a.id}')"`:''}>
-      <div class="av" style="background:${a?a.color:'#ccc'}">${a?a.init:'?'}</div>
+      <div class="av" style="${avStyle(a)}">${avInner(a)}</div>
       <div><b>${a?a.name:'선생님'}</b><small>${(a&&a.org)||''}</small></div>
     </div>
     <div class="card post-detail-body">${linkifyTags(p.desc,p.tags)}</div>
@@ -2150,7 +2152,7 @@ function renderBrowseFeed(){
     el.innerHTML=`
       <div class="post-top">
         <div class="whoclick" ${whoClick?whoClick.replace('onclick="','onclick="event.stopPropagation();'):''}>
-          <div class="av" style="background:${a.color}">${a.init}</div>
+          <div class="av" style="${avStyle(a)}">${avInner(a)}</div>
           <div class="who"><b>${a.name}</b><small>${a.org||''}</small></div>
         </div>
         ${followBtn.replace('onclick="','onclick="event.stopPropagation();')}
@@ -2232,7 +2234,7 @@ function openTeacher(tid){
   const tt=t(tid);if(!tt)return;
   const tp=posts.filter(p=>p.tid===tid);
   const followBtn=tt.me?'':`<button class="foll-btn ${tt.following?'':'off'}" onclick="toggleFollow('${tt.id}');openTeacher('${tt.id}')">${tt.following?'팔로잉':'+ 팔로우'}</button>`;
-  $('#teacherHead').innerHTML=`<div class="av" style="background:${tt.color}">${tt.init}</div>
+  $('#teacherHead').innerHTML=`<div class="av" style="${avStyle(tt)}">${avInner(tt)}</div>
     <div class="tinfo"><b>${tt.name}</b><small>${tt.org} · 게시물 ${tp.length}</small></div>${followBtn}`;
   const body=$('#teacherPosts');body.innerHTML='';
   // 올린 놀이 (폴더)
@@ -2670,10 +2672,11 @@ function richCmd(cmd){try{document.execCommand('styleWithCSS',false,false);}catc
 document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&!e.altKey){
     const k=e.key.toLowerCase();
-    if(k==='b'||k==='u'){
-      const el=document.activeElement;
-      if(el&&el.classList&&el.classList.contains('rich')){e.preventDefault();richCmd(k==='b'?'bold':'underline');}
-    }
+    const el=document.activeElement;
+    if(!(el&&el.classList&&el.classList.contains('rich')))return;
+    if(k==='b'||k==='u'){e.preventDefault();richCmd(k==='b'?'bold':'underline');}
+    else if(k==='z'){e.preventDefault();document.execCommand(e.shiftKey?'redo':'undo',false,null);}
+    else if(k==='y'){e.preventDefault();document.execCommand('redo',false,null);}
   }
 });
 /* 리치 편집 내용 → 저장용 마커(**굵게**, __밑줄__) */
@@ -2703,6 +2706,21 @@ function marksToRich(text){
   return h.replace(/\n/g,'<br>');
 }
 function composeBody(){return richToMarks($('#pBody'));}
+/* 글 내용에 쓴 #해시태그를 맨 아래 해시태그 칸으로 자동 수집 (인스타처럼) */
+function extractHashtags(text){
+  const out=[]; const re=/#([^\s#<>.,!?~*]+)/g; let m;
+  while((m=re.exec(text||''))){ if(m[1]&&!out.includes(m[1])) out.push(m[1]); }
+  return out;
+}
+function syncBodyTags(){
+  if(!sel)return;
+  const el=$('#pBody'); if(!el)return;
+  const found=extractHashtags(el.innerText||el.textContent||'');
+  let changed=false;
+  found.forEach(t=>{ if(!sel.tags.includes(t)){ sel.tags.push(t); changed=true; } });
+  if(changed) renderTags();
+}
+(function(){const pb=document.getElementById('pBody');if(pb)pb.addEventListener('input',syncBodyTags);})();
 /* ===== 글 내용 기반 자동 추천 (누리과정·카테고리·해시태그) ===== */
 const AI_CAT={
   '여름':['여름','물놀이','물총','수박','얼음','바다','수영','더위','모래','아이스크림','부채','선풍기','비눗방울'],
@@ -2853,7 +2871,8 @@ async function publishPost(){
         image_url:uploaded[0].img, images:uploaded,
         age:sel.age, nuri:[...sel.nuri], categories:catTags, spots:uploaded[0].spots,
         attachments:atts,
-        author_name:profile.nick, author_role:profile.roleShort||profile.role });
+        author_name:profile.nick, author_role:profile.roleShort||profile.role,
+        author_icon:profile.icon||'', author_avatar:profile.photo||'' });
       if(error)throw error;
       toast(`업로드 완료! 사진 ${uploaded.length}장 저장`);
       await loadDbPosts();
@@ -2898,6 +2917,7 @@ renderProfile();
 renderBrowseAuth();
 renderSideCats();
 syncStats();
+renderBrowse(); // 새로고침 시 기본 화면 = 둘러보기
 if(SB){
   refreshSession();
   SB.auth.onAuthStateChange(()=>refreshSession());
