@@ -451,6 +451,12 @@
   .ei-photo .ei-edit{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.6);color:#fff;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:8px}
   .ei-photo:hover .ei-edit{background:var(--coral)}
   .ei-photo .ei-no{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:700;border-radius:7px;padding:1px 8px}
+  .ei-photo .ei-marker{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;
+    background:#dd5b8d;color:#fff;border:2px solid #fff;box-shadow:0 2px 7px rgba(0,0,0,.4);display:grid;place-items:center;
+    font-size:12px;font-weight:700;cursor:grab;touch-action:none;z-index:4}
+  .ei-photo .ei-marker.drag{cursor:grabbing;transform:translate(-50%,-50%) scale(1.15)}
+  .espot-no{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:#dd5b8d;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center}
+  .espot-hint{font-size:12px;color:var(--coral-tx);margin:8px 0 6px;background:#fff7f9;border:1px dashed #f3d3ce;border-radius:9px;padding:7px 10px}
   /* 소개 페이지 */
   .about-wrap{max-width:720px}
   .about-hero{text-align:center;background:linear-gradient(180deg,var(--pink-bg),#fff);border:1px solid #f0dcd6;border-radius:20px;padding:30px 20px 26px;margin-bottom:16px}
@@ -480,7 +486,7 @@
   .ei-del-btn{color:#c0433f;border-color:#eec6c6}
   .ei-del-btn:hover{background:#fbeceb}
   .espots{margin-top:8px;display:flex;flex-direction:column;gap:6px}
-  .espot{display:grid;grid-template-columns:1fr 1fr 1.3fr auto;gap:6px;align-items:center}
+  .espot{display:grid;grid-template-columns:22px 1fr 1fr 1.3fr auto;gap:6px;align-items:center}
   .espot input{border:1px solid #e7dcd6;border-radius:8px;padding:8px;font-size:12px;background:#fafafb;font-family:inherit;min-width:0}
   .espot-del{border:none;background:#f2f2f5;color:#c33;border-radius:8px;width:30px;height:32px;font-size:12px}
   .addspot2{margin-top:8px}
@@ -2297,29 +2303,56 @@ function renderEditImages(){
   _editImages.forEach((im,idx)=>{
     const spotsHtml=im.spots.map((s,si)=>`
       <div class="espot">
+        <span class="espot-no">${si+1}</span>
         <input placeholder="물품명" value="${esc(s.name||'')}" data-k="name" data-i="${idx}" data-s="${si}">
         <input placeholder="쇼핑몰" value="${esc(s.mall||'')}" data-k="mall" data-i="${idx}" data-s="${si}">
         <input placeholder="https:// 링크" value="${esc(s.url||'')}" data-k="url" data-i="${idx}" data-s="${si}">
         <button class="espot-del" data-i="${idx}" data-s="${si}">✕</button>
       </div>`).join('');
+    const markersHtml=im.spots.map((s,si)=>`<span class="ei-marker" data-i="${idx}" data-s="${si}" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%">${si+1}</span>`).join('');
     const card=document.createElement('div');card.className='edit-img';
-    card.innerHTML=`<div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt=""><span class="ei-no">${idx+1}</span><span class="ei-edit">✏️ 사진 수정</span></div>
+    card.innerHTML=`<div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt=""><span class="ei-no">${idx+1}</span>${markersHtml}<span class="ei-edit">✏️ 사진 수정</span></div>
       <div class="ei-btns">
         <button type="button" class="fa-btn ei-edit-btn" data-i="${idx}">🖼️ 사진 수정 (모자이크·자르기·회전)</button>
         <button type="button" class="fa-btn ei-del-btn" data-i="${idx}">🗑 사진 삭제</button>
       </div>
       <textarea class="photo-desc ecap" data-i="${idx}" placeholder="이 사진 설명">${esc(im.desc||'')}</textarea>
+      ${im.spots.length?'<div class="espot-hint">🛒 사진 위 <b>핑크 동그라미를 드래그</b>해 상품 위치를 지정하세요</div>':''}
       <div class="espots">${spotsHtml}</div>
       <button class="fa-btn addspot2" data-i="${idx}">＋ 상품 태그 추가</button>`;
     box.appendChild(card);
   });
+  box.querySelectorAll('.ei-marker').forEach(m=>enableEiMarkerDrag(m));
   box.querySelectorAll('.ei-photo, .ei-edit-btn').forEach(el=>el.onclick=()=>openEditImage(+el.dataset.i));
   box.querySelectorAll('.ei-del-btn').forEach(b=>b.onclick=()=>deleteEditImage(+b.dataset.i));
   box.querySelectorAll('.ecap').forEach(tx=>tx.addEventListener('input',e=>{_editImages[+e.target.dataset.i].desc=e.target.value;}));
   box.querySelectorAll('.espot input').forEach(inp=>inp.addEventListener('input',e=>{
     _editImages[+e.target.dataset.i].spots[+e.target.dataset.s][e.target.dataset.k]=e.target.value;}));
   box.querySelectorAll('.espot-del').forEach(b=>b.onclick=()=>{_editImages[+b.dataset.i].spots.splice(+b.dataset.s,1);renderEditImages();});
-  box.querySelectorAll('.addspot2').forEach(b=>b.onclick=()=>{_editImages[+b.dataset.i].spots.push({x:50,y:50,name:'',mall:'',url:''});renderEditImages();});
+  box.querySelectorAll('.addspot2').forEach(b=>b.onclick=()=>{
+    const im=_editImages[+b.dataset.i]; const n=im.spots.length;
+    im.spots.push({x:35+(n%4)*12, y:35+(Math.floor(n/4)%3)*14, name:'',mall:'',url:''}); // 새 동그라미가 겹치지 않게 살짝 어긋나게
+    renderEditImages();
+    toast('사진 위 핑크 동그라미를 드래그해 위치를 정해주세요');
+  });
+}
+/* 수정 화면: 상품 태그 동그라미를 사진 위에서 드래그해 위치 지정 */
+function enableEiMarkerDrag(m){
+  const i=+m.dataset.i, si=+m.dataset.s, wrap=m.parentElement;
+  let dragging=false;
+  const move=e=>{
+    const r=wrap.getBoundingClientRect(); if(!r.width||!r.height)return;
+    let x=(e.clientX-r.left)/r.width*100, y=(e.clientY-r.top)/r.height*100;
+    x=Math.max(3,Math.min(97,x)); y=Math.max(3,Math.min(97,y));
+    if(_editImages[i]&&_editImages[i].spots[si]){ _editImages[i].spots[si].x=x; _editImages[i].spots[si].y=y; }
+    m.style.left=x+'%'; m.style.top=y+'%';
+  };
+  m.addEventListener('pointerdown',e=>{ e.stopPropagation(); e.preventDefault(); dragging=true; m.classList.add('drag'); try{m.setPointerCapture(e.pointerId);}catch(_){}} );
+  m.addEventListener('pointermove',e=>{ if(!dragging)return; e.stopPropagation(); move(e); });
+  const end=e=>{ if(!dragging)return; dragging=false; m.classList.remove('drag'); e.stopPropagation(); try{m.releasePointerCapture(e.pointerId);}catch(_){}} ;
+  m.addEventListener('pointerup',end);
+  m.addEventListener('pointercancel',end);
+  m.addEventListener('click',e=>e.stopPropagation()); // 사진 클릭(모자이크 편집)과 분리
 }
 /* 글 수정 화면에서 사진 클릭 → 모자이크·자르기·회전 편집 */
 function openEditImage(idx){
