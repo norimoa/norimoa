@@ -450,7 +450,36 @@
   .ei-photo img{width:100%;max-height:200px;object-fit:cover;border-radius:10px;display:block}
   .ei-photo .ei-edit{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.6);color:#fff;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:8px}
   .ei-photo:hover .ei-edit{background:var(--coral)}
-  .ei-edit-btn{margin-top:8px}
+  .ei-photo .ei-no{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:700;border-radius:7px;padding:1px 8px}
+  /* 소개 페이지 */
+  .about-wrap{max-width:720px}
+  .about-hero{text-align:center;background:linear-gradient(180deg,var(--pink-bg),#fff);border:1px solid #f0dcd6;border-radius:20px;padding:30px 20px 26px;margin-bottom:16px}
+  .about-hero .about-logo{font-size:44px}
+  .about-hero h2{color:var(--coral-tx);font-size:26px;margin:6px 0 8px}
+  .about-hero .about-tag{color:var(--pink-tx);font-size:15px;line-height:1.6;font-weight:600}
+  .about-card{background:#fff;border:1px solid #efe7e2;border-radius:16px;padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .about-card.highlight{background:#fff7f9;border-color:#f3d3ce}
+  .about-card h3{color:var(--coral-tx);font-size:16.5px;margin:0 0 8px}
+  .about-card p{color:var(--ink);font-size:14px;line-height:1.7;margin:0}
+  .about-card .about-note{margin-top:10px;font-size:12.5px;color:var(--coral-tx);background:#fff;border:1px dashed #e6a9b0;border-radius:9px;padding:8px 10px;line-height:1.55}
+  .about-list{margin:6px 0 0;padding-left:2px;list-style:none;display:flex;flex-direction:column;gap:9px}
+  .about-list li{color:var(--ink);font-size:14px;line-height:1.6;padding-left:16px;position:relative}
+  .about-list li::before{content:'•';position:absolute;left:0;color:var(--coral-tx);font-weight:700}
+  .about-list li b{color:var(--coral-tx)}
+  .about-foot{text-align:center;color:var(--coral-tx);font-size:14px;font-weight:600;line-height:1.7;padding:18px 10px 8px}
+  .about-foot span{color:var(--sub);font-size:12.5px;font-weight:400}
+  .about-link{display:block;text-align:center;color:var(--sub);font-size:12.5px;margin-top:14px;cursor:pointer;padding:8px}
+  .about-link:hover{color:var(--coral-tx)}
+  .side-btn-row{display:flex;gap:8px;align-items:stretch}
+  .side-btn-row .cat-btn,.side-btn-row .about-btn{flex:1 1 0;width:auto;justify-content:center;margin:0}
+  .about-btn{background:var(--pink-bg);color:var(--coral-tx);border:1px solid #eec6c9;border-radius:12px;
+    padding:11px 12px;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+  .about-btn svg{flex:0 0 auto}
+  .about-btn:hover{background:#f3d3ce;border-color:#e6a9b0}
+  .ei-btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .ei-btns .fa-btn{flex:1 1 auto}
+  .ei-del-btn{color:#c0433f;border-color:#eec6c6}
+  .ei-del-btn:hover{background:#fbeceb}
   .espots{margin-top:8px;display:flex;flex-direction:column;gap:6px}
   .espot{display:grid;grid-template-columns:1fr 1fr 1.3fr auto;gap:6px;align-items:center}
   .espot input{border:1px solid #e7dcd6;border-radius:8px;padding:8px;font-size:12px;background:#fafafb;font-family:inherit;min-width:0}
@@ -764,7 +793,10 @@
       <div class="logo">🎪</div>
       <div><b>놀이모아</b><small>놀이 검색 플랫폼</small></div>
     </div>
-    <button class="cat-btn" onclick="openCat()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg> 카테고리</button>
+    <div class="side-btn-row">
+      <button class="cat-btn" onclick="openCat()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg> 카테고리</button>
+      <button class="about-btn" onclick="go('about')"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> 놀이모아 소개</button>
+    </div>
     <nav class="side-menu">
       <a class="on" data-sc="kinder" onclick="setSideSection('kinder')">🏫 유치원/어린이집</a>
     </nav>
@@ -823,6 +855,36 @@
       <div class="placeholder"><div class="big">💬</div>곧 열려요!</div>
     </section>
 
+    <!-- 소개 -->
+    <section class="view" id="v-about">
+      <div class="main-head"><div><h1>놀이모아 소개</h1><p>놀이 아이디어를 모아, 함께 나눠요</p></div></div>
+      <div class="about-wrap">
+        <div class="about-card">
+          <h3>🌱 어떤 곳인가요?</h3>
+          <p>오늘은 어떤 놀이를 해야 하지? 혼자 고민하지 마세요. 놀이모아는 유아교사들이 직접 해본 놀이를 사진과 함께 기록하고, 서로의 놀이에서 아이디어와 영감을 나누는 공간입니다. 놀이주제, 놀이유형, 연령 등 다양한 카테고리로 정리되어 있어 원하는 놀이를 쉽고 빠르게 찾을 수 있어요.</p>
+        </div>
+        <div class="about-card">
+          <h3>👩‍🏫 누구를 위한 곳인가요?</h3>
+          <p>유아교육기관에서 유아들과 함께하는 모든 교사들을 위한 곳이에요. 놀이를 나누고 싶은 교사, 새로운 아이디어를 찾는 교사, 그리고 교사들의 놀이를 참고하여 가정에서 아이와 즐겁게 놀이하고 싶은 학부모님까지 모두 환영합니다.</p>
+        </div>
+        <div class="about-card highlight">
+          <h3>🔒 유아들의 개인정보, 안심하세요</h3>
+          <p>놀이모아는 유아의 개인정보를 무엇보다 소중하게 생각합니다. 사진을 업로드하면 <b>AI가 유아의 얼굴을 자동으로 인식해 모자이크 처리</b>하며, 필요한 경우 원하는 부분을 직접 추가하거나 범위를 조정할 수도 있습니다. 안심하고 소중한 놀이 순간을 공유하세요.</p>
+          <p class="about-note">※ 유아의 이름이나 이름표 등 개인정보가 포함된 부분은 반드시 직접 모자이크해 주세요.</p>
+        </div>
+        <div class="about-card">
+          <h3>✨ 이렇게 쓸 수 있어요</h3>
+          <ul class="about-list">
+            <li><b>둘러보기</b> — 다른 교사들의 놀이를 구경하고, 마음에 드는 놀이나 나중에 보고 싶은 놀이는 저장해 보세요.</li>
+            <li><b>놀이 업로드</b> — 사진·설명·해시태그로 우리 반 놀이를 기록하고 공유해요.</li>
+            <li><b>저장·폴더</b> — 저장한 놀이를 나만의 폴더로 정리하고, 필요할 때 언제든 다시 꺼내볼 수 있어요.</li>
+            <li><b>팔로우</b> — 관심 있는 교사를 팔로우하면 새로 업로드되는 놀이를 한 곳에서 모아볼 수 있어요.</li>
+          </ul>
+        </div>
+        <div class="about-foot">놀이를 나누는 교사들이 모일수록, 유아들의 하루가 더 즐거워져요 🌷<br><span>놀이모아와 함께해요.</span></div>
+      </div>
+    </section>
+
     <!-- 마이페이지 -->
     <section class="view" id="v-my">
       <div class="main-head">
@@ -852,6 +914,7 @@
         <h4>🔖 저장한 놀이</h4>
         <div class="folder-row savedgrid" id="savedPlaysRow"></div>
       </div>
+      <div class="about-link" onclick="go('about')">ℹ️ 놀이모아 소개 보기</div>
     </section>
   </main>
 
@@ -1158,8 +1221,10 @@
 
       <!-- 사진별 설명·상품태그 (수정할 때만 표시) -->
       <div class="sec" id="writeImagesSec" style="display:none">
-        <div class="sec-label">🖼️ 사진별 설명 · 상품 태그</div>
+        <div class="sec-label">🖼️ 사진 · 설명 · 상품 태그 <span class="hint">사진을 눌러 수정 · 🗑로 삭제 · 아래에서 추가</span></div>
         <div id="writeImages"></div>
+        <input type="file" id="editAddPhoto" accept="image/*" multiple hidden>
+        <button type="button" class="fa-btn" onclick="document.getElementById('editAddPhoto').click()">＋ 사진 추가</button>
       </div>
     </div>
     <div class="up-foot" style="display:flex;gap:10px">
@@ -1554,9 +1619,9 @@ function removeFollower(i){followers.splice(i,1);renderSocial();}
 // 데모 모드면 윤서쌤 미리보기, 실제 모드면 로그인 전까지 게스트
 let profile = (typeof SB!=='undefined' && SB)
   ? {nick:'게스트',role:'',roleShort:'',icon:'🧑',photo:'',guest:true}
-  : {nick:'윤서쌤',role:'교사',roleShort:'유치원',icon:'🧑',photo:''};
+  : {nick:'윤서쌤',role:'유아교사',roleShort:'유치원',icon:'🧑',photo:''};
 function isGuest(){return !!(SB && !authUser);}
-const roles=['교사','학부모','학원','학생/예비교사','기타'];
+const roles=['유아교사','학부모','학원','학생/예비교사','기타'];
 const profileIcons=['🧑','🐣','🌸','🌊','🦋','🌈','🐬','🌻','⭐'];
 const myPlays=[
   {title:'수박 주제 놀이',tag:'수박',count:3,img:'https://images.unsplash.com/photo-1595475207225-428b62bda831?w=400&q=70'},
@@ -1722,7 +1787,7 @@ async function doAuth(){
       const nick=$('#authNick').value.trim()||'선생님';
       const {data,error}=await SB.auth.signUp({email,password:pw,options:{data:{nickname:nick}}});
       if(error)throw error;
-      if(data.user){await SB.from('profiles').upsert({id:data.user.id,nickname:nick,role:'교사',icon:'🧑'});}
+      if(data.user){await SB.from('profiles').upsert({id:data.user.id,nickname:nick,role:'유아교사',icon:'🧑'});}
       toast('회원가입 완료! 이메일 인증이 필요할 수 있어요');
     }else{
       const {error}=await SB.auth.signInWithPassword({email,password:pw});
@@ -1755,8 +1820,8 @@ async function refreshSession(){
     // 프로필 행이 아직 없으면(가입 시 세션 미형성 등) 지금 만들어 준다
     if(!prof){
       const nick=metaNick||'선생님';
-      try{await SB.from('profiles').upsert({id:authUser.id,nickname:nick,role:'교사',icon:'🧑'});}catch(e){}
-      prof={nickname:nick,role:'교사',icon:'🧑',avatar_url:''};
+      try{await SB.from('profiles').upsert({id:authUser.id,nickname:nick,role:'유아교사',icon:'🧑'});}catch(e){}
+      prof={nickname:nick,role:'유아교사',icon:'🧑',avatar_url:''};
     }
     profile.nick=prof.nickname||metaNick||profile.nick;
     profile.role=prof.role||profile.role;
@@ -1844,16 +1909,23 @@ function isFollowingUser(uid){return myFollowing.has(uid);}
 async function followUser(uid){
   if(!(SB && authUser)||!uid||uid===authUser.id)return;
   myFollowing.add(uid);
-  try{await SB.from('follows').upsert({follower_id:authUser.id,following_id:uid}); createNotif(uid,'follow',null);}catch(e){}
+  try{
+    const {error}=await SB.from('follows').upsert({follower_id:authUser.id,following_id:uid});
+    if(error)throw error;
+    createNotif(uid,'follow',null);
+  }catch(e){ myFollowing.delete(uid); toast('팔로우 저장 실패: '+(e.message||e)); throw e; }
 }
 async function unfollowUser(uid){
   if(!(SB && authUser)||!uid)return;
   myFollowing.delete(uid);
-  try{await SB.from('follows').delete().eq('follower_id',authUser.id).eq('following_id',uid);}catch(e){}
+  try{
+    const {error}=await SB.from('follows').delete().eq('follower_id',authUser.id).eq('following_id',uid);
+    if(error)throw error;
+  }catch(e){ myFollowing.add(uid); toast('언팔로우 실패: '+(e.message||e)); throw e; }
 }
 async function toggleFollowUser(uid){
   if(!(SB && authUser)){toast('로그인 후 팔로우할 수 있어요');return;}
-  if(myFollowing.has(uid))await unfollowUser(uid); else await followUser(uid);
+  try{ if(myFollowing.has(uid))await unfollowUser(uid); else await followUser(uid); }catch(e){}
   syncStats();
 }
 async function countFollows(col,uid){
@@ -1993,17 +2065,25 @@ function wrapSel(id,mark){
 let _currentPost=null, _postBack='browse';
 function openFeedPost(i){openPost(window._feed[i]);}
 function openBrowsePost(i){openPost(window._browse[i]);}
+let _scrollPos={};
 function openPost(p){
   if(!p)return;_currentPost=p;
   const cur=document.querySelector('.view.on');
-  if(cur && cur.id!=='v-post')_postBack=cur.id.replace('v-','');
+  if(cur && cur.id!=='v-post'){ _postBack=cur.id.replace('v-',''); _scrollPos[_postBack]=window.scrollY||window.pageYOffset||0; } // 방금 읽던 위치 기억
   close_('teacherOverlay');
   renderPostPage(p);
   if(SB && p.db){ loadComments(p).then(()=>{if(_currentPost===p)renderComments(p);}); recordView(p); }
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   $('#v-post').classList.add('on');window.scrollTo(0,0);
 }
-function postBack(){go(_postBack);}
+function postBack(){
+  const to=_postBack, y=_scrollPos[to]||0;
+  go(to);
+  // 뒤로 가면 방금 읽던 스크롤 지점으로 복원 (맨 위로 튀지 않게)
+  window.scrollTo(0,y);
+  requestAnimationFrame(()=>window.scrollTo(0,y));
+  setTimeout(()=>window.scrollTo(0,y),120);
+}
 function renderPostPage(p){
   const a=authorOf(p), imgs=imagesOf(p);
   const nuriChips=(p.nuri||[]).map(n=>`<span class="nuri-chip">${nuriLabel(n)}</span>`).join('');
@@ -2224,14 +2304,18 @@ function renderEditImages(){
         <button class="espot-del" data-i="${idx}" data-s="${si}">✕</button>
       </div>`).join('');
     const card=document.createElement('div');card.className='edit-img';
-    card.innerHTML=`<div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt=""><span class="ei-edit">✏️ 사진 수정</span></div>
-      <button type="button" class="fa-btn ei-edit-btn" data-i="${idx}">🖼️ 사진 수정 (모자이크·자르기·회전)</button>
+    card.innerHTML=`<div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt=""><span class="ei-no">${idx+1}</span><span class="ei-edit">✏️ 사진 수정</span></div>
+      <div class="ei-btns">
+        <button type="button" class="fa-btn ei-edit-btn" data-i="${idx}">🖼️ 사진 수정 (모자이크·자르기·회전)</button>
+        <button type="button" class="fa-btn ei-del-btn" data-i="${idx}">🗑 사진 삭제</button>
+      </div>
       <textarea class="photo-desc ecap" data-i="${idx}" placeholder="이 사진 설명">${esc(im.desc||'')}</textarea>
       <div class="espots">${spotsHtml}</div>
       <button class="fa-btn addspot2" data-i="${idx}">＋ 상품 태그 추가</button>`;
     box.appendChild(card);
   });
   box.querySelectorAll('.ei-photo, .ei-edit-btn').forEach(el=>el.onclick=()=>openEditImage(+el.dataset.i));
+  box.querySelectorAll('.ei-del-btn').forEach(b=>b.onclick=()=>deleteEditImage(+b.dataset.i));
   box.querySelectorAll('.ecap').forEach(tx=>tx.addEventListener('input',e=>{_editImages[+e.target.dataset.i].desc=e.target.value;}));
   box.querySelectorAll('.espot input').forEach(inp=>inp.addEventListener('input',e=>{
     _editImages[+e.target.dataset.i].spots[+e.target.dataset.s][e.target.dataset.k]=e.target.value;}));
@@ -2242,6 +2326,49 @@ function renderEditImages(){
 function openEditImage(idx){
   const im=_editImages[idx]; if(!im)return;
   openImgEdit(im.img, { boxes:[], mosaicOn:true, onApply:(url)=>{ _editImages[idx].img=url; renderEditImages(); } });
+}
+/* 수정 화면: 사진 삭제 */
+function deleteEditImage(idx){
+  if(!_editImages||idx<0||idx>=_editImages.length)return;
+  if(_editImages.length<=1){ toast('사진은 최소 1장 필요해요'); return; }
+  _editImages.splice(idx,1);
+  renderEditImages();
+  toast('사진을 삭제했어요');
+}
+/* 이미지(dataURL)에 얼굴 자동 모자이크를 입혀 깨끗한 dataURL로 반환 */
+async function autoMosaicDataURL(src){
+  return new Promise(resolve=>{
+    const im=new Image();
+    im.onload=async ()=>{
+      const sc=Math.min(1,520/im.width);
+      const cv=document.createElement('canvas'); cv.width=Math.round(im.width*sc); cv.height=Math.round(im.height*sc);
+      cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+      let found=[];
+      try{
+        if(modelReady){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35}); const dets=await faceapi.detectAllFaces(cv,opt); found=dets.map(d=>({x:d.box.x,y:d.box.y,w:d.box.width,h:d.box.height}));}
+        else if('FaceDetector' in window){const fd=new FaceDetector({fastMode:true}); const f=await fd.detect(cv); found=f.map(o=>({x:o.boundingBox.x,y:o.boundingBox.y,w:o.boundingBox.width,h:o.boundingBox.height}));}
+      }catch(e){}
+      const ph={img:im, cv, mosaicOn:true, boxes:found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}))};
+      try{ resolve(cleanPhotoDataURL(ph,0.9)); }catch(e){ resolve(src); }
+    };
+    im.onerror=()=>resolve(src);
+    im.src=src;
+  });
+}
+/* 수정 화면: 사진 추가 (얼굴 자동 모자이크 적용) */
+async function addEditPhotos(fileList){
+  const files=[...(fileList||[])].filter(f=>f.type.startsWith('image/'));
+  if(!files.length)return;
+  if(!_editImages)_editImages=[];
+  toast('사진 추가 중… (얼굴 자동 모자이크)');
+  for(const f of files){
+    const raw=await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>res('');r.readAsDataURL(f);});
+    if(!raw)continue;
+    const img=await autoMosaicDataURL(raw);
+    _editImages.push({img, desc:'', spots:[]});
+  }
+  renderEditImages();
+  toast('사진을 추가했어요. 얼굴을 더 가리려면 사진을 눌러 수정하세요.');
 }
 async function saveEdit(){
   const p=_editPost;if(!p)return;
@@ -2781,11 +2908,11 @@ function clearBrowseFilter(){browseFilter='';renderBrowseFeed();}
 /* ---------------- 카테고리 드로어 ---------------- */
 const catDrawer={
   kinder:{title:'🏫 유치원/어린이집', groups:[
-    {g:'생활주제', ic:'🌱', items:['봄','여름','가을','겨울','나와 가족','우리 동네','건강과 안전','동식물','교통기관','환경과 자연','우리나라','세계 여러 나라','우주','물','공룡','곤충','명절','기념일']},
-    {g:'연령별', ic:'👶', items:['0~2세','3세','4세','5세','혼합연령']},
+    {g:'놀이 주제', ic:'🌱', items:['봄','여름','가을','겨울','나와 가족','우리 동네','건강과 안전','동식물','교통기관','환경과 자연','우리나라','세계 여러 나라','우주','물','공룡','곤충','명절','기념일']},
     {g:'놀이 유형', ic:'🎨', items:['미술','신체','역할','쌓기','언어','수·조작','과학·탐구','음악','바깥놀이','감각놀이','새노래','이야기나누기','요리','게임','전통놀이']},
     {g:'특색교육', ic:'📚', items:['생태','AI·디지털','코딩','인성교육','다문화교육','환경교육','경제교육','안전교육','성교육']},
     {g:'상황별', ic:'⭐', items:['주의집중','학부모참여수업','준비물 없는 놀이','혼자놀이','비/눈 오는 날','행사·발표회']},
+    {g:'연령별', ic:'👶', items:['0~2세','3세','4세','5세','혼합연령']},
   ]},
 };
 let catSectionCur='kinder', catTab='놀이';
@@ -3021,6 +3148,7 @@ loadModels();
 
 $('#file').addEventListener('change',e=>{addFiles(e.target.files);e.target.value='';});
 (function(){const ai=document.getElementById('attachInput');if(ai)ai.addEventListener('change',e=>{addAttachments(e.target.files);e.target.value='';});})();
+(function(){const ep=document.getElementById('editAddPhoto');if(ep)ep.addEventListener('change',e=>{addEditPhotos(e.target.files);e.target.value='';});})();
 
 /* ===== 첨부파일 ===== */
 let attachments=[];
@@ -3540,7 +3668,7 @@ const nuriData=[
   {g:'자연탐구',     items:['탐구과정 즐기기','생활 속에서 탐구하기','자연과 더불어 살기']},
 ];
 const catData=[
-  {g:'생활주제', ic:'🌱', items:['봄','여름','가을','겨울','나와 가족','우리 동네','건강과 안전','동식물','교통기관','환경과 자연','우리나라','세계 여러 나라','우주','물','공룡','곤충','명절','기념일']},
+  {g:'놀이 주제', ic:'🌱', items:['봄','여름','가을','겨울','나와 가족','우리 동네','건강과 안전','동식물','교통기관','환경과 자연','우리나라','세계 여러 나라','우주','물','공룡','곤충','명절','기념일']},
   {g:'놀이 유형', ic:'🎨', items:['미술','신체','역할','쌓기','언어','수·조작','과학·탐구','음악','바깥놀이','감각놀이','새노래','이야기나누기','요리','게임','전통놀이']},
   {g:'특색교육', ic:'📚', items:['생태','AI·디지털','코딩','인성교육','다문화교육','환경교육','경제교육','안전교육','성교육']},
   {g:'상황별',   ic:'⭐', items:['주의집중','학부모참여수업','준비물 없는 놀이','혼자놀이','비/눈 오는 날','행사·발표회']},
