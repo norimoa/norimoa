@@ -245,6 +245,9 @@
   .opt-group:last-child{border-bottom:none}
   .opt-group .gl{font-size:12.5px;color:#948b83;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
   .opts{display:flex;flex-wrap:wrap;gap:8px}
+  /* 갈색 테두리로 강조하는 카테고리 항목 (현장체험학습 등) */
+  .hi-cat,.opt.hi-cat,.cg-item.hi-cat{border:2px solid #8d5a44 !important;color:#8d5a44 !important;font-weight:700}
+  .side-cat-items button.hi-cat{border:2px solid #8d5a44 !important;color:#8d5a44 !important;font-weight:700}
   .opt{border:1px solid #e7dcd6;background:#fff;color:#6a6a72;border-radius:18px;
     padding:7px 13px;font-size:12.5px;font-weight:500}
   .opt.on{background:var(--coral);color:#fff;border-color:var(--coral)}
@@ -290,6 +293,8 @@
   .folder-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
   .folder-row.savedgrid{grid-template-columns:repeat(3,1fr)}
   .folder{cursor:pointer}
+  .folder.dragging{opacity:.45}
+  .folder[draggable=true] .fimg{cursor:grab}
   .folder .fimg{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:4/3;background:#e9e9ee}
   .folder .fimg img{width:100%;height:100%;object-fit:cover}
   .folder .cnt{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.62);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px}
@@ -316,6 +321,11 @@
     border:none;background:#fff;box-shadow:0 4px 16px rgba(30,30,50,.14);font-size:20px;cursor:pointer}
   .bell-badge{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;background:var(--coral);
     color:#fff;font-size:11px;font-weight:700;padding:0 5px;display:none;place-items:center}
+  /* 모바일 좌측 상단 고정 카테고리 버튼 (사이드바 없는 화면에서만) */
+  .cat-fab{position:fixed;top:18px;left:18px;z-index:50;width:46px;height:46px;border-radius:50%;border:none;
+    background:#fff;box-shadow:0 4px 16px rgba(30,30,50,.14);color:var(--coral-tx);cursor:pointer;display:none;align-items:center;justify-content:center}
+  .cat-fab:active{transform:scale(.94)}
+  @media(max-width:980px){ .cat-fab{display:inline-flex} }
   #notifOverlay{z-index:90}
   .notif-row{display:flex;align-items:flex-start;gap:11px;padding:13px 20px;border-bottom:1px solid var(--line);cursor:pointer}
   .notif-row.unread{background:#fcf0ec}
@@ -474,6 +484,40 @@
   .about-list li b{color:var(--coral-tx)}
   .about-foot{text-align:center;color:var(--coral-tx);font-size:14px;font-weight:600;line-height:1.7;padding:18px 10px 8px}
   .about-foot span{color:var(--sub);font-size:12.5px;font-weight:400}
+  /* 사이트 하단 푸터 */
+  .site-foot{max-width:1520px;margin:0 auto;padding:22px 18px 110px;border-top:1px solid var(--line);
+    display:flex;flex-direction:column;gap:7px;align-items:center;text-align:center}
+  .site-foot .foot-links{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-size:12.5px}
+  .site-foot .foot-links a{color:var(--sub);cursor:pointer}
+  .site-foot .foot-links a:hover{color:var(--coral-tx);text-decoration:underline}
+  .site-foot .foot-links span{color:#ccc}
+  .site-foot .foot-copy{color:var(--sub);font-size:12px}
+  /* 사이드바·마이페이지 하단 링크 (스크롤 없이 접근) */
+  .side-foot{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);color:var(--sub);font-size:11.5px;line-height:1.9}
+  .side-foot a{color:var(--sub);cursor:pointer}
+  .side-foot a:hover{color:var(--coral-tx);text-decoration:underline}
+  .my-foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px}
+  .my-foot a{color:var(--sub);cursor:pointer}
+  .my-foot a:hover{color:var(--coral-tx);text-decoration:underline}
+  .my-foot span{color:#ccc}
+  /* 공지 */
+  #noticeBar{margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
+  .notice{display:flex;align-items:flex-start;gap:9px;background:#fff7f9;border:1px solid #f3d3ce;border-radius:12px;padding:11px 13px}
+  .notice .nc-ic{font-size:16px;flex:0 0 auto}
+  .notice .nc-tx{flex:1;min-width:0;font-size:13.5px;color:var(--ink);line-height:1.55;word-break:break-word}
+  .notice .nc-del{border:none;background:none;color:#c0433f;font-size:15px;cursor:pointer;flex:0 0 auto}
+  .notice-admin{margin-top:2px}
+  .issue-mgr-btn{border:1px solid #eec6c9;background:var(--pink-bg);color:var(--coral-tx);border-radius:9px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:6px}
+  /* 이슈 관리 */
+  .imgr-item{border:1px solid #eadfd8;border-radius:12px;padding:11px 13px;margin-bottom:10px;background:#fff}
+  .imgr-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .imgr-head b{font-size:14.5px}
+  .imgr-cnt{font-size:12px;color:var(--sub)}
+  .imgr-acts{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+  .imgr-del{color:#c0433f;border-color:#eec6c6}
+  .refpick-item.picked{border-color:var(--coral);background:#fdf7f5}
+  .refpick-item .rp-check{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;background:#f3eeeb;color:var(--coral-tx)}
+  .refpick-item.picked .rp-check{background:var(--coral);color:#fff}
   .about-link{display:block;text-align:center;color:var(--sub);font-size:12.5px;margin-top:14px;cursor:pointer;padding:8px}
   .about-link:hover{color:var(--coral-tx)}
   .side-btn-row{display:flex;gap:8px;align-items:stretch}
@@ -643,7 +687,9 @@
   .mini-card{cursor:pointer}
 
   /* ---------- teacher profile modal ---------- */
-  .teacher-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .teacher-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .prof-expand{margin-left:auto;border:1px solid #eec6c9;background:var(--pink-bg);color:var(--coral-tx);border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .prof-expand:hover{background:#f3d3ce}
   .teacher-head .av{width:52px;height:52px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:20px;flex:0 0 auto}
   .teacher-head .tinfo{flex:1}
   .teacher-head .tinfo b{font-size:16px}
@@ -737,6 +783,8 @@
     .side{display:none}
     .right{display:none}
     .browse-grid{columns:2}
+    /* 좌측 카테고리 버튼·우측 알림 벨을 피해 검색창을 가운데로 */
+    .br-search{margin-left:52px;margin-right:52px}
   }
   /* ---------- browse ---------- */
   .br-search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eee;border-radius:24px;padding:11px 18px;box-shadow:var(--shadow);margin-bottom:16px}
@@ -806,6 +854,10 @@
       <a class="on" data-sc="kinder" onclick="setSideSection('kinder')">🏫 유치원/어린이집</a>
     </nav>
     <div class="side-cats" id="sideCats"></div>
+    <div class="side-foot">
+      <a onclick="go('about')">놀이모아 소개</a> · <a onclick="go('privacy')">개인정보처리방침</a><br>
+      <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
+    </div>
   </aside>
 
   <!-- ============ MAIN ============ -->
@@ -826,11 +878,12 @@
     <!-- 둘러보기 -->
     <section class="view on" id="v-browse">
       <div class="br-search"><span>🔍</span><input id="brSearch" type="search" name="nolimoa-search-field" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="놀이 주제, 해시태그, 선생님 이름으로 검색" oninput="renderBrowseFeed()"></div>
-      <div class="main-head"><div><h1>둘러보기</h1><p>선생님들의 놀이 아이디어를 모았어요</p></div>
+      <div class="main-head"><div><h1>둘러보기</h1><p>놀이를 구경하고, 저장해보세요</p></div>
         <div class="auth-btns" id="browseAuth"></div></div>
+      <div id="noticeBar"></div>
       <div id="brFilterBar"></div>
       <div class="br-sec">
-        <h4>🗞️ 오늘의 이슈 맞춤 추천 <span class="ai-tag">AI</span></h4>
+        <h4>🗞️ 요즘 이슈 놀이 <span class="ai-tag" id="issueAiTag">AI</span> <button class="issue-mgr-btn" id="issueMgrBtn" onclick="openIssueMgr()" style="display:none">🛠 이슈 관리</button></h4>
         <div class="issue-note" id="issueNote"></div>
         <div class="issue-chips" id="issueChips"></div>
         <div class="br-mini" id="brRecommend"></div>
@@ -890,6 +943,46 @@
       </div>
     </section>
 
+    <!-- 개인정보처리방침 -->
+    <section class="view" id="v-privacy">
+      <div class="main-head"><div><h1>개인정보처리방침</h1><p>놀이모아는 이용자의 개인정보를 소중히 여깁니다</p></div></div>
+      <div class="about-wrap">
+        <div class="about-card">
+          <h3>1. 수집하는 개인정보</h3>
+          <p>놀이모아는 서비스 제공을 위해 아래 정보를 수집합니다.</p>
+          <ul class="about-list">
+            <li>회원가입 시 — 이메일 주소, 비밀번호, 닉네임</li>
+            <li>서비스 이용 중 — 프로필 사진(선택), 이용자가 직접 올린 놀이 사진·글·해시태그</li>
+          </ul>
+        </div>
+        <div class="about-card">
+          <h3>2. 개인정보의 이용 목적</h3>
+          <p>수집한 정보는 회원 식별과 로그인, 놀이 기록·공유 등 서비스 제공, 문의 응대의 목적으로만 이용하며, 그 외의 용도로는 사용하지 않습니다.</p>
+        </div>
+        <div class="about-card">
+          <h3>3. 보관 및 파기</h3>
+          <p>개인정보는 회원 탈퇴 시 또는 이용 목적이 달성되면 지체 없이 파기합니다. 이용자는 언제든지 본인의 게시물과 계정 정보를 수정·삭제할 수 있습니다.</p>
+        </div>
+        <div class="about-card">
+          <h3>4. 제3자 제공 및 처리 위탁</h3>
+          <p>놀이모아는 이용자의 개인정보를 외부에 판매하거나 무단으로 제공하지 않습니다. 다만 서비스 운영을 위해 데이터 저장·인증을 클라우드 서비스(Supabase)에 위탁하여 처리하며, 관련 정보는 안전하게 보관됩니다.</p>
+        </div>
+        <div class="about-card highlight">
+          <h3>5. 유아 사진 보호</h3>
+          <p>놀이모아는 사진 업로드 시 <b>AI가 유아의 얼굴을 자동 인식해 모자이크 처리</b>합니다. 다만 완벽하지 않을 수 있으므로, 이용자는 업로드 전 유아의 얼굴·이름표 등 개인정보가 노출되지 않도록 직접 확인·모자이크할 책임이 있습니다.</p>
+        </div>
+        <div class="about-card">
+          <h3>6. 이용자의 권리</h3>
+          <p>이용자는 언제든지 자신의 개인정보 열람·수정·삭제 및 회원 탈퇴를 요청할 수 있으며, 아래 문의처로 연락하시면 처리해 드립니다.</p>
+        </div>
+        <div class="about-card">
+          <h3>7. 문의처</h3>
+          <p>개인정보 관련 문의: <b><a href="mailto:tweecys@naver.com" style="color:var(--coral-tx)">tweecys@naver.com</a></b><br>운영: 놀이모아 운영팀</p>
+        </div>
+        <div class="about-foot"><span>본 방침은 서비스 개선에 따라 변경될 수 있으며, 변경 시 이 페이지에 공지합니다.</span></div>
+      </div>
+    </section>
+
     <!-- 마이페이지 -->
     <section class="view" id="v-my">
       <div class="main-head">
@@ -919,7 +1012,20 @@
         <h4>🔖 저장한 놀이</h4>
         <div class="folder-row savedgrid" id="savedPlaysRow"></div>
       </div>
-      <div class="about-link" onclick="go('about')">ℹ️ 놀이모아 소개 보기</div>
+      <div class="my-foot">
+        <a onclick="go('about')">놀이모아 소개</a><span>·</span>
+        <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
+        <a href="mailto:tweecys@naver.com">문의</a>
+      </div>
+    </section>
+
+    <!-- 선생님 프로필 (전체화면) -->
+    <section class="view" id="v-profile">
+      <div class="post-topbar"><button class="back-btn" onclick="go(_profileBack||'browse')">‹ 뒤로</button><span class="pt-mini" id="profMini"></span></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="teacher-head" id="profHead"></div>
+      </div>
+      <div class="prof-body" id="profBody" style="margin-top:16px"></div>
     </section>
   </main>
 
@@ -948,6 +1054,16 @@
     </div>
   </aside>
 </div>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-foot">
+  <div class="foot-links">
+    <a onclick="go('about')">놀이모아 소개</a><span>·</span>
+    <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
+    <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
+  </div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀</div>
+</footer>
 
 <!-- ============ BOTTOM NAV ============ -->
 <nav class="nav">
@@ -1249,6 +1365,34 @@
   </div>
 </div>
 
+<!-- ============ (관리자) 오늘의 이슈 관리 모달 ============ -->
+<div class="overlay" id="issueMgrOverlay" onclick="if(event.target===this)close_('issueMgrOverlay')">
+  <div class="modal" style="max-width:560px;max-height:90vh;display:flex;flex-direction:column">
+    <div class="modal-head"><b>🛠 오늘의 이슈 관리</b><button class="x" onclick="close_('issueMgrOverlay')">×</button></div>
+    <div class="up-body">
+      <p style="margin:0 0 12px;color:var(--sub);font-size:13px">이슈(카테고리)를 만들고, 각 이슈에 보여줄 놀이 글을 직접 골라 넣을 수 있어요. 관리자가 만든 이슈는 자동 추천보다 앞에 표시돼요.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <input id="newIssueIcon" placeholder="아이콘(예: 🎨)" maxlength="4" style="width:90px;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;text-align:center">
+        <input id="newIssueLabel" placeholder="이슈 이름 (예: 이달의 미술놀이)" style="flex:1;min-width:150px;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb">
+        <button class="fa-btn" onclick="addFeaturedIssue()">＋ 이슈 추가</button>
+      </div>
+      <div id="issueMgrList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ (관리자) 이슈에 넣을 글 고르기 모달 ============ -->
+<div class="overlay" id="issuePickOverlay" onclick="if(event.target===this)close_('issuePickOverlay')">
+  <div class="modal" style="max-width:560px;max-height:90vh;display:flex;flex-direction:column">
+    <div class="modal-head"><b id="issuePickTitle">글 고르기</b><button class="x" onclick="close_('issuePickOverlay')">×</button></div>
+    <div class="up-body">
+      <input id="issuePickSearch" type="search" name="nolimoa-issuepick" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" placeholder="놀이 제목·해시태그·선생님 이름 검색" oninput="renderIssuePick()" style="width:100%;border:1px solid #e7dcd6;border-radius:20px;padding:11px 15px;font-size:13.5px;background:#fafafb;margin-bottom:12px">
+      <p style="margin:0 0 10px;color:var(--sub);font-size:12.5px">글을 누르면 이슈에 추가/제거돼요. ✓ 표시된 글이 이 이슈에 들어가요.</p>
+      <div id="issuePickList"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ============ 임시저장 이어쓰기 모달 ============ -->
 <div class="overlay" id="draftOverlay" onclick="if(event.target===this)close_('draftOverlay')">
   <div class="modal" style="max-width:520px">
@@ -1362,6 +1506,11 @@
     <div class="up-foot"><button onclick="saveEdit()">✓ 수정 완료</button></div>
   </div>
 </div>
+
+<!-- ============ 모바일 카테고리 버튼 (좌측 상단 고정) ============ -->
+<button class="cat-fab" id="catFab" onclick="openCat()" title="카테고리" aria-label="카테고리">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+</button>
 
 <!-- ============ 알림 벨 ============ -->
 <button class="bell-btn" id="bellBtn" onclick="openNotif()">🔔<span class="bell-badge" id="bellBadge"></span></button>
@@ -1624,6 +1773,9 @@ let profile = (typeof SB!=='undefined' && SB)
   ? {nick:'게스트',role:'',roleShort:'',icon:'🧑',photo:'',guest:true}
   : {nick:'윤서쌤',role:'유아교사',roleShort:'유치원',icon:'🧑',photo:''};
 function isGuest(){return !!(SB && !authUser);}
+/* ===== 관리자 ===== 지정 이메일로만 관리자 권한 (RLS에서도 동일 이메일로 보호) */
+const ADMIN_EMAIL='1004chldbstj3@gmail.com';
+function isAdmin(){ return !!(SB && authUser && (authUser.email||'').toLowerCase()===ADMIN_EMAIL); }
 const roles=['유아교사','학부모','학원','학생/예비교사','기타'];
 const profileIcons=['🧑','🐣','🌸','🌊','🦋','🌈','🐬','🌻','⭐'];
 const myPlays=[
@@ -1874,8 +2026,10 @@ async function loadDbPosts(){
   await loadUserData();   // 폴더·저장한 놀이 복원 (새 글 로드 후 참조 갱신)
   await loadFollows();    // 내 팔로잉 목록 복원
   await loadNotifs();     // 알림 불러오기
+  await loadNotices();    // 공지 불러오기
+  await loadFeaturedIssues(); // 관리자 큐레이션 이슈
   syncStats();
-  if($('#v-browse').classList.contains('on'))renderBrowseFeed();
+  if($('#v-browse').classList.contains('on'))renderBrowse();
   if($('#v-my').classList.contains('on'))renderMyPage();
 }
 /* ===== 마이페이지 저장(폴더·저장한 놀이) — Supabase 계정별 동기화 ===== */
@@ -1888,6 +2042,12 @@ async function saveUserData(){
   };
   try{ await SB.from('user_data').upsert({user_id:authUser.id, data}); }
   catch(e){ console.warn('마이페이지 저장 오류:', e.message||e); }
+  // '올린 놀이' 폴더는 남들도 볼 수 있게 공개 테이블에도 저장 (저장한 놀이는 비공개)
+  try{ await SB.from('public_folders').upsert({user_id:authUser.id, folders:data.upFolders}); }catch(e){}
+}
+async function loadPublicFolders(userId){
+  if(!(SB && userId))return [];
+  try{ const r=await SB.from('public_folders').select('folders').eq('user_id',userId).maybeSingle(); return (r&&r.data&&r.data.folders)||[]; }catch(e){ return []; }
 }
 async function loadUserData(){
   if(!(SB && authUser))return;
@@ -1935,11 +2095,11 @@ async function countFollows(col,uid){
   if(!(SB && uid))return 0;
   try{const {count}=await SB.from('follows').select('*',{count:'exact',head:true}).eq(col,uid);return count||0;}catch(e){return 0;}
 }
-async function updateProfFollowCounts(uid){
+async function updateProfFollowCounts(uid, fwId, fgId){
   const fw=await countFollows('following_id',uid);  // uid를 팔로우하는 사람 수
   const fg=await countFollows('follower_id',uid);   // uid가 팔로우하는 수
-  const e1=$('#pfFollowers'); if(e1)e1.textContent=fw;
-  const e2=$('#pfFollowing'); if(e2)e2.textContent=fg;
+  const e1=document.getElementById(fwId||'pfFollowers'); if(e1)e1.textContent=fw;
+  const e2=document.getElementById(fgId||'pfFollowing'); if(e2)e2.textContent=fg;
 }
 /* ===== 좋아요·댓글·알림·조회수 (Supabase) ===== */
 function whenText(ts){
@@ -2133,7 +2293,7 @@ function renderPostPage(p){
   renderRelGrid('#authorRel', authorRelated(p), '아직 관련 놀이가 없어요');
   renderRelGrid('#otherRel', otherRelated(p), '아직 관련 글이 없어요');
 }
-function canEdit(p){return p?(p.db?!!(SB&&authUser&&p.user_id===authUser.id):p.tid==='me'):false;}
+function canEdit(p){ if(!p)return false; if(p.db && isAdmin())return true; /* 관리자는 모든 글 수정·삭제 */ return p.db?!!(SB&&authUser&&p.user_id===authUser.id):p.tid==='me';}
 /* 깔끔한 흑백(라인) 아이콘 */
 const ICO={
   heart:(f)=>`<svg viewBox="0 0 24 24" fill="${f?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21l8.84-8.61a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
@@ -2207,7 +2367,7 @@ function renderECatPanel(){const p=$('#eCatPanel');if(!p)return;p.innerHTML='';
   catData.forEach(grp=>{const g=document.createElement('div');g.className='opt-group';
     g.innerHTML=`<div class="gl">${grp.ic} ${grp.g}</div>`;const w=document.createElement('div');w.className='opts';
     grp.items.forEach(it=>{const on=esel.cat.has(it);const b=document.createElement('button');
-      b.className='opt'+(on?' on':'');b.textContent=(on?'✓ ':'')+it;
+      b.className='opt'+(on?' on':'')+hiCat(it);b.textContent=(on?'✓ ':'')+it;
       b.onclick=()=>{on?esel.cat.delete(it):esel.cat.add(it);renderECat();};w.appendChild(b);});
     g.appendChild(w);p.appendChild(g);});}
 function renderECat(){renderECatChips();renderECatPanel();}
@@ -2505,6 +2665,13 @@ function renderFolderRow(ctx, editable, container){
     const cover=f.posts[0]?`<img src="${f.posts[0].img}" alt="">`:'<div class="fnew" style="font-size:30px">📁</div>';
     const el=folderTile(cover,f.posts.length,esc(f.name),'my-badge2','내 폴더');
     el.onclick=()=> editable?openCustomFolder(ctx,f.id):showPlays(`📁 ${esc(f.name)}`, f.posts.slice());
+    if(editable){ // 내 폴더는 드래그해서 순서 바꾸기
+      el.draggable=true;
+      el.addEventListener('dragstart',e=>{_folderDrag={ctx,id:f.id};el.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+      el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+      el.addEventListener('dragover',e=>e.preventDefault());
+      el.addEventListener('drop',e=>{e.preventDefault();folderDrop(ctx,f.id,container);});
+    }
     box.appendChild(el);
   });
   const assigned=assignedCtx(ctx), rest=col.posts().filter(p=>!assigned.has(p)), groups={};
@@ -2514,9 +2681,19 @@ function renderFolderRow(ctx, editable, container){
     el.onclick=editable?()=>openAiFolder(ctx,theme,arr):()=>showPlays(`🗂️ ${theme} · AI 자동 분류`, arr.slice());
     box.appendChild(el);});
   if(editable){const add=document.createElement('div');add.className='folder';
-    add.innerHTML=`<div class="fimg fnew">＋</div><div class="ft" style="color:var(--coral-tx)">새 폴더</div>`;
+    add.innerHTML=`<div class="fimg"><div class="fnew">＋</div></div><div class="ft" style="color:var(--coral-tx)">새 폴더</div>`;
     add.onclick=()=>openNewFolder(ctx);box.appendChild(add);}
   if(!editable && !box.children.length)box.innerHTML='<div class="empty">아직 놀이가 없어요</div>';
+}
+let _folderDrag=null;
+function folderDrop(ctx,targetId,container){
+  if(!_folderDrag||_folderDrag.ctx!==ctx){_folderDrag=null;return;}
+  const arr=COL[ctx].custom();
+  const from=arr.findIndex(x=>x.id===_folderDrag.id), to=arr.findIndex(x=>x.id===targetId);
+  _folderDrag=null;
+  if(from<0||to<0||from===to)return;
+  const it=arr.splice(from,1)[0]; arr.splice(to,0,it);
+  renderFolderRow(ctx,true,container); saveUserData();
 }
 function renderMyFolders(){renderFolderRow('upload',true);renderFolderRow('saved',true);}
 function tpostEl(p, removeFn){
@@ -2835,29 +3012,136 @@ function renderBrowse(){
   tags.forEach(tag=>{const s=document.createElement('button');s.className='br-tag';s.textContent='#'+noSpace(tag);
     s.onclick=()=>filterByLabel(tag);tg.appendChild(s);});
   renderWeekPop();
+  renderNoticeBar();
   renderBrowseFeed();
 }
 function renderIssues(){
   const box=$('#issueChips');if(!box)return;
-  _issues=pickTodayIssues();
+  // 관리자 큐레이션 이슈(직접 만든 것)를 앞에, 그 뒤에 자동 추천 이슈
+  const admin=(window._adminIssues||[]).map(a=>({icon:a.icon||'📌',label:a.label||'이슈',postIds:a.post_ids||[],admin:true,id:a.id}));
+  _issues=admin.concat(pickTodayIssues());
+  if(!_issues.length){box.innerHTML='';$('#brRecommend').innerHTML='';return;}
   if(curIssue>=_issues.length)curIssue=0;
+  // 관리자 버튼 표시
+  const mb=$('#issueMgrBtn'); if(mb)mb.style.display=isAdmin()?'':'none';
   box.innerHTML='';
   _issues.forEach((iss,i)=>{const b=document.createElement('button');b.className='issue-chip'+(i===curIssue?' on':'');
-    b.innerHTML=`${iss.icon} ${iss.label}`;b.onclick=()=>{curIssue=i;renderIssues();};box.appendChild(b);});
+    b.innerHTML=`${iss.icon} ${esc(iss.label)}`;b.onclick=()=>{curIssue=i;renderIssues();};box.appendChild(b);});
   const iss=_issues[curIssue];
   const d=new Date();
-  $('#issueNote').textContent=`✨ 오늘(${d.getMonth()+1}월 ${d.getDate()}일) 기준, AI가 '${iss.label}'에 맞춰 골랐어요`;
-  // 이슈 태그를 태그·카테고리 모두에서 확인해 '관련 놀이만' 추림 (관련 없으면 안 띄움)
-  const matches=allPosts().filter(p=>{
-    const bag=(p.tags||[]).concat(p.categories||[]);
-    return iss.tags.some(x=>bag.includes(x));
-  });
+  const tag=$('#issueAiTag'); if(tag)tag.style.display=iss.admin?'none':'';
+  $('#issueNote').textContent=iss.admin
+    ? `📌 관리자가 고른 '${iss.label}' 놀이예요`
+    : `✨ 오늘(${d.getMonth()+1}월 ${d.getDate()}일) 기준, AI가 '${iss.label}'에 맞춰 골랐어요`;
+  // 관리자 이슈는 '직접 고른 글', 자동 이슈는 '태그 매칭'
+  let matches;
+  if(iss.admin){
+    const byId={}; allPosts().forEach(p=>{if(p.id)byId[p.id]=p;});
+    matches=(iss.postIds||[]).map(id=>byId[id]).filter(Boolean);
+  }else{
+    matches=allPosts().filter(p=>{const bag=(p.tags||[]).concat(p.categories||[]);return (iss.tags||[]).some(x=>bag.includes(x));});
+  }
   const rec=$('#brRecommend');rec.innerHTML='';
   if(matches.length){
     matches.slice(0,8).forEach(p=>rec.appendChild(miniCardPost(p)));
   }else{
-    rec.innerHTML=`<div class="empty" style="grid-column:1/-1">아직 '${iss.label}'에 맞는 놀이가 없어요. 관련 놀이를 올려보세요!</div>`;
+    rec.innerHTML=`<div class="empty" style="grid-column:1/-1">${iss.admin?`'${esc(iss.label)}'에 넣은 글이 아직 없어요. 이슈 관리에서 글을 골라주세요.`:`아직 '${iss.label}'에 맞는 놀이가 없어요. 관련 놀이를 올려보세요!`}</div>`;
   }
+}
+/* ===== 공지 (관리자 작성) ===== */
+async function loadNotices(){ if(!SB){window._notices=[];return;} try{const {data}=await SB.from('notices').select('*').order('created_at',{ascending:false}); window._notices=data||[];}catch(e){window._notices=[];} renderNoticeBar(); }
+function renderNoticeBar(){
+  const box=$('#noticeBar'); if(!box)return; box.innerHTML='';
+  (window._notices||[]).forEach(n=>{
+    const el=document.createElement('div'); el.className='notice';
+    el.innerHTML=`<span class="nc-ic">📢</span><div class="nc-tx">${linkifyTags(n.text||'')}</div>${isAdmin()?'<button class="nc-del" title="공지 삭제">✕</button>':''}`;
+    if(isAdmin())el.querySelector('.nc-del').onclick=()=>deleteNotice(n.id);
+    box.appendChild(el);
+  });
+  if(isAdmin()){
+    const w=document.createElement('div'); w.className='notice-admin';
+    w.innerHTML=`<button class="fa-btn" id="ncWriteToggle">📢 공지 쓰기</button>
+      <div id="ncForm" style="display:none;margin-top:8px">
+        <textarea id="ncInput" placeholder="공지 내용을 입력하세요 (링크·#해시태그도 됩니다)" style="width:100%;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;min-height:60px"></textarea>
+        <div style="display:flex;gap:8px;margin-top:6px"><button class="fa-btn" id="ncPost">등록</button><button class="fa-btn" id="ncCancel">취소</button></div>
+      </div>`;
+    box.appendChild(w);
+    w.querySelector('#ncWriteToggle').onclick=()=>{const f=w.querySelector('#ncForm');f.style.display=f.style.display==='none'?'block':'none';};
+    w.querySelector('#ncPost').onclick=()=>postNotice(w.querySelector('#ncInput').value);
+    w.querySelector('#ncCancel').onclick=()=>{w.querySelector('#ncForm').style.display='none';};
+  }
+}
+async function postNotice(text){ text=(text||'').trim(); if(!text){toast('공지 내용을 입력하세요');return;} if(!isAdmin())return;
+  try{const {error}=await SB.from('notices').insert({text}); if(error)throw error; toast('공지를 등록했어요'); await loadNotices();}catch(e){toast('공지 등록 실패: '+(e.message||e));} }
+async function deleteNotice(id){ if(!isAdmin())return; try{const {error}=await SB.from('notices').delete().eq('id',id); if(error)throw error; await loadNotices(); toast('공지를 삭제했어요');}catch(e){toast('삭제 실패: '+(e.message||e));} }
+/* ===== 오늘의 이슈 (관리자 큐레이션) ===== */
+async function loadFeaturedIssues(){ if(!SB){window._adminIssues=[];return;} try{const {data}=await SB.from('featured_issues').select('*').order('sort',{ascending:true}).order('created_at',{ascending:true}); window._adminIssues=data||[];}catch(e){window._adminIssues=[];} }
+let _issuePickId=null;
+function openIssueMgr(){ if(!isAdmin())return; renderIssueMgr(); open_('issueMgrOverlay'); }
+function renderIssueMgr(){
+  const box=$('#issueMgrList'); if(!box)return; box.innerHTML='';
+  const list=window._adminIssues||[];
+  if(!list.length){ box.innerHTML='<div class="empty" style="padding:12px 4px">아직 만든 이슈가 없어요. 위에서 추가해보세요.</div>'; return; }
+  list.forEach(a=>{
+    const el=document.createElement('div'); el.className='imgr-item';
+    el.innerHTML=`<div class="imgr-head"><b>${a.icon||'📌'} ${esc(a.label||'')}</b><span class="imgr-cnt">글 ${(a.post_ids||[]).length}개</span></div>
+      <div class="imgr-acts">
+        <button class="fa-btn" data-act="pick">＋ 글 고르기</button>
+        <button class="fa-btn imgr-del" data-act="del">이슈 삭제</button>
+      </div>`;
+    el.querySelector('[data-act=pick]').onclick=()=>openIssuePick(a.id);
+    el.querySelector('[data-act=del]').onclick=()=>deleteFeaturedIssue(a.id);
+    box.appendChild(el);
+  });
+}
+async function addFeaturedIssue(){
+  if(!isAdmin())return;
+  const icon=($('#newIssueIcon').value||'📌').trim()||'📌';
+  const label=($('#newIssueLabel').value||'').trim();
+  if(!label){toast('이슈 이름을 입력하세요');return;}
+  try{const {error}=await SB.from('featured_issues').insert({icon,label,post_ids:[],sort:(window._adminIssues||[]).length}); if(error)throw error;
+    $('#newIssueIcon').value=''; $('#newIssueLabel').value='';
+    await loadFeaturedIssues(); renderIssueMgr(); renderIssues(); toast('이슈를 추가했어요');
+  }catch(e){toast('이슈 추가 실패: '+(e.message||e));}
+}
+async function deleteFeaturedIssue(id){
+  if(!isAdmin())return;
+  try{const {error}=await SB.from('featured_issues').delete().eq('id',id); if(error)throw error;
+    await loadFeaturedIssues(); renderIssueMgr(); renderIssues(); toast('이슈를 삭제했어요');
+  }catch(e){toast('삭제 실패: '+(e.message||e));}
+}
+function openIssuePick(id){ _issuePickId=id; const a=(window._adminIssues||[]).find(x=>x.id===id);
+  const t=$('#issuePickTitle'); if(t)t.textContent=`'${a?a.label:''}'에 넣을 글 고르기`;
+  const s=$('#issuePickSearch'); if(s)s.value=''; renderIssuePick(); open_('issuePickOverlay'); }
+function renderIssuePick(){
+  const box=$('#issuePickList'); if(!box)return; box.innerHTML='';
+  const a=(window._adminIssues||[]).find(x=>x.id===_issuePickId); if(!a)return;
+  const chosen=new Set(a.post_ids||[]);
+  const q=(($('#issuePickSearch')||{}).value||'').trim().toLowerCase();
+  let list=(window._dbPosts||[]).slice();
+  if(q)list=list.filter(p=>{const au=authorOf(p);return ((p.title||'')+(p.desc||'')+(p.tags||[]).join(' ')+((au&&au.name)||'')).toLowerCase().includes(q);});
+  list=list.slice(0,50);
+  if(!list.length){box.innerHTML='<div class="empty" style="padding:12px 4px">글이 없어요. (실제 회원 글만 넣을 수 있어요)</div>';return;}
+  list.forEach(p=>{
+    const au=authorOf(p), thumb=(imagesOf(p)[0]||{}).img||p.img||'', on=chosen.has(p.id);
+    const el=document.createElement('div'); el.className='refpick-item'+(on?' picked':'');
+    el.innerHTML=`${thumb?`<img src="${thumb}" alt="">`:'<div style="width:46px;height:46px;border-radius:9px;background:#f6ddd8;display:grid;place-items:center">🎨</div>'}
+      <div class="rbody"><div style="font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc((p.title||'놀이').replace(/^#/,''))}</div>
+      <div style="font-size:11.5px;color:var(--sub)">${esc((au&&au.name)||'선생님')}</div></div>
+      <div class="rp-check">${on?'✓':'＋'}</div>`;
+    el.onclick=()=>toggleIssuePost(p.id);
+    box.appendChild(el);
+  });
+}
+async function toggleIssuePost(pid){
+  if(!isAdmin())return;
+  const a=(window._adminIssues||[]).find(x=>x.id===_issuePickId); if(!a)return;
+  const ids=new Set(a.post_ids||[]);
+  if(ids.has(pid))ids.delete(pid); else ids.add(pid);
+  const arr=[...ids];
+  try{const {error}=await SB.from('featured_issues').update({post_ids:arr}).eq('id',a.id); if(error)throw error;
+    a.post_ids=arr; renderIssuePick(); renderIssueMgr(); renderIssues();
+  }catch(e){toast('저장 실패: '+(e.message||e));}
 }
 function miniCard(c){
   const el=document.createElement('div');el.className='mini-card';
@@ -2944,7 +3228,7 @@ const catDrawer={
     {g:'놀이 주제', ic:'🌱', items:['봄','여름','가을','겨울','나와 가족','우리 동네','건강과 안전','동식물','교통기관','환경과 자연','우리나라','세계 여러 나라','우주','물','공룡','곤충','명절','기념일']},
     {g:'놀이 유형', ic:'🎨', items:['미술','신체','역할','쌓기','언어','수·조작','과학·탐구','음악','바깥놀이','감각놀이','새노래','이야기나누기','요리','게임','전통놀이']},
     {g:'특색교육', ic:'📚', items:['생태','AI·디지털','코딩','인성교육','다문화교육','환경교육','경제교육','안전교육','성교육']},
-    {g:'상황별', ic:'⭐', items:['주의집중','학부모참여수업','준비물 없는 놀이','혼자놀이','비/눈 오는 날','행사·발표회']},
+    {g:'상황별', ic:'⭐', items:['주의집중','학부모참여수업','준비물 없는 놀이','혼자놀이','비/눈 오는 날','행사·발표회','현장체험학습','찾아오는 현장체험학습']},
     {g:'연령별', ic:'👶', items:['0~2세','3세','4세','5세','혼합연령']},
   ]},
 };
@@ -2952,6 +3236,8 @@ let catSectionCur='kinder', catTab='놀이';
 function openCat(){catSectionCur='kinder';catTab='놀이';renderCatDrawer();open_('catOverlay');}
 function catSection(s){catSectionCur=s;renderCatDrawer();}
 function setCatTab(tb){catTab=tb;renderCatDrawer();}
+const HILITE_CATS=new Set(['현장체험학습','찾아오는 현장체험학습']); // 갈색 테두리로 강조할 항목
+function hiCat(it){return HILITE_CATS.has(it)?' hi-cat':'';}
 function renderCatDrawer(){
   document.querySelectorAll('.cat-nav-item').forEach(a=>a.classList.toggle('on',a.dataset.s===catSectionCur));
   const d=catDrawer[catSectionCur], box=$('#catContent');
@@ -2965,7 +3251,7 @@ function renderCatDrawer(){
   } else {
     d.groups.forEach(grp=>{
       html+=`<div class="cat-group"><div class="cgl">${grp.ic} ${grp.g}</div><div class="cg-grid">`+
-        grp.items.map(it=>`<button class="cg-item" onclick="pickCategory('${it}')">${it}</button>`).join('')+
+        grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
         `</div></div>`;
     });
   }
@@ -2987,7 +3273,7 @@ function renderSideCats(){
   box.innerHTML=d.groups.map(grp=>
     `<div class="side-cat-group"><div class="scg-label">${grp.ic} ${grp.g}</div>`+
     `<div class="side-cat-items">`+
-    grp.items.map(it=>`<button onclick="filterByLabel('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
+    grp.items.map(it=>`<button class="${hiCat(it).trim()}" onclick="filterByLabel('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
     `</div></div>`).join('');
 }
 /* 선생님 프로필 모달 */
@@ -3002,33 +3288,54 @@ function profStatsHTML(n,isMe){
   return `<div class="prof-stats"><span><b>${n}</b> 게시물</span><span><b>${s.fw}</b> 팔로워</span><span><b>${s.fg}</b> 팔로잉</span></div>`;
 }
 /* 프로필 방문: 데모 선생님이면 openTeacher, 실제 글쓴이면 그 사람 프로필 */
+let _profileTarget=null, _profileBack='browse';
 function openAuthor(p){
   if(!p)return;
   if(!p.db && p.tid){ openTeacher(p.tid); return; }
+  _profileTarget=p;
+  renderAuthorInto(p, $('#teacherHead'), $('#teacherPosts'), false);
+  open_('teacherOverlay');
+}
+/* 프로필을 마이페이지처럼 전체화면으로 보기 */
+function expandProfile(){
+  const p=_profileTarget; if(!p)return;
+  close_('teacherOverlay');
+  const cur=document.querySelector('.view.on'); if(cur && cur.id!=='v-profile') _profileBack=cur.id.replace('v-','');
+  renderAuthorInto(p, $('#profHead'), $('#profBody'), true);
+  const pm=$('#profMini'); if(pm)pm.textContent=((p.author&&p.author.name)||'프로필');
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  $('#v-profile').classList.add('on'); window.scrollTo(0,0);
+}
+function renderAuthorInto(p, headEl, bodyEl, full){
+  if(!headEl||!bodyEl)return;
   const a=p.author||{};
   const isMe = !!(authUser && p.user_id===authUser.id);
   const tp=(window._dbPosts||[]).filter(x=>x.user_id===p.user_id);
   const canFollow = !!(SB && authUser && p.user_id && !isMe);
-  const followBtn = canFollow
-    ? `<button class="foll-btn ${myFollowing.has(p.user_id)?'':'off'}" id="profFollowBtn">${myFollowing.has(p.user_id)?'팔로잉':'+ 팔로우'}</button>` : '';
-  const statsHTML = `<div class="prof-stats"><span><b>${tp.length}</b> 게시물</span><span><b id="pfFollowers">–</b> 팔로워</span><span><b id="pfFollowing">–</b> 팔로잉</span></div>`;
-  $('#teacherHead').innerHTML=`<div class="av" style="${avStyle(a)}">${avInner(a)}</div>
-    <div class="tinfo"><b>${esc(a.name||'선생님')}</b><small>${esc(a.org||'')}</small>${statsHTML}</div>${followBtn}`;
-  const fb=$('#profFollowBtn'); if(fb)fb.onclick=()=>toggleFollowUser(p.user_id).then(()=>{openAuthor(p);renderFeed();});
-  if(SB && p.user_id) updateProfFollowCounts(p.user_id);
-  const body=$('#teacherPosts');body.innerHTML='';
+  const followBtn = canFollow ? `<button class="foll-btn ${myFollowing.has(p.user_id)?'':'off'}" data-follow="1">${myFollowing.has(p.user_id)?'팔로잉':'+ 팔로우'}</button>` : '';
+  const fwId=full?'pfFollowers2':'pfFollowers', fgId=full?'pfFollowing2':'pfFollowing';
+  const statsHTML = `<div class="prof-stats"><span><b>${tp.length}</b> 게시물</span><span><b id="${fwId}">–</b> 팔로워</span><span><b id="${fgId}">–</b> 팔로잉</span></div>`;
+  headEl.innerHTML=`<div class="av" style="${avStyle(a)}">${avInner(a)}</div>
+    <div class="tinfo"><b>${esc(a.name||'선생님')}</b><small>${esc(a.org||'')}</small>${statsHTML}</div>${followBtn}
+    ${!full?'<button class="prof-expand" onclick="expandProfile()">프로필 보러 가기 ›</button>':''}`;
+  const fb=headEl.querySelector('[data-follow]'); if(fb)fb.onclick=()=>toggleFollowUser(p.user_id).then(()=>{renderAuthorInto(p,headEl,bodyEl,full);renderFeed();});
+  if(SB && p.user_id) updateProfFollowCounts(p.user_id, fwId, fgId);
+  bodyEl.innerHTML='';
   const upSec=document.createElement('div');upSec.className='prof-sec';
   upSec.innerHTML='<h4>📁 올린 놀이</h4><div class="folder-row prof-row"></div>';
-  body.appendChild(upSec);
-  if(isMe){ renderFolderRow('upload', false, upSec.querySelector('.folder-row')); } // 내 프로필: 마이페이지와 동일한 폴더
-  else { renderAiFolderRow(upSec.querySelector('.folder-row'), tp); }               // 다른 사람: 주제별 AI 분류
+  bodyEl.appendChild(upSec);
+  const frow=upSec.querySelector('.folder-row');
+  if(isMe){ renderFolderRow('upload', false, frow); } // 내 프로필: 마이페이지와 동일한 폴더
+  else {
+    renderAiFolderRow(frow, tp); // 우선 AI 분류로 표시하고
+    loadPublicFolders(p.user_id).then(folders=>{ if(folders&&folders.length && document.body.contains(frow)) renderExternalFolders(frow, folders, tp); }); // 실제 폴더가 있으면 그걸로 교체
+  }
   if(isMe){
     const svSec=document.createElement('div');svSec.className='prof-sec';
     svSec.innerHTML='<h4>🔖 저장한 놀이</h4><div class="folder-row prof-row"></div>';
-    body.appendChild(svSec);
+    bodyEl.appendChild(svSec);
     renderFolderRow('saved', false, svSec.querySelector('.folder-row'));
   }
-  open_('teacherOverlay');
 }
 function openTeacher(tid){
   const tt=t(tid);if(!tt)return;
@@ -3051,6 +3358,25 @@ function openTeacher(tid){
     renderFolderRow('saved', false, svSec.querySelector('.folder-row'));
   }
   open_('teacherOverlay');
+}
+function renderExternalFolders(box, folders, posts){   // 다른 선생님 프로필: 그 사람이 만든 실제 폴더 + 나머지 AI
+  box.innerHTML='';
+  const map={}; posts.forEach(p=>{if(p.id)map[p.id]=p;});
+  const assigned=new Set();
+  (folders||[]).forEach(f=>{
+    const fposts=(f.ids||[]).map(id=>map[id]).filter(Boolean);
+    fposts.forEach(p=>assigned.add(p));
+    const cover=fposts[0]?`<img src="${fposts[0].img}" alt="">`:'<div class="fnew" style="font-size:30px">📁</div>';
+    const el=folderTile(cover,fposts.length,esc(f.name),'my-badge2','📁 폴더');
+    el.onclick=()=>showPlays(`📁 ${esc(f.name)}`, fposts.slice());
+    box.appendChild(el);
+  });
+  const rest=posts.filter(p=>!assigned.has(p)), groups={};
+  rest.forEach(p=>{const k=themeFolderOf(p);(groups[k]=groups[k]||[]).push(p);});
+  Object.keys(groups).forEach(theme=>{const arr=groups[theme];
+    const el=folderTile(`<img src="${arr[0].img}" alt="">`,arr.length,theme,'ai-badge2','✨ AI 분류');
+    el.onclick=()=>showPlays(`🗂️ ${theme} · AI 자동 분류`,arr.slice());box.appendChild(el);});
+  if(!box.children.length)box.innerHTML='<div class="empty">아직 올린 놀이가 없어요</div>';
 }
 function renderAiFolderRow(box, list){   // 다른 선생님 프로필: 주제별 AI 폴더 (읽기전용)
   box.innerHTML='';const groups={};
@@ -3704,7 +4030,7 @@ const catData=[
   {g:'놀이 주제', ic:'🌱', items:['봄','여름','가을','겨울','나와 가족','우리 동네','건강과 안전','동식물','교통기관','환경과 자연','우리나라','세계 여러 나라','우주','물','공룡','곤충','명절','기념일']},
   {g:'놀이 유형', ic:'🎨', items:['미술','신체','역할','쌓기','언어','수·조작','과학·탐구','음악','바깥놀이','감각놀이','새노래','이야기나누기','요리','게임','전통놀이']},
   {g:'특색교육', ic:'📚', items:['생태','AI·디지털','코딩','인성교육','다문화교육','환경교육','경제교육','안전교육','성교육']},
-  {g:'상황별',   ic:'⭐', items:['주의집중','학부모참여수업','준비물 없는 놀이','혼자놀이','비/눈 오는 날','행사·발표회']},
+  {g:'상황별',   ic:'⭐', items:['주의집중','학부모참여수업','준비물 없는 놀이','혼자놀이','비/눈 오는 날','행사·발표회','현장체험학습','찾아오는 현장체험학습']},
 ];
 const ages=['선택 안함','0~2세','3세','4세','5세'];
 let sel;
@@ -3752,7 +4078,7 @@ function renderCatPanel(){
     g.innerHTML=`<div class="gl">${grp.ic} ${grp.g}</div>`;
     const w=document.createElement('div');w.className='opts';
     grp.items.forEach(it=>{const key=gi+'::'+it;const on=sel.cat.has(key);
-      const b=document.createElement('button');b.className='opt'+(on?' on':'');b.textContent=(on?'✓ ':'')+it;
+      const b=document.createElement('button');b.className='opt'+(on?' on':'')+hiCat(it);b.textContent=(on?'✓ ':'')+it;
       b.onclick=()=>{on?sel.cat.delete(key):sel.cat.add(key);renderCat();};w.appendChild(b);});
     g.appendChild(w);p.appendChild(g);
   });
