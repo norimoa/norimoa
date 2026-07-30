@@ -293,7 +293,7 @@
   .my-sec{margin-top:22px}
   .my-sec h4{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
   .folder-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  .folder-row.savedgrid{grid-template-columns:repeat(3,1fr)}
+  .folder-row.savedgrid{grid-template-columns:repeat(4,1fr)}
   .folder{cursor:pointer}
   .folder.dragging{opacity:.45}
   .folder[draggable=true] .fimg{cursor:grab}
@@ -1881,9 +1881,10 @@ function openProfileEdit(){
   $('#peNick').value=profile.nick;
   renderPeAvatar();renderPeIcons();renderRoleGrid();
   // 구글 계정 연결 필드: 실제 로그인(SB+authUser) 상태에서만 노출
+  // GOOGLE_LINK_ON=false 이면 잠시 숨김 (Supabase 수동연결/구글 설정 준비되면 true 로)
   const lf=$('#peLinkField');
   if(lf){
-    if(SB&&authUser&&!isGuest()){
+    if(GOOGLE_LINK_ON&&SB&&authUser&&!isGuest()){
       lf.style.display='';
       const linked=isGoogleLinked();
       const tx=$('#peGoogleLinkTx'), btn=$('#peGoogleLink');
@@ -1981,6 +1982,8 @@ async function googleAuth(){
   const {error}=await SB.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin+window.location.pathname}});
   if(error)toast('구글 로그인 오류: '+error.message);
 }
+// 구글 계정 연결 기능 On/Off (Supabase 수동연결+구글 로그인 켜지면 true 로 바꾸면 됨)
+const GOOGLE_LINK_ON=false;
 function isGoogleLinked(){
   return !!(authUser && (authUser.identities||[]).some(i=>i.provider==='google'));
 }
