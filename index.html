@@ -411,10 +411,10 @@
   .up-photo canvas{border-radius:12px}
   .markers{position:absolute;inset:0}
   .marker{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;
-    background:var(--coral-soft);color:var(--coral-tx);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);
+    background:#dd5b8d;color:#fff;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);
     display:grid;place-items:center;font-size:15px;font-weight:700;cursor:pointer;touch-action:none;z-index:5;pointer-events:auto}
   .marker.pulse{animation:pulse 1.5s infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(224,140,168,.55)}70%{box-shadow:0 0 0 13px rgba(224,140,168,0)}100%{box-shadow:0 0 0 0 rgba(224,140,168,0)}}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(221,91,141,.55)}70%{box-shadow:0 0 0 13px rgba(221,91,141,0)}100%{box-shadow:0 0 0 0 rgba(221,91,141,0)}}
   .spot-form{position:absolute;transform:translateY(10px);z-index:9;background:#fff;border-radius:12px;
     box-shadow:0 10px 30px rgba(0,0,0,.28);padding:12px;width:230px;display:flex;flex-direction:column;gap:7px;pointer-events:auto}
   .spot-form input{border:1px solid #e7dcd6;border-radius:8px;padding:9px;font-size:12.5px;font-family:inherit}
@@ -663,7 +663,7 @@
   .pd-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .pdp{position:relative;border-radius:10px;overflow:hidden;background:#e9e9ee;cursor:pointer;aspect-ratio:1/1}
   .pdp img{width:100%;height:100%;object-fit:cover}
-  .pdp .pcount{background:var(--coral-soft);color:var(--coral-tx);left:8px;right:auto;bottom:8px;top:auto}
+  .pdp .pcount{background:#dd5b8d;color:#fff;left:8px;right:auto;bottom:8px;top:auto}
   .cmt-row{display:flex;gap:10px;padding:12px 4px;border-bottom:1px solid var(--line)}
   .cmt-row .av{width:34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 auto}
   .cmt-row .cb b{font-size:13.5px}.cmt-row .cb .when{color:var(--sub);font-size:11.5px;margin-left:6px}
@@ -1029,9 +1029,9 @@
 </div>
 
 <!-- ============ 1단계: 사진 업로드 모달 ============ -->
-<div class="overlay" id="uploadOverlay" onclick="if(event.target===this)closeUpload()">
+<div class="overlay" id="uploadOverlay" onclick="if(event.target===this)requestCloseWrite()">
   <div class="modal up-modal big-modal">
-    <div class="modal-head"><b>1단계 · 놀이 사진 올리기</b><button class="x" onclick="closeUpload()">×</button></div>
+    <div class="modal-head"><b>1단계 · 놀이 사진 올리기</b><button class="x" onclick="requestCloseWrite()">×</button></div>
     <div class="up-body">
       <!-- 사진 + AI 얼굴 인식 -->
       <div class="drop" id="drop" onclick="document.getElementById('file').click()">
@@ -1045,7 +1045,7 @@
         <div id="photoList"></div>
         <button class="add-photo" onclick="document.getElementById('file').click()">＋ 사진 더 추가</button>
         <div class="sec" style="color:var(--sub);font-size:12.5px;line-height:1.5;margin-top:14px">
-          🛒 구매 링크가 있으면 사진의 <b>＋ 구매 링크 추가</b>를 눌러 <b style="color:var(--coral-tx)">연분홍 동그라미</b>로 표시할 수 있어요. (없으면 그냥 두면 돼요.)<br>
+          🛒 구매 링크가 있으면 사진의 <b>＋ 구매 링크 추가</b>를 눌러 <b style="color:#dd5b8d">핑크 동그라미</b>로 표시할 수 있어요. (없으면 그냥 두면 돼요.)<br>
           🔄 <b>회전</b> · ✂️ <b>자르기</b>로 사진을 다듬을 수 있어요.
         </div>
       </div>
@@ -1055,12 +1055,12 @@
 </div>
 
 <!-- ============ 2단계: 글 작성 모달 ============ -->
-<div class="overlay" id="writeOverlay" onclick="if(event.target===this)closeWrite()">
+<div class="overlay" id="writeOverlay" onclick="if(event.target===this)requestCloseWrite()">
   <div class="modal up-modal big-modal">
     <div class="modal-head">
       <button class="x" id="writeBack" onclick="backToPhotos()" title="사진 단계로">‹</button>
       <b id="writeTitle">2단계 · 글 작성하기</b>
-      <button class="x" onclick="closeWrite()">×</button>
+      <button class="x" onclick="requestCloseWrite()">×</button>
     </div>
     <div class="up-body">
       <!-- 놀이 제목 -->
@@ -1191,6 +1191,19 @@
       <div id="draftList"></div>
     </div>
     <div class="up-foot"><button onclick="startFreshUpload()">＋ 새 글 시작하기</button></div>
+  </div>
+</div>
+
+<!-- ============ 창 닫기 확인(임시저장) 모달 ============ -->
+<div class="overlay" id="closeConfirmOverlay" style="z-index:120" onclick="if(event.target===this)keepWriting()">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head"><b id="ccTitle">작성 중인 글이 있어요</b><button class="x" onclick="keepWriting()">×</button></div>
+    <div class="up-body"><p id="ccMsg" style="margin:0;color:var(--sub);font-size:14px;line-height:1.6">임시저장하면 나중에 업로드에서 이어서 쓸 수 있어요.</p></div>
+    <div class="up-foot" style="display:flex;flex-direction:column;gap:8px">
+      <button id="ccSave" onclick="closeConfirmSave()">💾 임시저장하고 닫기</button>
+      <button class="btn g" id="ccDiscard" onclick="closeConfirmDiscard()" style="padding:11px">저장 안 하고 닫기</button>
+      <button class="btn g" onclick="keepWriting()" style="padding:11px">← 계속 쓰기</button>
+    </div>
   </div>
 </div>
 
@@ -2129,6 +2142,40 @@ function setWriteMode(edit){
 }
 function submitWrite(){ if(_editPost) saveEdit(); else publishPost(); }
 function closeWrite(){ _editPost=null; setWriteMode(false); close_('writeOverlay'); }
+/* 작성 중 내용이 있는지 (제목·본문·사진 중 하나라도) */
+function hasWriteContent(){
+  try{
+    if(photos&&photos.length)return true;
+    if(($('#pTitle')&&$('#pTitle').value||'').trim())return true;
+    if(richToMarks($('#pBody')).trim())return true;
+  }catch(e){}
+  return false;
+}
+/* 창 닫기 요청 → 작성 중이면 확인 창, 아니면 바로 닫기 */
+function requestCloseWrite(){
+  if(hasWriteContent()){ showCloseConfirm(); return; }
+  reallyCloseWrite();
+}
+function reallyCloseWrite(){ resetUpload(); $('#writeOverlay').classList.remove('on'); $('#uploadOverlay').classList.remove('on'); }
+function showCloseConfirm(){
+  const edit=!!_editPost;
+  const t=$('#ccTitle'), m=$('#ccMsg'), save=$('#ccSave'), disc=$('#ccDiscard');
+  if(edit){
+    if(t)t.textContent='수정을 취소할까요?';
+    if(m)m.textContent='변경한 내용이 저장되지 않아요.';
+    if(save)save.style.display='none';
+    if(disc)disc.textContent='변경 취소하고 닫기';
+  }else{
+    if(t)t.textContent='작성 중인 글이 있어요';
+    if(m)m.textContent='임시저장하면 나중에 업로드에서 이어서 쓸 수 있어요.';
+    if(save)save.style.display='';
+    if(disc)disc.textContent='저장 안 하고 닫기';
+  }
+  open_('closeConfirmOverlay');
+}
+function keepWriting(){ close_('closeConfirmOverlay'); }
+function closeConfirmSave(){ close_('closeConfirmOverlay'); saveDraft(); reallyCloseWrite(); }
+function closeConfirmDiscard(){ close_('closeConfirmOverlay'); reallyCloseWrite(); }
 /* 수정: 업로드(글 작성) 창과 '완전히 동일한' 창을 열어요 */
 function openEdit(){
   const p=_currentPost;if(!p||!canEdit(p))return;
