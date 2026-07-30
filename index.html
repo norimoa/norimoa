@@ -1165,8 +1165,8 @@
       </div>
     </div>
     <div class="up-foot" style="display:flex;gap:10px">
-      <button id="writeDraftBtn" class="btn g" style="flex:0 0 auto" onclick="saveDraft()">💾 임시저장</button>
-      <button id="writeSubmit" style="flex:1" onclick="submitWrite()">✓ 업로드 완료</button>
+      <button id="writeDraftBtn" class="btn g" style="flex:0 0 auto;width:auto;padding:12px 16px" onclick="saveDraft()">💾 임시저장</button>
+      <button id="writeSubmit" style="flex:1 1 auto;width:auto" onclick="submitWrite()">✓ 업로드 완료</button>
     </div>
   </div>
 </div>
@@ -1674,6 +1674,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   const pf=$('#peFile');
   if(pf)pf.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;
     const r=new FileReader();r.onload=()=>{peSel.photo=r.result;renderPeAvatar();renderPeIcons();};r.readAsDataURL(f);});
+  // 제목·본문을 고치면 '저장 안 된 변경'으로 표시 (닫기 확인용)
+  const pt=$('#pTitle'); if(pt)pt.addEventListener('input',markDirty);
+  const pb=$('#pBody'); if(pb)pb.addEventListener('input',markDirty);
 });
 async function saveProfile(){
   profile.nick=$('#peNick').value.trim()||'윤서쌤';
@@ -2151,9 +2154,12 @@ function hasWriteContent(){
   }catch(e){}
   return false;
 }
-/* 창 닫기 요청 → 작성 중이면 확인 창, 아니면 바로 닫기 */
+/* 창 닫기 요청 → 저장 안 된 변경이 있을 때만 확인 창, 아니면 바로 닫기 */
 function requestCloseWrite(){
-  if(hasWriteContent()){ showCloseConfirm(); return; }
+  // 수정 모드는 임시저장 개념이 없으니 내용이 있으면 항상 확인
+  if(_editPost){ if(hasWriteContent()){ showCloseConfirm(); return; } reallyCloseWrite(); return; }
+  // 새 글: 내용이 있고 '마지막 저장 이후 바뀐 게 있을 때만' 확인 (이미 임시저장했으면 그냥 닫힘)
+  if(hasWriteContent() && _draftDirty){ showCloseConfirm(); return; }
   reallyCloseWrite();
 }
 function reallyCloseWrite(){ resetUpload(); $('#writeOverlay').classList.remove('on'); $('#uploadOverlay').classList.remove('on'); }
@@ -2923,7 +2929,7 @@ function addRefLink(){
   let url=(u.value||'').trim(); if(!url){toast('링크 주소를 입력해주세요');return;}
   if(!/^https?:\/\//i.test(url)) url='https://'+url;
   let host=''; try{host=new URL(url).hostname.replace(/^www\./,'');}catch(e){host=url;}
-  postRefs.push({type:'link', url, label:(l.value||'').trim()||host, rel:'참고했어요'});
+  postRefs.push({type:'link', url, label:(l.value||'').trim()||host, rel:REF_RELS[0]});
   u.value=''; l.value=''; $('#refLinkForm').style.display='none';
   renderRefList();
 }
@@ -2955,7 +2961,7 @@ function pickRefPost(p){
   if(postRefs.some(r=>r.type==='post'&&r.refId===id)){toast('이미 추가된 놀이예요');close_('refPickOverlay');return;}
   const a=authorOf(p), thumb=(imagesOf(p)[0]||{}).img||p.img||'';
   postRefs.push({type:'post', refId:id, db:!!p.db, postId:p.db?p.id:null,
-    title:(p.title||'놀이').replace(/^#/,''), author:(a&&a.name)||'선생님', thumb, rel:'참고했어요'});
+    title:(p.title||'놀이').replace(/^#/,''), author:(a&&a.name)||'선생님', thumb, rel:REF_RELS[0]});
   close_('refPickOverlay'); renderRefList();
 }
 function removeRef(i){ postRefs.splice(i,1); renderRefList(); }
@@ -3006,6 +3012,7 @@ function go(v){
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   window.scrollTo(0,0);
   if(v==='browse')renderBrowse();
+  if(v==='sub')renderFeed();     // 팔로잉 탭 열 때마다 최신 팔로우 반영
   if(v==='my')renderMyPage();
 }
 
@@ -3059,6 +3066,7 @@ $('#pxRange').addEventListener('input',e=>{pxStrength=+e.target.value;photos.for
 function addFiles(fileList){
   const files=[...fileList].filter(f=>f.type.startsWith('image/'));
   if(!files.length)return;
+  markDirty();
   $('#drop').style.display='none';$('#photoTop').style.display='block';
   files.forEach(file=>{
     const r=new FileReader();
@@ -3107,7 +3115,7 @@ function buildPhotoCard(ph, skipDetect){
   ph.addBtn=card.querySelector('.addspot');
   const maxW=520,sc=Math.min(1,maxW/ph.img.width);
   ph.cv.width=ph.img.width*sc;ph.cv.height=ph.img.height*sc;
-  card.querySelector('.photo-desc').addEventListener('input',e=>ph.desc=e.target.value);
+  card.querySelector('.photo-desc').addEventListener('input',e=>{ph.desc=e.target.value;markDirty();});
   card.querySelector('.redetect').onclick=()=>runDetectP(ph);
   card.querySelector('.clearface').onclick=()=>{ph.boxes=[];renderCanvasP(ph);ph.status.textContent='모자이크를 지웠어요.';};
   const mzChk=card.querySelector('.mzon'); mzChk.checked=ph.mosaicOn!==false;
@@ -3164,7 +3172,7 @@ function updatePhotoOrder(){
     if(up)up.disabled=idx===0; if(dn)dn.disabled=idx===photos.length-1;
   });
 }
-function removePhoto(ph){const i=photos.indexOf(ph);if(i>=0)photos.splice(i,1);ph.el.remove();closeSpotForm();
+function removePhoto(ph){markDirty();const i=photos.indexOf(ph);if(i>=0)photos.splice(i,1);ph.el.remove();closeSpotForm();
   updatePhotoOrder();
   if(!photos.length){$('#photoTop').style.display='none';$('#drop').style.display='block';}}
 
@@ -3627,13 +3635,16 @@ function openUpload(){
     const drafts=loadDrafts();
     if(drafts.length){ renderDraftList(drafts); open_('draftOverlay'); return; }
   }
-  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); postRefs=[]; renderRefList(); _bodyTagSet=new Set(); _editPost=null; }
+  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); postRefs=[]; renderRefList(); _bodyTagSet=new Set(); _editPost=null; _currentDraftId=null; _draftDirty=false; }
   $('#uploadOverlay').classList.add('on');
 }
 function startFreshUpload(){ close_('draftOverlay'); _skipDraftPrompt=true; openUpload(); _skipDraftPrompt=false; }
 
 /* ===== 임시저장(드래프트) ===== localStorage 기반, 실패해도 앱은 정상 동작 */
 const DRAFT_KEY='nolimoa_drafts';
+let _currentDraftId=null;   // 지금 편집 중인 글이 매핑된 임시저장 id (중복 저장 방지)
+let _draftDirty=false;      // 마지막 저장 이후 바뀐 내용이 있는지
+function markDirty(){ _draftDirty=true; }
 function lsGet(k){ try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;} }
 function lsSet(k,v){ try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;} }
 function loadDrafts(){ const d=lsGet(DRAFT_KEY); return Array.isArray(d)?d:[]; }
@@ -3646,7 +3657,7 @@ function saveDraft(){
     return { img, desc:(ph.desc||'').trim(), spots:(ph.spots||[]).filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url})) };
   });
   const draft={
-    id:'d'+Date.now(),
+    id:_currentDraftId || ('d'+Date.now()),
     ts:Date.now(),
     title, body,
     age:sel.age, nuri:[...sel.nuri], cat:[...sel.cat].map(k=>k.split('::')[1]), tags:[...(sel.tags||[])],
@@ -3655,8 +3666,10 @@ function saveDraft(){
     preview:(stripFmt(body)||title||'(내용 없음)').slice(0,50)
   };
   const drafts=loadDrafts();
-  // 같은 작업을 이어서 저장하면 최신 것만 (제목+사진수 같으면 갱신)
-  drafts.unshift(draft);
+  // 이미 이 글의 임시저장이 있으면 '덮어쓰기'(중복 저장 방지), 없으면 새로 추가
+  const idx=drafts.findIndex(d=>d.id===draft.id);
+  if(idx>=0) drafts[idx]=draft; else drafts.unshift(draft);
+  _currentDraftId=draft.id; _draftDirty=false;   // 저장했으니 '변경 없음' 상태
   const trimmed=drafts.slice(0,12);
   const ok=lsSet(DRAFT_KEY, trimmed);
   toast(ok?'임시저장했어요. 나중에 업로드에서 이어쓸 수 있어요.':'임시저장 공간이 부족해요. 사진을 줄여보세요.');
@@ -3688,11 +3701,10 @@ function renderDraftList(drafts){
     box.appendChild(el);
   });
 }
-let _resumedDraftId=null;
 async function resumeDraft(id){
   const d=loadDrafts().find(x=>x.id===id); if(!d)return;
   if(SB && !authUser){toast('로그인 후 이어쓸 수 있어요');close_('draftOverlay');openAuth('login');return;}
-  _resumedDraftId=id;
+  _currentDraftId=id; _draftDirty=false;   // 불러온 직후엔 저장된 상태와 같음
   close_('draftOverlay');
   // 상태 초기화 후 드래프트 값 채우기
   _editPost=null; setWriteMode(false);
@@ -4069,7 +4081,7 @@ async function publishPost(){
       if(error)throw error;
       toast(`업로드 완료! 사진 ${uploaded.length}장 저장`);
       await loadDbPosts();
-      resetUpload();closeUpload();go('browse');renderBrowse();
+      clearPublishedDraft();resetUpload();closeUpload();go('browse');renderBrowse();
       return;
     }catch(e){toast('업로드 실패: '+(e.message||e));return;}
   }
@@ -4080,7 +4092,7 @@ async function publishPost(){
     img:images[0].img, images, tags:tags.length?tags:['새놀이'], nuri:[...sel.nuri], categories:catLabels,
     views:'0',like:0,cmt:0,liked:false,emoji:'🎨', spots:images[0].spots, attachments:demoAtts, refs:postRefs.slice()});
   toast(`놀이 ${images.length}장 업로드! (데모)`);
-  resetUpload();closeUpload();go('browse');renderBrowse();
+  clearPublishedDraft();resetUpload();closeUpload();go('browse');renderBrowse();
 }
 function resetUpload(){
   photos=[];$('#photoList').innerHTML='';closeSpotForm();resetSel();
@@ -4089,7 +4101,11 @@ function resetUpload(){
   attachments=[]; renderAttachList(); _bodyTagSet=new Set();
   postRefs=[]; renderRefList();
   _editPost=null; setWriteMode(false);
-  if(_resumedDraftId){ try{ const rest=loadDrafts().filter(d=>d.id!==_resumedDraftId); lsSet(DRAFT_KEY,rest);}catch(e){} _resumedDraftId=null; } // 업로드 끝났으니 임시저장 정리
+  _currentDraftId=null; _draftDirty=false;   // 폼 상태만 초기화 (임시저장 자체는 지우지 않음)
+}
+/* 업로드가 '성공'했을 때만 그 임시저장을 정리 */
+function clearPublishedDraft(){
+  if(_currentDraftId){ try{ const rest=loadDrafts().filter(d=>d.id!==_currentDraftId); lsSet(DRAFT_KEY,rest);}catch(e){} }
 }
 
 /* ---------------- init ---------------- */
