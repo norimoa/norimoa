@@ -881,7 +881,7 @@
           <h3>✨ 이렇게 쓸 수 있어요</h3>
           <ul class="about-list">
             <li><b>둘러보기</b> — 다른 교사들의 놀이를 구경하고, 마음에 드는 놀이나 나중에 보고 싶은 놀이는 저장해 보세요.</li>
-            <li><b>놀이 업로드</b> — 사진·설명·해시태그로 우리 반 놀이를 기록하고 공유해요.</li>
+            <li><b>놀이 업로드</b> — 사진·설명·해시태그로 우리 반 놀이를 기록하고 공유해요. 놀이에 필요한 재료 및 교구는 구매 링크를 통해 바로 확인하고 구매할 수 있어요.</li>
             <li><b>저장·폴더</b> — 저장한 놀이를 나만의 폴더로 정리하고, 필요할 때 언제든 다시 꺼내볼 수 있어요.</li>
             <li><b>팔로우</b> — 관심 있는 교사를 팔로우하면 새로 업로드되는 놀이를 한 곳에서 모아볼 수 있어요.</li>
           </ul>
@@ -1156,7 +1156,6 @@
             <button type="button" class="fmt-sw" style="background:#e8863d" title="주황" onclick="richColor('#e8863d')"></button>
             <button type="button" class="fmt-sw" style="background:#3cb4a0" title="초록" onclick="richColor('#3cb4a0')"></button>
             <button type="button" class="fmt-sw" style="background:#5b8def" title="파랑" onclick="richColor('#5b8def')"></button>
-            <button type="button" class="fmt-sw" style="background:#8d5a44" title="갈색" onclick="richColor('#8d5a44')"></button>
           </span>
           <span class="fmt-div"></span>
           <span class="fmt-label">크기</span>
@@ -1337,7 +1336,6 @@
             <button type="button" class="fmt-sw" style="background:#e8863d" title="주황" onclick="richColor('#e8863d')"></button>
             <button type="button" class="fmt-sw" style="background:#3cb4a0" title="초록" onclick="richColor('#3cb4a0')"></button>
             <button type="button" class="fmt-sw" style="background:#5b8def" title="파랑" onclick="richColor('#5b8def')"></button>
-            <button type="button" class="fmt-sw" style="background:#8d5a44" title="갈색" onclick="richColor('#8d5a44')"></button>
           </span>
           <span class="fmt-div"></span>
           <span class="fmt-label">크기</span>
@@ -2072,7 +2070,10 @@ function openFeedPost(i){openPost(window._feed[i]);}
 function openBrowsePost(i){openPost(window._browse[i]);}
 let _scrollPos={};
 function openPost(p){
-  if(!p)return;_currentPost=p;
+  if(!p)return;
+  // 로그인 안 한 사람은 미리보기만 — 자세히 보기는 회원가입 안내
+  if(isGuest()){ toast('회원가입하면 놀이 전체를 볼 수 있어요'); openAuth('signup'); return; }
+  _currentPost=p;
   const cur=document.querySelector('.view.on');
   if(cur && cur.id!=='v-post'){ _postBack=cur.id.replace('v-',''); _scrollPos[_postBack]=window.scrollY||window.pageYOffset||0; } // 방금 읽던 위치 기억
   close_('teacherOverlay');
