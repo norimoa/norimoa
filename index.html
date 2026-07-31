@@ -13,13 +13,14 @@
     --shadow:0 2px 14px rgba(30,30,50,.06);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:var(--bg);color:var(--ink);overflow-x:hidden;
+  html,body{background:var(--bg);color:var(--ink);
     font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,-apple-system,sans-serif;}
   a{color:inherit;text-decoration:none}
   button{font-family:inherit;cursor:pointer}
   img{display:block;max-width:100%}
   .app{max-width:1520px;margin:0 auto;padding:22px 18px 120px;
     display:grid;grid-template-columns:270px 1fr 300px;gap:22px;align-items:start}
+  .app>main{min-width:0}  /* 그리드 본문 열이 내용 때문에 화면보다 넓어지지 않도록 */
 
   /* ---------- sidebar ---------- */
   .side{position:sticky;top:22px}
@@ -481,7 +482,7 @@
   .about-card p{color:var(--ink);font-size:14px;line-height:1.7;margin:0}
   .about-card .about-note{margin-top:10px;font-size:12.5px;color:var(--coral-tx);background:#fff;border:1px dashed #e6a9b0;border-radius:9px;padding:8px 10px;line-height:1.55}
   .about-list{margin:6px 0 0;padding-left:2px;list-style:none;display:flex;flex-direction:column;gap:9px}
-  .about-list li{color:var(--ink);font-size:14px;line-height:1.6;padding-left:16px;position:relative}
+  .about-list li{color:var(--ink);font-size:14px;line-height:1.6;padding-left:16px;position:relative;letter-spacing:-0.055em}
   .about-list li::before{content:'•';position:absolute;left:0;color:var(--coral-tx);font-weight:700}
   .about-list li b{color:var(--coral-tx)}
   .about-foot{text-align:center;color:var(--coral-tx);font-size:14px;font-weight:600;line-height:1.7;padding:18px 10px 8px}
@@ -787,6 +788,8 @@
     .browse-grid{columns:2}
     /* 좌측 카테고리 버튼·우측 알림 벨을 피해 검색창을 가운데로 */
     .br-search{margin-left:52px;margin-right:52px}
+    /* 제목이 첫 요소인 페이지는 좌우 상단 고정 아이콘(카테고리·알림) 아래로 내려 가림 방지 */
+    .view > .main-head:first-child{padding-top:42px}
   }
   /* ---------- browse ---------- */
   .br-search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eee;border-radius:24px;padding:11px 18px;box-shadow:var(--shadow);margin-bottom:16px}
@@ -844,8 +847,6 @@
     .pc-stats{gap:16px}
     .pc-stats div{display:flex;flex-direction:column;align-items:center;gap:1px}
     .pc-stats small{margin-left:0}
-    /* 페이지 제목 가운데 정렬 → 좌우 고정 아이콘(카테고리·알림)에 안 가림 */
-    .main-head{flex-direction:column;align-items:center;text-align:center;gap:8px}
     /* 소개 마지막 문구 줄바꿈 */
     .mob-br{display:inline}
   }
@@ -936,7 +937,7 @@
       <div class="about-wrap">
         <div class="about-card">
           <h3>🌱 어떤 곳인가요?</h3>
-          <p>오늘은 어떤 놀이를 해야 하지? 혼자 고민하지 마세요.<br>놀이모아는 유아교사들이 직접 해본 놀이를 사진과 함께 기록하고, 서로의 놀이에서 아이디어와 영감을 나누는 공간입니다.<br>놀이주제, 놀이유형, 연령 등 다양한 카테고리로 정리되어 있어 원하는 놀이를 쉽고 빠르게 찾을 수 있어요.</p>
+          <p>오늘은 어떤 놀이를 해야 하지? 혼자 고민하지 마세요.<br>놀이모아는 유아교사들이 직접 해본 놀이를 사진과 함께 기록하고, 서로의 놀이에서 아이디어와 영감을 나누는 공간입니다. 놀이주제, 놀이유형, 연령 등 다양한 카테고리로 정리되어 있어 원하는 놀이를 쉽고 빠르게 찾을 수 있어요.</p>
         </div>
         <div class="about-card">
           <h3>👩‍🏫 누구를 위한 곳인가요?</h3>
