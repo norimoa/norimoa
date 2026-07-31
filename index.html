@@ -328,7 +328,13 @@
   .cat-fab{position:fixed;top:18px;left:18px;z-index:50;width:46px;height:46px;border-radius:50%;border:none;
     background:#fff;box-shadow:0 4px 16px rgba(30,30,50,.14);color:var(--coral-tx);cursor:pointer;display:none;align-items:center;justify-content:center}
   .cat-fab:active{transform:scale(.94)}
-  @media(max-width:980px){ .cat-fab{display:inline-flex} }
+  /* 모바일: 카테고리·알림 버튼은 '둘러보기' 페이지에서만 표시 */
+  @media(max-width:980px){
+    .cat-fab{display:none}
+    .bell-btn{display:none}
+    body.nav-browse .cat-fab{display:inline-flex}
+    body.nav-browse .bell-btn{display:block}
+  }
   #notifOverlay{z-index:90}
   .notif-row{display:flex;align-items:flex-start;gap:11px;padding:13px 20px;border-bottom:1px solid var(--line);cursor:pointer}
   .notif-row.unread{background:#fcf0ec}
@@ -788,8 +794,6 @@
     .browse-grid{columns:2}
     /* 좌측 카테고리 버튼·우측 알림 벨을 피해 검색창을 가운데로 */
     .br-search{margin-left:52px;margin-right:52px}
-    /* 제목이 첫 요소인 페이지는 좌우 상단 고정 아이콘(카테고리·알림) 아래로 내려 가림 방지 */
-    .view > .main-head:first-child{padding-top:42px}
   }
   /* ---------- browse ---------- */
   .br-search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eee;border-radius:24px;padding:11px 18px;box-shadow:var(--shadow);margin-bottom:16px}
@@ -822,6 +826,8 @@
   .cat-nav-item.on{background:#f6ddd8;color:var(--coral-tx);font-weight:700}
   .cat-content{flex:1;overflow:auto;padding:22px 24px}
   .cat-title{font-size:19px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .cat-draw-head{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:18px;margin-bottom:20px}
+  .cat-draw-head button{border:none;background:none;font-size:24px;color:#999;line-height:1}
   .cat-tabs{display:inline-flex;gap:8px;margin-bottom:18px}
   .ct{border:none;background:#f2f2f5;color:#888;border-radius:18px;padding:8px 20px;font-size:13.5px;font-weight:700}
   .ct.on{background:var(--coral);color:#fff}
@@ -856,7 +862,7 @@
   }
 </style>
 </head>
-<body>
+<body class="nav-browse">
 <div class="app">
   <!-- ============ SIDEBAR ============ -->
   <aside class="side">
@@ -868,9 +874,6 @@
       <button class="cat-btn" onclick="openCat()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg> 카테고리</button>
       <button class="about-btn" onclick="go('about')">놀이모아 소개</button>
     </div>
-    <nav class="side-menu">
-      <a class="on" data-sc="kinder" onclick="setSideSection('kinder')">🏫 유치원/어린이집</a>
-    </nav>
     <div class="side-cats" id="sideCats"></div>
     <div class="side-foot">
       <a onclick="go('about')">놀이모아 소개</a> · <a onclick="go('privacy')">개인정보처리방침</a><br>
@@ -1225,10 +1228,6 @@
 <!-- ============ 카테고리 드로어 ============ -->
 <div class="overlay cat-ov" id="catOverlay" onclick="if(event.target===this)close_('catOverlay')">
   <div class="cat-drawer">
-    <div class="cat-nav">
-      <div class="cat-nav-head">카테고리 <button onclick="close_('catOverlay')">×</button></div>
-      <a class="cat-nav-item on" data-s="kinder" onclick="catSection('kinder')">🏫 유치원/어린이집</a>
-    </div>
     <div class="cat-content" id="catContent"></div>
   </div>
 </div>
@@ -3292,35 +3291,25 @@ function clearBrowseFilter(){browseFilter='';renderBrowseFeed();}
 const catDrawer={
   kinder:{title:'🏫 유치원/어린이집', groups:[
     {g:'놀이 주제', ic:'🌱', items:['봄','여름','가을','겨울','나와 가족','우리 동네','건강과 안전','동식물','교통기관','환경과 자연','우리나라','세계 여러 나라','우주','물','공룡','곤충','명절','기념일']},
-    {g:'놀이 유형', ic:'🎨', items:['미술','신체','역할','쌓기','언어','수·조작','과학·탐구','음악','바깥놀이','감각놀이','새노래','이야기나누기','요리','게임','전통놀이']},
+    {g:'놀이 유형', ic:'🎨', items:['미술','신체','역할','쌓기','언어','수·조작','과학·탐구','음악','바깥놀이','신체표현','새노래','이야기나누기','요리','게임','전통놀이']},
     {g:'특색교육', ic:'📚', items:['생태','AI·디지털','코딩','인성교육','다문화교육','환경교육','경제교육','안전교육','성교육']},
     {g:'상황별', ic:'⭐', items:['주의집중','학부모참여수업','준비물 없는 놀이','혼자놀이','비/눈 오는 날','행사·발표회','현장체험학습','찾아오는 현장체험학습']},
     {g:'연령별', ic:'👶', items:['0~2세','3세','4세','5세','혼합연령']},
   ]},
 };
-let catSectionCur='kinder', catTab='놀이';
-function openCat(){catSectionCur='kinder';catTab='놀이';renderCatDrawer();open_('catOverlay');}
+let catSectionCur='kinder';
+function openCat(){catSectionCur='kinder';renderCatDrawer();open_('catOverlay');}
 function catSection(s){catSectionCur=s;renderCatDrawer();}
-function setCatTab(tb){catTab=tb;renderCatDrawer();}
 const HILITE_CATS=new Set(['현장체험학습','찾아오는 현장체험학습']); // 갈색 테두리로 강조할 항목
 function hiCat(it){return HILITE_CATS.has(it)?' hi-cat':'';}
 function renderCatDrawer(){
-  document.querySelectorAll('.cat-nav-item').forEach(a=>a.classList.toggle('on',a.dataset.s===catSectionCur));
   const d=catDrawer[catSectionCur], box=$('#catContent');
-  let html=`<div class="cat-title">${d.title}</div>
-    <div class="cat-tabs">
-      <button class="ct ${catTab==='놀이'?'on':''}" onclick="setCatTab('놀이')">놀이</button>
-      <button class="ct ${catTab==='자료'?'on':''}" onclick="setCatTab('자료')">자료</button>
-    </div>`;
-  if(catTab==='자료'){
-    html+='<div class="placeholder" style="margin-top:20px"><div class="big">📄</div>자료실은 준비 중이에요</div>';
-  } else {
-    d.groups.forEach(grp=>{
-      html+=`<div class="cat-group"><div class="cgl">${grp.ic} ${grp.g}</div><div class="cg-grid">`+
-        grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
-        `</div></div>`;
-    });
-  }
+  let html=`<div class="cat-draw-head"><span>카테고리</span><button onclick="close_('catOverlay')" aria-label="닫기">×</button></div>`;
+  d.groups.forEach(grp=>{
+    html+=`<div class="cat-group"><div class="cgl">${grp.ic} ${grp.g}</div><div class="cg-grid">`+
+      grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
+      `</div></div>`;
+  });
   box.innerHTML=html;
 }
 function pickCategory(label){
@@ -3555,6 +3544,7 @@ function go(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   $('#v-'+v).classList.add('on');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  document.body.classList.toggle('nav-browse', v==='browse'); // 카테고리·알림 버튼은 둘러보기에서만
   window.scrollTo(0,0);
   if(v==='browse')renderBrowse();
   if(v==='sub')renderFeed();     // 팔로잉 탭 열 때마다 최신 팔로우 반영
@@ -4108,7 +4098,7 @@ const nuriData=[
 ];
 const catData=[
   {g:'놀이 주제', ic:'🌱', items:['봄','여름','가을','겨울','나와 가족','우리 동네','건강과 안전','동식물','교통기관','환경과 자연','우리나라','세계 여러 나라','우주','물','공룡','곤충','명절','기념일']},
-  {g:'놀이 유형', ic:'🎨', items:['미술','신체','역할','쌓기','언어','수·조작','과학·탐구','음악','바깥놀이','감각놀이','새노래','이야기나누기','요리','게임','전통놀이']},
+  {g:'놀이 유형', ic:'🎨', items:['미술','신체','역할','쌓기','언어','수·조작','과학·탐구','음악','바깥놀이','신체표현','새노래','이야기나누기','요리','게임','전통놀이']},
   {g:'특색교육', ic:'📚', items:['생태','AI·디지털','코딩','인성교육','다문화교육','환경교육','경제교육','안전교육','성교육']},
   {g:'상황별',   ic:'⭐', items:['주의집중','학부모참여수업','준비물 없는 놀이','혼자놀이','비/눈 오는 날','행사·발표회','현장체험학습','찾아오는 현장체험학습']},
 ];
@@ -4516,7 +4506,7 @@ const AI_CAT={
   '과학·탐구':['과학','실험','관찰','탐구','돋보기','자석','색깔 변화','녹는','현미경'],
   '음악':['노래','악기','리듬','멜로디','새노래','연주'],
   '바깥놀이':['바깥놀이','산책','운동장','흙놀이','자연물'],
-  '감각놀이':['감각','촉감','오감','밀가루','촉감놀이','슬라임'],
+  '신체표현':['신체표현','표현','동작','율동','몸짓','춤','움직임'],
   '요리':['요리','반죽','샌드위치','쿠키','화채','비빔밥','만들어 먹'],
   '게임':['게임','규칙','대결','경기','보드게임','술래'],
   '전통놀이':['전통놀이','윷놀이','제기','팽이','투호','딱지','공기놀이'],
