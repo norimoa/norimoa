@@ -292,7 +292,8 @@
   .pc-stats b{font-size:15px}
   .pc-stats small{color:var(--sub);font-size:11.5px;margin-left:4px}
   .my-sec{margin-top:22px}
-  .my-sec h4{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+  .my-sec h4{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .my-sec h4 .drag-hint{font-size:11.5px;font-weight:400;color:var(--sub)}
   .folder-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
   .folder-row.savedgrid{grid-template-columns:repeat(4,1fr)}
   .folder{cursor:pointer}
@@ -1078,11 +1079,11 @@
         <button class="btn-line" onclick="openProfileEdit()">프로필 편집</button>
       </div>
       <div class="my-sec">
-        <h4>📁 내가 올린 놀이</h4>
+        <h4>📁 내가 올린 놀이 <span class="drag-hint">폴더를 드래그하면 순서를 바꿀 수 있어요</span></h4>
         <div class="folder-row" id="myPlaysRow"></div>
       </div>
       <div class="my-sec">
-        <h4>🔖 저장한 놀이</h4>
+        <h4>🔖 저장한 놀이 <span class="drag-hint">폴더를 드래그하면 순서를 바꿀 수 있어요</span></h4>
         <div class="folder-row savedgrid" id="savedPlaysRow"></div>
       </div>
       <div class="my-foot">
@@ -1345,7 +1346,7 @@
       <!-- 놀이 제목 -->
       <div class="sec">
         <div class="sec-label">🖌️ 놀이 제목</div>
-        <div class="title-input"><input id="pTitle" placeholder="예: 아이스크림 가게 놀이"><span class="pen">✎</span></div>
+        <div class="title-input"><input id="pTitle" placeholder="놀이 제목을 적어주세요"><span class="pen">✎</span></div>
       </div>
 
       <!-- 방금 올린 사진 한 줄 미리보기 (누르면 그 사진 편집) -->
@@ -1379,8 +1380,7 @@
         </div>
         <div id="pBody" class="rich big-write" contenteditable="true" data-ph="이 놀이를 자유롭게 소개해주세요. 준비물, 방법, 팁 등을 적어보세요."></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px">
-          <button type="button" class="ai-sum-btn" onclick="autoTidy('pBody')">🪄 AI 다듬기 · 보기 좋게 자동 정리</button>
-          <button type="button" class="ai-sum-btn" onclick="aiSuggestTags()">🎯 AI 추천 · 누리과정·카테고리·태그 자동 선택</button>
+          <button type="button" class="ai-sum-btn" onclick="aiSuggestTags()">🎯 AI 추천 · 카테고리·태그 자동 입력</button>
         </div>
       </div>
 
@@ -1388,14 +1388,6 @@
       <div class="sec">
         <div class="sec-label">🖍️ 연령</div>
         <div class="seg" id="ageSeg"></div>
-      </div>
-
-      <!-- 누리과정 -->
-      <div class="sec">
-        <div class="sec-label">🎨 누리과정</div>
-        <div class="chips" id="nuriChips"></div>
-        <button class="dd-head" id="nuriHead" onclick="toggleDD('nuri')">누리과정 항목 선택하기 <span class="chev">▾</span></button>
-        <div class="opt-panel" id="nuriPanel" style="display:none"></div>
       </div>
 
       <!-- 카테고리 -->
@@ -1586,12 +1578,7 @@
           <button type="button" class="fmt-btn sz" onmousedown="event.preventDefault()" onclick="richSize(28)">아주 크게</button>
         </div>
         <div id="eBody" class="rich big-write" contenteditable="true" data-ph="놀이 내용을 적어주세요."></div>
-        <button type="button" class="ai-sum-btn" onclick="autoTidy('eBody')">🪄 AI 다듬기 · 보기 좋게 자동 정리</button></div>
       <div class="sec"><div class="sec-label">🖍️ 연령</div><div class="seg" id="eAgeSeg"></div></div>
-      <div class="sec"><div class="sec-label">🎨 누리과정</div>
-        <div class="chips" id="eNuriChips"></div>
-        <button class="dd-head" id="eNuriHead" onclick="toggleDD('eNuri')">누리과정 항목 선택하기 <span class="chev">▾</span></button>
-        <div class="opt-panel" id="eNuriPanel" style="display:none"></div></div>
       <div class="sec"><div class="sec-label">🔳 카테고리</div>
         <div class="chips" id="eCatChips"></div>
         <button class="dd-head" id="eCatHead" onclick="toggleDD('eCat')">카테고리 선택하기 <span class="chev">▾</span></button>
@@ -2289,6 +2276,8 @@ function fmtDate(ts){ if(!ts)return ''; try{const d=new Date(ts); if(isNaN(d))re
 /* 해시태그는 띄어쓰기 없이 (카테고리 '나와 가족' → 태그 '나와가족') */
 function noSpace(s){return String(s||'').replace(/\s+/g,'');}
 function tagQ(s){return noSpace(s).replace(/'/g,"\\'");}
+// 공백·'놀이' 접미사를 무시한 비교용 문자열 ('수박'과 '수박놀이'를 같게 취급)
+function dePlay(s){return noSpace(String(s||'').toLowerCase()).replace(/놀이/g,'');}
 /* **굵게** / __밑줄__ 마크업을 안전하게 태그로 변환 (esc 이후에 적용) */
 function fmtRich(s){return s.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/__([^_\n]+)__/g,'<u>$1</u>');}
 function stripFmt(s){return String(s||'').replace(/\*\*([^*\n]+)\*\*/g,'$1').replace(/__([^_\n]+)__/g,'$1').replace(/⟦[cs]=[^⟧]*⟧/g,'').replace(/⟦\/[cs]⟧/g,'');}
@@ -2617,7 +2606,7 @@ function renderEditImages(){
         <input placeholder="물품명" value="${esc(s.name||'')}" data-k="name" data-i="${idx}" data-s="${si}">
         <div class="espot-mall-cell">
           <select class="espot-mall" data-i="${idx}" data-s="${si}">${mallOptionsHTML(s.mall||'')}</select>
-          <input class="espot-mall-custom" data-i="${idx}" data-s="${si}" placeholder="쇼핑몰 직접 입력" value="${esc((s.mall&&!MALL_OPTIONS.includes(s.mall))?s.mall:'')}" style="${(s.mall&&!MALL_OPTIONS.includes(s.mall))?'':'display:none'}">
+          <input class="espot-mall-custom" data-i="${idx}" data-s="${si}" placeholder="구매처 직접 입력" value="${esc((s.mall&&!MALL_OPTIONS.includes(s.mall))?s.mall:'')}" style="${(s.mall&&!MALL_OPTIONS.includes(s.mall))?'':'display:none'}">
         </div>
         <input placeholder="https:// 링크" value="${esc(s.url||'')}" data-k="url" data-i="${idx}" data-s="${si}">
         <button class="espot-del" data-i="${idx}" data-s="${si}">✕</button>
@@ -3337,9 +3326,9 @@ function authorOf(p){return p.author?p.author:t(p.tid);}
 /* 라벨(카테고리/태그)로 관련 놀이 필터 — 태그·제목·카테고리·누리 모두 확인 */
 function matchesFilter(p,label){
   if(!label)return true;
-  const L=noSpace(label.toLowerCase()); // 공백 무시 → '#나와가족'이 '나와 가족' 카테고리와 매칭
-  const inArr=a=>(a||[]).some(x=>noSpace(String(x).toLowerCase()).includes(L));
-  return inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||noSpace((p.title||'').toLowerCase()).includes(L);
+  const L=dePlay(label)||noSpace(label.toLowerCase()); // 공백·'놀이' 무시 → '수박'과 '수박놀이' 동일 취급
+  const inArr=a=>(a||[]).some(x=>dePlay(x).includes(L));
+  return inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||dePlay(p.title||'').includes(L);
 }
 function filterByLabel(label){
   ['detailOverlay','teacherOverlay','catOverlay','socialOverlay'].forEach(id=>close_(id));
@@ -3361,8 +3350,9 @@ function renderBrowseFeed(){
   const q=($('#brSearch').value||'').trim();
   let list=(window._dbPosts||[]).concat(posts);  // 실제 글 먼저, 그 뒤 데모
   if(browseFilter)list=list.filter(p=>matchesFilter(p,browseFilter));
-  if(q)list=list.filter(p=>{const a=authorOf(p);
-    return (p.title+p.desc+p.tags.join(' ')+((a&&a.name)||'')).toLowerCase().includes(q.toLowerCase());});
+  if(q){const qn=dePlay(q)||noSpace(q.toLowerCase()); // '놀이' 접미사 무시하고 검색
+    list=list.filter(p=>{const a=authorOf(p);
+      return dePlay(p.title+' '+p.desc+' '+(p.tags||[]).join(' ')+' '+((a&&a.name)||'')).includes(qn);});}
   window._browse=list;
   const fb=$('#brFilterBar');
   fb.innerHTML=browseFilter?`<div class="filter-chip">#${esc(noSpace(browseFilter))} <span onclick="clearBrowseFilter()">✕</span></div>`:'';
@@ -3546,9 +3536,9 @@ function envTiles(){
 }
 function renderEnv(){
   const box=$('#envGrid'); if(!box)return; box.innerHTML='';
-  const q=(($('#envSearch')&&$('#envSearch').value)||'').trim().toLowerCase();
+  const q=(($('#envSearch')&&$('#envSearch').value)||'').trim();
   let tiles=envTiles();
-  if(q) tiles=tiles.filter(t=>t.title.toLowerCase().includes(q));
+  if(q){ const qn=dePlay(q)||noSpace(q.toLowerCase()); tiles=tiles.filter(t=>dePlay(t.title).includes(qn)); }
   if(!tiles.length){
     box.innerHTML=`<div class="placeholder" style="grid-column:1/-1"><div class="big">🖼️</div>${q?'조건에 맞는 환경구성 사진이 없어요':'아직 환경구성으로 표시된 사진이 없어요.<br>글 쓸 때 사진 우측하단 ‘환경구성이면 체크’를 눌러보세요.'}</div>`;
     return;
@@ -4328,11 +4318,11 @@ function renderSpotsP(ph){
     ph.layer.appendChild(m);});
 }
 /* 쇼핑몰 선택지 (드롭다운) — '선택 안 함' 기본, '기타'는 직접 작성 */
-const MALL_OPTIONS=['키드키즈몰','G마켓','오늘의집'];
+const MALL_OPTIONS=['키드키즈몰','G마켓','오늘의 집'];
 function mallOptionsHTML(mall){
   const preset=MALL_OPTIONS.includes(mall);
   const etc=!!mall && !preset;
-  return `<option value="" ${!mall?'selected':''}>선택 안 함</option>`
+  return `<option value="" ${!mall?'selected':''}>구매처 (선택 안 함)</option>`
     + MALL_OPTIONS.map(m=>`<option value="${m}" ${mall===m?'selected':''}>${m}</option>`).join('')
     + `<option value="__etc__" ${etc?'selected':''}>기타 (직접 작성)</option>`;
 }
@@ -4342,7 +4332,7 @@ function openSpotFormP(ph,i){closeSpotForm();const s=ph.spots[i];
   const etc=!!s.mall && !MALL_OPTIONS.includes(s.mall);
   f.innerHTML=`<input class="sf-name" placeholder="물품 이름 (예: 무한변신 배)">
     <select class="sf-mall">${mallOptionsHTML(s.mall||'')}</select>
-    <input class="sf-mall-custom" placeholder="쇼핑몰 직접 입력" value="${esc(etc?s.mall:'')}" style="${etc?'':'display:none'}">
+    <input class="sf-mall-custom" placeholder="구매처 직접 입력" value="${esc(etc?s.mall:'')}" style="${etc?'':'display:none'}">
     <input class="sf-url" placeholder="https:// 구매링크 붙여넣기">
     <div class="sf-btns"><button class="sf-del">삭제</button><button class="sf-save">저장</button></div>`;
   const nameEl=f.querySelector('.sf-name'), urlEl=f.querySelector('.sf-url'),
@@ -4386,13 +4376,13 @@ function renderAge(){
 }
 /* 누리과정 (항목 고유) */
 function renderNuriChips(){
-  const c=$('#nuriChips');c.innerHTML='';
+  const c=$('#nuriChips');if(!c)return;c.innerHTML='';
   sel.nuri.forEach(it=>{const el=document.createElement('span');el.className='chip-sel';
     el.innerHTML=`${it} <span class="x">×</span>`;
     el.querySelector('.x').onclick=()=>{sel.nuri.delete(it);renderNuri();};c.appendChild(el);});
 }
 function renderNuriPanel(){
-  const p=$('#nuriPanel');p.innerHTML='';
+  const p=$('#nuriPanel');if(!p)return;p.innerHTML='';
   nuriData.forEach(grp=>{
     const g=document.createElement('div');g.className='opt-group';
     g.innerHTML=`<div class="gl">${grp.g}</div>`;
@@ -4811,20 +4801,18 @@ function aiSuggestTags(silent){
   if(!text.trim()){ if(!silent)toast('먼저 제목이나 글 내용을 적어주세요'); return; }
   const has=arr=>arr.some(k=>text.includes(k.toLowerCase()));
   const cats=[]; for(const l in AI_CAT){ if(has(AI_CAT[l])) cats.push(l); }
-  const nuri=new Set(); for(const it in AI_NURI){ if(has(AI_NURI[it])) nuri.add(it); }
   // 태그: 본문에 등장한 구체 키워드 먼저, 그다음 카테고리
   const tags=[]; const allKw=[...new Set(Object.values(AI_CAT).flat())];
   allKw.forEach(k=>{ if(text.includes(k.toLowerCase()) && k.length>=2 && !tags.includes(k)) tags.push(k); });
   cats.forEach(c=>{ if(!tags.includes(c)) tags.push(c); });
-  if(!cats.length && !nuri.size && !tags.length){ if(!silent)toast('내용에서 특징을 못 찾았어요 · 직접 골라주세요'); return; }
+  if(!cats.length && !tags.length){ if(!silent)toast('내용에서 특징을 못 찾았어요 · 직접 골라주세요'); return; }
   if(cats.length) sel.cat=new Set(catLabelsToKeys(cats.slice(0,6)));
-  if(nuri.size) sel.nuri=nuri;
   if(tags.length){ // 직접 단 해시태그는 유지하고, AI 추천 태그를 뒤에 누적
     const cur=(sel.tags||[]).slice();
     [...new Set(tags.map(noSpace).filter(Boolean))].forEach(t=>{ if(!cur.includes(t)) cur.push(t); });
     sel.tags=cur.slice(0,12);
   }
-  renderNuri();renderCat();renderTags();
+  renderCat();renderTags();
   if(!silent)toast('내용에 맞춰 골라봤어요 · 원하면 자유롭게 수정하세요');
 }
 /* 무료 자동 정리: 문장은 그대로, 소제목 굵게 + 목록 '-' + 문단 간격 정리 */
