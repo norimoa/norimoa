@@ -515,6 +515,24 @@
   .notice .nc-ic{font-size:16px;flex:0 0 auto}
   .notice .nc-tx{flex:1;min-width:0;font-size:13.5px;color:var(--ink);line-height:1.55;word-break:break-word}
   .notice .nc-del{border:none;background:none;color:#c0433f;font-size:15px;cursor:pointer;flex:0 0 auto}
+  /* ---------- 커뮤니티 ---------- */
+  .comm-card{background:#fff;border:1px solid #efe7e2;border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px;cursor:pointer}
+  .comm-card.notice{background:#fff7f9;border-color:#f3d3ce}
+  .comm-top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+  .comm-top .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:17px;overflow:hidden;flex:0 0 auto}
+  .comm-top .av img{width:100%;height:100%;object-fit:cover}
+  .comm-top .who{flex:1;min-width:0}
+  .comm-top .who b{font-size:13.5px}
+  .comm-top .who small{display:block;color:var(--sub);font-size:11.5px}
+  .comm-badge{background:var(--coral);color:#fff;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:9px;flex:0 0 auto}
+  .comm-card h3{color:var(--coral-tx);font-size:15.5px;margin:0 0 5px}
+  .comm-body{color:var(--ink);font-size:13.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .comm-body a{color:var(--teal)}
+  .comm-input{width:100%;border:1px solid #e7dcd6;border-radius:11px;padding:12px 13px;font-size:15px;font-family:inherit;background:#fafafb}
+  .comm-textarea{width:100%;border:1px solid #e7dcd6;border-radius:11px;padding:12px 13px;font-size:14px;font-family:inherit;background:#fafafb;min-height:150px;margin-top:10px;line-height:1.6;resize:vertical}
+  .comm-notice-row{display:flex;align-items:center;gap:7px;margin-top:12px;font-size:13.5px;color:var(--coral-tx);font-weight:600;cursor:pointer}
+  .comm-notice-row input{width:16px;height:16px;accent-color:var(--coral)}
   .notice-admin{margin-top:2px}
   .issue-mgr-btn{border:1px solid #eec6c9;background:var(--pink-bg);color:var(--coral-tx);border-radius:9px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:6px}
   /* 이슈 관리 */
@@ -930,8 +948,12 @@
 
     <!-- 커뮤니티 -->
     <section class="view" id="v-comm">
-      <div class="main-head"><div><h1>커뮤니티</h1><p>선생님들의 이야기</p></div></div>
-      <div class="placeholder"><div class="big">💬</div>곧 열려요!</div>
+      <div class="main-head">
+        <div><h1>커뮤니티</h1><p>연수 정보·오픈채팅·자유로운 이야기를 나눠요</p></div>
+        <button class="btn-fill" onclick="openCommWrite()">✏️ 글쓰기</button>
+      </div>
+      <div id="commNotices"></div>
+      <div id="commFeed"></div>
     </section>
 
     <!-- 소개 -->
@@ -1229,6 +1251,29 @@
 <div class="overlay cat-ov" id="catOverlay" onclick="if(event.target===this)close_('catOverlay')">
   <div class="cat-drawer">
     <div class="cat-content" id="catContent"></div>
+  </div>
+</div>
+
+<!-- ============ 커뮤니티 글쓰기 ============ -->
+<div class="overlay" id="commWriteOverlay" onclick="if(event.target===this)close_('commWriteOverlay')">
+  <div class="modal">
+    <div class="modal-head"><b>커뮤니티 글쓰기</b><button class="x" onclick="close_('commWriteOverlay')">×</button></div>
+    <div class="auth-body">
+      <input id="commTitle" class="comm-input" placeholder="제목" name="nolimoa-comm-title" autocomplete="off" maxlength="80">
+      <textarea id="commBody" class="comm-textarea" placeholder="내용을 입력하세요 (링크·#해시태그도 됩니다)"></textarea>
+      <label id="commNoticeRow" class="comm-notice-row" style="display:none">
+        <input type="checkbox" id="commNotice"> <span>📢 공지로 등록 (관리자)</span>
+      </label>
+      <button class="btn-fill" style="width:100%;margin-top:12px" onclick="submitCommPost()">등록</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 커뮤니티 글 보기 ============ -->
+<div class="overlay" id="commPostOverlay" onclick="if(event.target===this)close_('commPostOverlay')">
+  <div class="modal">
+    <div class="modal-head"><b id="commPostHead">게시글</b><button class="x" onclick="close_('commPostOverlay')">×</button></div>
+    <div class="auth-body" id="commPostBody"></div>
   </div>
 </div>
 
@@ -2077,6 +2122,8 @@ async function loadDbPosts(){
   await loadNotifs();     // 알림 불러오기
   await loadNotices();    // 공지 불러오기
   await loadFeaturedIssues(); // 관리자 큐레이션 이슈
+  await loadCommunity();  // 커뮤니티 글
+  if($('#v-comm').classList.contains('on'))renderCommunity();
   syncStats();
   if($('#v-browse').classList.contains('on'))renderBrowse();
   if($('#v-my').classList.contains('on'))renderMyPage();
@@ -3317,6 +3364,100 @@ function pickCategory(label){
   filterByLabel(label);
   toast(`'${label}' 관련 놀이`);
 }
+
+/* ===== 커뮤니티 (게시판 + 공지) ===== */
+let communityDemo=[
+  {id:'cd1', notice:true, title:'커뮤니티 이용 안내', body:'연수 정보, 오픈채팅방 링크, 자유로운 이야기를 나누는 공간이에요.\n서로 예의를 지키며 즐겁게 이용해 주세요 🙂', date:'2026. 7. 20.', author:{name:'놀이모아', icon:'🎪', color:'#86736b', init:'놀'}},
+  {id:'cd2', notice:false, title:'유아교사 오픈카톡방 공유해요', body:'놀이 아이디어 나누는 오픈채팅방이에요. 관심 있으신 분들 편하게 들어오세요!\n#오픈채팅 #유아교사', date:'2026. 7. 24.', author:{name:'이하은', icon:'🌸', color:'#86736b', init:'이'}},
+  {id:'cd3', notice:false, title:'가을 놀이 연수 후기 나눠요', body:'지난주 연수 다녀왔는데 자연물 놀이 아이디어가 정말 좋았어요.\n자료 필요하신 분 있으면 말씀해 주세요~ #연수후기', date:'2026. 7. 26.', author:{name:'박소연', icon:'🐣', color:'#86736b', init:'박'}}
+];
+function myAuthorObj(){return {name:profile.nick, icon:profile.icon, photo:profile.photo, color:'#86736b', init:(profile.nick||'나')[0]};}
+function commList(){ return (window._commPosts||[]).concat(communityDemo); }
+async function loadCommunity(){
+  if(!SB){ window._commPosts=[]; return; }
+  try{
+    const {data}=await SB.from('community_posts').select('*').order('created_at',{ascending:false});
+    window._commPosts=(data||[]).map(r=>({id:r.id, db:true, user_id:r.user_id, notice:!!r.is_notice,
+      title:r.title||'', body:r.body||'', date:fmtDate(r.created_at),
+      author:{name:r.author_name||'선생님', icon:r.author_icon||'🧑', photo:r.author_avatar||'', color:'#86736b', init:(r.author_name||'선')[0]}}));
+  }catch(e){ window._commPosts=[]; }
+}
+function commCanDel(p){ return p.db ? (isAdmin()||!!(authUser&&p.user_id===authUser.id)) : (p.tid==='me'); }
+function commCard(p){
+  const a=p.author||{};
+  const el=document.createElement('div'); el.className='comm-card'+(p.notice?' notice':'');
+  el.onclick=()=>openCommPost(p.id);
+  el.innerHTML=`
+    <div class="comm-top">
+      <div class="av" style="${avStyle(a)}">${avInner(a)}</div>
+      <div class="who"><b>${esc(a.name||'선생님')}</b><small>${p.date||''}</small></div>
+      ${p.notice?'<span class="comm-badge">📢 공지</span>':''}
+    </div>
+    <h3>${esc(p.title||'(제목 없음)')}</h3>
+    <div class="comm-body">${linkifyTags(p.body||'')}</div>`;
+  return el;
+}
+function renderCommunity(){
+  const all=commList();
+  const notices=all.filter(p=>p.notice);
+  const posts=all.filter(p=>!p.notice);
+  const nb=$('#commNotices'); if(nb){nb.innerHTML=''; notices.forEach(p=>nb.appendChild(commCard(p)));}
+  const fb=$('#commFeed'); if(!fb)return; fb.innerHTML='';
+  if(!posts.length){
+    fb.innerHTML='<div class="placeholder"><div class="big">💬</div>아직 글이 없어요.<br>첫 글을 남겨보세요!</div>';
+    return;
+  }
+  posts.forEach(p=>fb.appendChild(commCard(p)));
+}
+function openCommWrite(){
+  if(isGuest()){ toast('회원가입하면 글을 쓸 수 있어요'); openAuth('signup'); return; }
+  $('#commTitle').value=''; $('#commBody').value='';
+  const nr=$('#commNoticeRow'); if(nr)nr.style.display=isAdmin()?'flex':'none';
+  const nc=$('#commNotice'); if(nc)nc.checked=false;
+  open_('commWriteOverlay');
+}
+async function submitCommPost(){
+  const title=$('#commTitle').value.trim(), body=$('#commBody').value.trim();
+  if(!title && !body){ toast('제목이나 내용을 입력하세요'); return; }
+  const notice=isAdmin() && $('#commNotice') && $('#commNotice').checked;
+  if(!SB){
+    communityDemo.unshift({id:'c'+Date.now(), tid:'me', notice, title, body, date:'방금', author:myAuthorObj()});
+    close_('commWriteOverlay'); renderCommunity(); toast('등록했어요 (데모)'); return;
+  }
+  if(!authUser){ toast('로그인이 필요해요'); openAuth('login'); return; }
+  try{
+    const row={ user_id:authUser.id, title, body, is_notice:!!notice,
+      author_name:profile.nick, author_icon:profile.icon, author_avatar:profile.photo };
+    const {error}=await SB.from('community_posts').insert(row); if(error)throw error;
+    close_('commWriteOverlay'); await loadCommunity(); renderCommunity();
+    toast(notice?'공지를 등록했어요':'글을 등록했어요');
+  }catch(e){ toast('등록 실패: '+(e.message||e)); }
+}
+function openCommPost(id){
+  const p=commList().find(x=>String(x.id)===String(id)); if(!p)return;
+  const a=p.author||{};
+  const head=$('#commPostHead'); if(head)head.textContent=p.notice?'공지':'게시글';
+  $('#commPostBody').innerHTML=`
+    <div class="comm-top">
+      <div class="av" style="${avStyle(a)}">${avInner(a)}</div>
+      <div class="who"><b>${esc(a.name||'선생님')}</b><small>${p.date||''}</small></div>
+      ${p.notice?'<span class="comm-badge">📢 공지</span>':''}
+    </div>
+    <h3 style="color:var(--coral-tx);font-size:18px;margin:8px 0 12px">${esc(p.title||'')}</h3>
+    <div style="font-size:14px;line-height:1.75;white-space:pre-wrap;word-break:break-word">${linkifyTags(p.body||'')}</div>
+    ${commCanDel(p)?`<div style="margin-top:18px;text-align:right"><button class="btn-line" onclick="deleteCommPost('${p.id}')">🗑 삭제</button></div>`:''}`;
+  open_('commPostOverlay');
+}
+async function deleteCommPost(id){
+  const p=commList().find(x=>String(x.id)===String(id)); if(!p)return;
+  if(!p.db){ communityDemo=communityDemo.filter(x=>String(x.id)!==String(id)); close_('commPostOverlay'); renderCommunity(); toast('삭제했어요'); return; }
+  if(!commCanDel(p)){ toast('삭제 권한이 없어요'); return; }
+  try{
+    const {error}=await SB.from('community_posts').delete().eq('id',id); if(error)throw error;
+    close_('commPostOverlay'); await loadCommunity(); renderCommunity(); toast('삭제했어요');
+  }catch(e){ toast('삭제 실패: '+(e.message||e)); }
+}
+
 /* 왼쪽 사이드바에 카테고리 항목 전체 펼쳐 보이기 */
 let sideSection='kinder';
 function setSideSection(s){sideSection=s;
@@ -3541,6 +3682,8 @@ function openRefTarget(refId){
 
 /* ---------------- nav ---------------- */
 function go(v){
+  // 커뮤니티는 로그인/회원가입 후에만 볼 수 있음
+  if(v==='comm' && isGuest()){ toast('회원가입하면 커뮤니티를 볼 수 있어요'); openAuth('signup'); return; }
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   $('#v-'+v).classList.add('on');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
@@ -3549,6 +3692,7 @@ function go(v){
   if(v==='browse')renderBrowse();
   if(v==='sub')renderFeed();     // 팔로잉 탭 열 때마다 최신 팔로우 반영
   if(v==='my')renderMyPage();
+  if(v==='comm'){ renderCommunity(); loadCommunity().then(renderCommunity); }
 }
 
 /* ================= 멀티 사진 업로드 (얼굴 모자이크 + 구매 물품 표시) ================= */
@@ -4548,7 +4692,11 @@ function aiSuggestTags(silent){
   if(!cats.length && !nuri.size && !tags.length){ if(!silent)toast('내용에서 특징을 못 찾았어요 · 직접 골라주세요'); return; }
   if(cats.length) sel.cat=new Set(catLabelsToKeys(cats.slice(0,6)));
   if(nuri.size) sel.nuri=nuri;
-  if(tags.length) sel.tags=[...new Set(tags.map(noSpace).filter(Boolean))].slice(0,6);
+  if(tags.length){ // 직접 단 해시태그는 유지하고, AI 추천 태그를 뒤에 누적
+    const cur=(sel.tags||[]).slice();
+    [...new Set(tags.map(noSpace).filter(Boolean))].forEach(t=>{ if(!cur.includes(t)) cur.push(t); });
+    sel.tags=cur.slice(0,12);
+  }
   renderNuri();renderCat();renderTags();
   if(!silent)toast('내용에 맞춰 골라봤어요 · 원하면 자유롭게 수정하세요');
 }
