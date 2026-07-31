@@ -559,6 +559,21 @@
   .espots{margin-top:8px;display:flex;flex-direction:column;gap:6px}
   .espot{display:grid;grid-template-columns:22px 1fr 1fr 1.3fr auto;gap:6px;align-items:center}
   .espot input{border:1px solid #e7dcd6;border-radius:8px;padding:8px;font-size:12px;background:#fafafb;font-family:inherit;min-width:0}
+  .espot-mall-cell{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .espot select,.espot-mall-cell input{border:1px solid #e7dcd6;border-radius:8px;padding:8px;font-size:12px;background:#fafafb;font-family:inherit;min-width:0}
+  .spot-form select{border:1px solid #e7dcd6;border-radius:8px;padding:9px;font-size:12.5px;font-family:inherit;background:#fafafb}
+  /* 환경구성 체크 (사진 우측하단) */
+  .env-check{position:absolute;right:8px;bottom:8px;z-index:6;display:flex;align-items:center;gap:5px;
+    background:rgba(255,255,255,.93);border:1px solid #e7dcd6;border-radius:9px;padding:5px 9px;
+    font-size:12px;font-weight:600;color:var(--coral-tx);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.14)}
+  .env-check input{width:15px;height:15px;accent-color:var(--coral);margin:0}
+  /* 환경구성 갤러리 */
+  .env-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .env-tile{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1/1;background:#e9e9ee;cursor:pointer;box-shadow:var(--shadow)}
+  .env-tile img{width:100%;height:100%;object-fit:cover;display:block}
+  .env-tile .env-title{position:absolute;left:0;right:0;bottom:0;padding:16px 10px 9px;color:#fff;font-weight:700;font-size:13px;
+    background:linear-gradient(transparent,rgba(0,0,0,.72));word-break:break-word;line-height:1.35}
+  @media(max-width:640px){ .env-grid{grid-template-columns:repeat(2,1fr)} }
   .espot-del{border:none;background:#f2f2f5;color:#c33;border-radius:8px;width:30px;height:32px;font-size:12px}
   .addspot2{margin-top:8px}
   .prod-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
@@ -844,6 +859,13 @@
   .cat-nav-item.on{background:#f6ddd8;color:var(--coral-tx);font-weight:700}
   .cat-content{flex:1;overflow:auto;padding:22px 24px}
   .cat-title{font-size:19px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .cat-env-btn{display:flex;align-items:center;justify-content:center;width:calc(100% - 56px);margin:0 auto 22px;
+    border:1px solid #f3d3ce;background:#fff7f9;color:var(--coral-tx);border-radius:12px;padding:14px 16px;
+    font-size:14.5px;font-weight:700;cursor:pointer;text-align:center}
+  .cat-env-btn:hover{background:#fbe9ec}
+  .side-env-btn{display:block;width:calc(100% - 24px);margin:0 auto 18px;border:1px solid #f3d3ce;background:#fff7f9;
+    color:var(--coral-tx);border-radius:11px;padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
+  .side-env-btn:hover{background:#fbe9ec}
   .cat-draw-head{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:18px;margin-bottom:20px}
   .cat-draw-head button{border:none;background:none;font-size:24px;color:#999;line-height:1}
   .cat-tabs{display:inline-flex;gap:8px;margin-bottom:18px}
@@ -954,6 +976,14 @@
       </div>
       <div id="commNotices"></div>
       <div id="commFeed"></div>
+    </section>
+
+    <!-- 환경구성 갤러리 -->
+    <section class="view" id="v-env">
+      <div class="post-topbar"><button class="back-btn" onclick="go(_envBack||'browse')">‹ 뒤로</button><span class="pt-mini">환경구성</span></div>
+      <div class="main-head"><div><h1>🖼️ 환경구성</h1><p>게시판 · 교실 환경구성 사진을 모아봤어요</p></div></div>
+      <div class="br-search"><span>🔍</span><input id="envSearch" type="search" name="nolimoa-env-search" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="주제로 검색 (예: 여름)" oninput="renderEnv()"></div>
+      <div class="env-grid" id="envGrid"></div>
     </section>
 
     <!-- 소개 -->
@@ -1395,12 +1425,12 @@
       <div class="sec">
         <div class="sec-label">🔗 참고 · 출처 <span class="hint">참고했거나 확장한 놀이·링크 · 선택</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button type="button" class="fa-btn" onclick="openRefPicker()">＋ 놀이모아 글 참고</button>
-          <button type="button" class="fa-btn" onclick="toggleRefLinkForm()">＋ 링크 추가 (블로그·인스타 등)</button>
+          <button type="button" class="fa-btn" onclick="openRefPicker()">＋ 놀이모아 글 인용</button>
+          <button type="button" class="fa-btn" onclick="toggleRefLinkForm()">＋ 링크 추가(블로그, 인스타그램, 유튜브 등)</button>
         </div>
         <div id="refLinkForm" style="display:none;margin-top:10px;gap:8px;flex-wrap:wrap;align-items:center">
           <input id="refLinkUrl" type="url" placeholder="https:// 링크 붙여넣기" style="flex:1;min-width:180px;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px">
-          <input id="refLinkLabel" placeholder="이름(선택) 예: 네이버 블로그" style="flex:1;min-width:150px;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px">
+          <input id="refLinkLabel" placeholder="이름(선택)" style="flex:1;min-width:150px;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px">
           <button type="button" class="fa-btn" onclick="addRefLink()">추가</button>
         </div>
         <div id="refList" style="margin-top:10px"></div>
@@ -1424,7 +1454,7 @@
 <!-- ============ 놀이모아 글 참고 선택 모달 ============ -->
 <div class="overlay" id="refPickOverlay" onclick="if(event.target===this)close_('refPickOverlay')">
   <div class="modal" style="max-width:560px;max-height:88vh;display:flex;flex-direction:column">
-    <div class="modal-head"><b>🔗 참고할 놀이 고르기</b><button class="x" onclick="close_('refPickOverlay')">×</button></div>
+    <div class="modal-head"><b>🔗 인용할 놀이 고르기</b><button class="x" onclick="close_('refPickOverlay')">×</button></div>
     <div class="up-body">
       <input id="refSearch" type="search" name="nolimoa-refsearch" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" placeholder="놀이 제목·해시태그·선생님 이름 검색" oninput="renderRefPick()" style="width:100%;border:1px solid #e7dcd6;border-radius:20px;padding:11px 15px;font-size:13.5px;background:#fafafb;margin-bottom:12px">
       <div id="refPickList"></div>
@@ -1643,7 +1673,7 @@ const posts = [
    img:'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=800&q=70',
    tags:['여름','아쿠아리움','배','바다생물','모래'], views:'4.1만', like:5234, cmt:2108, liked:false,
    images:[
-     {img:'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=800&q=70',desc:'수박 모양 미니 수영장 완성!',spots:[{x:50,y:45,name:'미니 원형 풀장',mall:'쿠팡',url:'https://www.coupang.com/vp/pool'}]},
+     {img:'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=800&q=70',desc:'수박 모양 미니 수영장 완성!',env:true,spots:[{x:50,y:45,name:'미니 원형 풀장',mall:'쿠팡',url:'https://www.coupang.com/vp/pool'}]},
      {img:'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=800&q=70',desc:'물놀이 준비',spots:[]},
      {img:'https://images.unsplash.com/photo-1509057199576-632a47484ece?w=800&q=70',desc:'바다생물 낚시',spots:[]},
      {img:'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=800&q=70',desc:'다같이 첨벙',spots:[]},
@@ -2304,11 +2334,13 @@ function linkifyTags(text, extraTags){
 }
 /* 선택한 글씨를 **굵게** 또는 __밑줄__ 로 감싸기 */
 /* 피드용 본문 미리보기: 앞 몇 줄만 + 더보기 */
+// 미리보기에서는 '크게' 표시한 글자도 같은 크기로 (글자 크기 마커만 제거, 색상은 유지)
+function stripSizeMarks(s){ return String(s||'').replace(/⟦s=\d{1,3}⟧/g,'').replace(/⟦\/s⟧/g,''); }
 function descPreview(p,openCall){
   const raw=stripFmt(p.desc||'');
   if(!raw)return '';
   const long = raw.length>70 || /\n/.test(raw);
-  return `<div class="desc clamp">${linkifyTags(p.desc,p.tags)}</div>`+
+  return `<div class="desc clamp">${linkifyTags(stripSizeMarks(p.desc),p.tags)}</div>`+
     (long?`<button class="more-link" onclick="event.stopPropagation();${openCall}">더보기</button>`:'');
 }
 function wrapSel(id,mark){
@@ -2436,7 +2468,23 @@ function togglePostSave(){const p=_currentPost;if(!p)return;
 function sharePost(){toast('공유 링크가 복사되었어요 (데모)');}
 
 /* ===== 놀이 수정 ===== */
-let _editPost=null, _editImages=null;
+let _editPost=null, _editImages=null, _editBaseline=null;
+// 수정 화면의 현재 상태를 문자열로 요약 (열었을 때와 비교해 '바뀐 게 있는지' 판단)
+function editStateSignature(){
+  try{
+    return JSON.stringify({
+      t:($('#pTitle').value||'').trim(),
+      b:richToMarks($('#pBody'))||'',
+      age:sel.age,
+      nuri:[...(sel.nuri||[])].sort(),
+      cat:[...(sel.cat||[])].sort(),
+      tags:(sel.tags||[]),
+      att:(attachments||[]).map(a=>a.url||''),
+      refs:(postRefs||[]),
+      imgs:(_editImages||[]).map(im=>({i:im.img,d:im.desc||'',s:im.spots||[]}))
+    });
+  }catch(e){ return null; }
+}
 let esel={age:'선택 안함',nuri:new Set(),cat:new Set()};
 function renderEAge(){
   const s=$('#eAgeSeg');if(!s)return;s.innerHTML='';
@@ -2496,8 +2544,12 @@ function hasWriteContent(){
 }
 /* 창 닫기 요청 → 저장 안 된 변경이 있을 때만 확인 창, 아니면 바로 닫기 */
 function requestCloseWrite(){
-  // 수정 모드는 임시저장 개념이 없으니 내용이 있으면 항상 확인
-  if(_editPost){ if(hasWriteContent()){ showCloseConfirm(); return; } reallyCloseWrite(); return; }
+  // 수정 모드: 연 뒤로 바뀐 게 없으면 확인 없이 바로 닫기, 바뀐 게 있으면 확인
+  if(_editPost){
+    if(_editBaseline!==null && editStateSignature()===_editBaseline){ reallyCloseWrite(); return; }
+    if(hasWriteContent()){ showCloseConfirm(); return; }
+    reallyCloseWrite(); return;
+  }
   // 새 글: 내용이 있고 '마지막 저장 이후 바뀐 게 있을 때만' 확인 (이미 임시저장했으면 그냥 닫힘)
   if(hasWriteContent() && _draftDirty){ showCloseConfirm(); return; }
   reallyCloseWrite();
@@ -2526,7 +2578,7 @@ function closeConfirmDiscard(){ close_('closeConfirmOverlay'); reallyCloseWrite(
 function openEdit(){
   const p=_currentPost;if(!p||!canEdit(p))return;
   _editPost=p;
-  _editImages=imagesOf(p).map(im=>({img:im.img,desc:im.desc||'',spots:(im.spots||[]).map(s=>({...s}))}));
+  _editImages=imagesOf(p).map(im=>({img:im.img,desc:im.desc||'',env:im.env===true,spots:(im.spots||[]).map(s=>({...s}))}));
   $('#pTitle').value=(p.title||'').replace(/^#/,'');
   $('#pBody').innerHTML=marksToRich(p.desc||'');
   sel={age:p.age||'선택 안함', nuri:new Set(p.nuri||[]), cat:new Set(catLabelsToKeys(p.categories||[])), tags:[...(p.tags||[])]};
@@ -2538,6 +2590,7 @@ function openEdit(){
   setWriteMode(true);
   $('#uploadOverlay').classList.remove('on');
   open_('writeOverlay');
+  _editBaseline=editStateSignature(); // 연 시점의 상태를 기준으로 저장
 }
 function deletePost(){
   const p=_currentPost;if(!p||!canEdit(p))return;
@@ -2562,13 +2615,16 @@ function renderEditImages(){
       <div class="espot">
         <span class="espot-no">${si+1}</span>
         <input placeholder="물품명" value="${esc(s.name||'')}" data-k="name" data-i="${idx}" data-s="${si}">
-        <input placeholder="쇼핑몰" value="${esc(s.mall||'')}" data-k="mall" data-i="${idx}" data-s="${si}">
+        <div class="espot-mall-cell">
+          <select class="espot-mall" data-i="${idx}" data-s="${si}">${mallOptionsHTML(s.mall||'')}</select>
+          <input class="espot-mall-custom" data-i="${idx}" data-s="${si}" placeholder="쇼핑몰 직접 입력" value="${esc((s.mall&&!MALL_OPTIONS.includes(s.mall))?s.mall:'')}" style="${(s.mall&&!MALL_OPTIONS.includes(s.mall))?'':'display:none'}">
+        </div>
         <input placeholder="https:// 링크" value="${esc(s.url||'')}" data-k="url" data-i="${idx}" data-s="${si}">
         <button class="espot-del" data-i="${idx}" data-s="${si}">✕</button>
       </div>`).join('');
     const markersHtml=im.spots.map((s,si)=>`<span class="ei-marker" data-i="${idx}" data-s="${si}" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%">${si+1}</span>`).join('');
     const card=document.createElement('div');card.className='edit-img';
-    card.innerHTML=`<div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt=""><span class="ei-no">${idx+1}</span>${markersHtml}<span class="ei-edit">✏️ 사진 수정</span></div>
+    card.innerHTML=`<div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt=""><span class="ei-no">${idx+1}</span>${markersHtml}<span class="ei-edit">✏️ 사진 수정</span><label class="env-check ei-env" data-i="${idx}" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox"> 환경구성이면 체크</label></div>
       <div class="ei-btns">
         <button type="button" class="fa-btn ei-edit-btn" data-i="${idx}">🖼️ 사진 수정 (모자이크·자르기·회전)</button>
         <button type="button" class="fa-btn ei-del-btn" data-i="${idx}">🗑 사진 삭제</button>
@@ -2580,11 +2636,24 @@ function renderEditImages(){
     box.appendChild(card);
   });
   box.querySelectorAll('.ei-marker').forEach(m=>enableEiMarkerDrag(m));
+  box.querySelectorAll('.ei-env').forEach(l=>{
+    const idx=+l.dataset.i; const cb=l.querySelector('input');
+    cb.checked=_editImages[idx].env===true;
+    l.addEventListener('click',e=>e.stopPropagation());
+    cb.addEventListener('change',e=>{ e.stopPropagation(); _editImages[idx].env=e.target.checked; });
+  });
   box.querySelectorAll('.ei-photo, .ei-edit-btn').forEach(el=>el.onclick=()=>openEditImage(+el.dataset.i));
   box.querySelectorAll('.ei-del-btn').forEach(b=>b.onclick=()=>deleteEditImage(+b.dataset.i));
   box.querySelectorAll('.ecap').forEach(tx=>tx.addEventListener('input',e=>{_editImages[+e.target.dataset.i].desc=e.target.value;}));
-  box.querySelectorAll('.espot input').forEach(inp=>inp.addEventListener('input',e=>{
+  box.querySelectorAll('.espot input[data-k]').forEach(inp=>inp.addEventListener('input',e=>{
     _editImages[+e.target.dataset.i].spots[+e.target.dataset.s][e.target.dataset.k]=e.target.value;}));
+  box.querySelectorAll('.espot-mall').forEach(selEl=>selEl.addEventListener('change',e=>{
+    const sp=_editImages[+e.target.dataset.i].spots[+e.target.dataset.s];
+    const cust=e.target.closest('.espot-mall-cell').querySelector('.espot-mall-custom');
+    if(e.target.value==='__etc__'){ cust.style.display=''; sp.mall=cust.value.trim(); cust.focus(); }
+    else { cust.style.display='none'; cust.value=''; sp.mall=e.target.value; }}));
+  box.querySelectorAll('.espot-mall-custom').forEach(inp=>inp.addEventListener('input',e=>{
+    _editImages[+e.target.dataset.i].spots[+e.target.dataset.s].mall=e.target.value.trim();}));
   box.querySelectorAll('.espot-del').forEach(b=>b.onclick=()=>{_editImages[+b.dataset.i].spots.splice(+b.dataset.s,1);renderEditImages();});
   box.querySelectorAll('.addspot2').forEach(b=>b.onclick=()=>{
     const im=_editImages[+b.dataset.i]; const n=im.spots.length;
@@ -2667,7 +2736,7 @@ async function saveEdit(){
   const catLabels=[...sel.cat].map(k=>k.split('::')[1]);          // 카테고리(띄어쓰기 유지)
   const photoTags=_editImages.flatMap(im=>extractHashtags(im.desc,true));   // 사진 설명 속 해시태그도 수집
   const tags=[...new Set([...(sel.tags||[]), ...catLabels, ...photoTags].map(noSpace).filter(Boolean))]; // 해시태그(띄어쓰기 없음)
-  const images=_editImages.map(im=>({img:im.img,desc:(im.desc||'').trim(),
+  const images=_editImages.map(im=>({img:im.img,desc:(im.desc||'').trim(),env:im.env===true,
     spots:im.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:(s.name||'').trim(),mall:(s.mall||'').trim(),
       url:s.url&&!/^https?:\/\//i.test(s.url)?'https://'+s.url:(s.url||'')}))}));
   const age=sel.age, nuri=[...sel.nuri], categories=catLabels;
@@ -3352,10 +3421,11 @@ function hiCat(it){return HILITE_CATS.has(it)?' hi-cat':'';}
 function renderCatDrawer(){
   const d=catDrawer[catSectionCur], box=$('#catContent');
   let html=`<div class="cat-draw-head"><span>카테고리</span><button onclick="close_('catOverlay')" aria-label="닫기">×</button></div>`;
-  d.groups.forEach(grp=>{
+  d.groups.forEach((grp,gi)=>{
     html+=`<div class="cat-group"><div class="cgl">${grp.ic} ${grp.g}</div><div class="cg-grid">`+
       grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
       `</div></div>`;
+    if(gi===0) html+=`<button type="button" class="cat-env-btn" onclick="openEnv()">🖼️ 환경구성 모아보기</button>`; // '놀이 주제'와 '놀이 유형' 사이
   });
   box.innerHTML=html;
 }
@@ -3458,6 +3528,39 @@ async function deleteCommPost(id){
   }catch(e){ toast('삭제 실패: '+(e.message||e)); }
 }
 
+/* ===== 환경구성 갤러리 (env 체크된 사진을 낱장으로 모아보기) ===== */
+let _envBack='browse';
+function openEnv(){
+  close_('catOverlay');
+  const cur=document.querySelector('.view.on');
+  if(cur && cur.id!=='v-env' && cur.id!=='v-post') _envBack=cur.id.replace('v-','');
+  const s=$('#envSearch'); if(s)s.value='';
+  go('env');
+}
+function envTiles(){
+  const out=[];
+  allPosts().forEach(p=>{
+    imagesOf(p).forEach(im=>{ if(im && im.env){ out.push({img:im.img, title:(p.title||'놀이').replace(/^#/,''), post:p}); } });
+  });
+  return out;
+}
+function renderEnv(){
+  const box=$('#envGrid'); if(!box)return; box.innerHTML='';
+  const q=(($('#envSearch')&&$('#envSearch').value)||'').trim().toLowerCase();
+  let tiles=envTiles();
+  if(q) tiles=tiles.filter(t=>t.title.toLowerCase().includes(q));
+  if(!tiles.length){
+    box.innerHTML=`<div class="placeholder" style="grid-column:1/-1"><div class="big">🖼️</div>${q?'조건에 맞는 환경구성 사진이 없어요':'아직 환경구성으로 표시된 사진이 없어요.<br>글 쓸 때 사진 우측하단 ‘환경구성이면 체크’를 눌러보세요.'}</div>`;
+    return;
+  }
+  tiles.forEach(t=>{
+    const el=document.createElement('div'); el.className='env-tile';
+    el.onclick=()=>openPost(t.post);
+    el.innerHTML=`<img src="${t.img}" alt=""><div class="env-title">${esc(t.title)}</div>`;
+    box.appendChild(el);
+  });
+}
+
 /* 왼쪽 사이드바에 카테고리 항목 전체 펼쳐 보이기 */
 let sideSection='kinder';
 function setSideSection(s){sideSection=s;
@@ -3466,11 +3569,13 @@ function setSideSection(s){sideSection=s;
 function renderSideCats(){
   const box=$('#sideCats');if(!box)return;
   const d=catDrawer[sideSection];if(!d){box.innerHTML='';return;}
-  box.innerHTML=d.groups.map(grp=>
+  box.innerHTML=d.groups.map((grp,gi)=>
     `<div class="side-cat-group"><div class="scg-label">${grp.ic} ${grp.g}</div>`+
     `<div class="side-cat-items">`+
     grp.items.map(it=>`<button class="${hiCat(it).trim()}" onclick="filterByLabel('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
-    `</div></div>`).join('');
+    `</div></div>`+
+    (gi===0?`<button type="button" class="side-env-btn" onclick="openEnv()">🖼️ 환경구성 모아보기</button>`:'')  // '놀이 주제'와 '놀이 유형' 사이
+  ).join('');
 }
 /* 선생님 프로필 모달 */
 /* 프로필 헤더 스탯: 본인은 마이페이지와 동일한 팔로워/팔로잉, 남은 0 */
@@ -3693,6 +3798,7 @@ function go(v){
   if(v==='sub')renderFeed();     // 팔로잉 탭 열 때마다 최신 팔로우 반영
   if(v==='my')renderMyPage();
   if(v==='comm'){ renderCommunity(); loadCommunity().then(renderCommunity); }
+  if(v==='env')renderEnv();
 }
 
 /* ================= 멀티 사진 업로드 (얼굴 모자이크 + 구매 물품 표시) ================= */
@@ -3769,7 +3875,7 @@ function buildPhotoCard(ph, skipDetect){
         <button class="btn g delphoto">🗑 삭제</button>
       </div>
     </div>
-    <div class="up-photo"><canvas></canvas><div class="markers" style="pointer-events:none"></div></div>
+    <div class="up-photo"><canvas></canvas><div class="markers" style="pointer-events:none"></div><label class="env-check" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox" class="envon"> 환경구성이면 체크</label></div>
     <div class="ai-status">🤖 얼굴 인식 중…</div>
     <div class="crop-bar" style="display:none">
       <span class="crop-hint">✂️ 잘라낼 부분을 사진에서 드래그하세요</span>
@@ -3800,6 +3906,7 @@ function buildPhotoCard(ph, skipDetect){
   card.querySelector('.clearface').onclick=()=>{ph.boxes=[];renderCanvasP(ph);ph.status.textContent='모자이크를 지웠어요.';};
   const mzChk=card.querySelector('.mzon'); mzChk.checked=ph.mosaicOn!==false;
   mzChk.onchange=e=>{ph.mosaicOn=e.target.checked;renderCanvasP(ph);};
+  const envChk=card.querySelector('.envon'); if(envChk){ envChk.checked=ph.env===true; envChk.onchange=e=>{ph.env=e.target.checked;markDirty();}; }
   ph.addBtn.onclick=()=>toggleAddSpotP(ph);
   card.querySelector('.delphoto').onclick=()=>removePhoto(ph);
   // 회전 / 자르기
@@ -4220,16 +4327,36 @@ function renderSpotsP(ph){
     m.addEventListener('pointerup',()=>{if(!moved)openSpotFormP(ph,i);});
     ph.layer.appendChild(m);});
 }
+/* 쇼핑몰 선택지 (드롭다운) — '선택 안 함' 기본, '기타'는 직접 작성 */
+const MALL_OPTIONS=['키드키즈몰','G마켓','오늘의집'];
+function mallOptionsHTML(mall){
+  const preset=MALL_OPTIONS.includes(mall);
+  const etc=!!mall && !preset;
+  return `<option value="" ${!mall?'selected':''}>선택 안 함</option>`
+    + MALL_OPTIONS.map(m=>`<option value="${m}" ${mall===m?'selected':''}>${m}</option>`).join('')
+    + `<option value="__etc__" ${etc?'selected':''}>기타 (직접 작성)</option>`;
+}
 function openSpotFormP(ph,i){closeSpotForm();const s=ph.spots[i];
   const f=document.createElement('div');f.className='spot-form';f.id='spotForm';
   f.style.left=Math.min(55,s.x)+'%';f.style.top=s.y+'%';
-  f.innerHTML=`<input placeholder="물품 이름 (예: 무한변신 배)"><input placeholder="쇼핑몰 (예: 키드키즈몰)"><input placeholder="https:// 구매링크 붙여넣기"><div class="sf-btns"><button class="sf-del">삭제</button><button class="sf-save">저장</button></div>`;
-  const ins=f.querySelectorAll('input');ins[0].value=s.name||'';ins[1].value=s.mall||'';ins[2].value=s.url||'';
+  const etc=!!s.mall && !MALL_OPTIONS.includes(s.mall);
+  f.innerHTML=`<input class="sf-name" placeholder="물품 이름 (예: 무한변신 배)">
+    <select class="sf-mall">${mallOptionsHTML(s.mall||'')}</select>
+    <input class="sf-mall-custom" placeholder="쇼핑몰 직접 입력" value="${esc(etc?s.mall:'')}" style="${etc?'':'display:none'}">
+    <input class="sf-url" placeholder="https:// 구매링크 붙여넣기">
+    <div class="sf-btns"><button class="sf-del">삭제</button><button class="sf-save">저장</button></div>`;
+  const nameEl=f.querySelector('.sf-name'), urlEl=f.querySelector('.sf-url'),
+        mallSel=f.querySelector('.sf-mall'), mallCust=f.querySelector('.sf-mall-custom');
+  nameEl.value=s.name||''; urlEl.value=s.url||'';
+  mallSel.onchange=()=>{ if(mallSel.value==='__etc__'){mallCust.style.display='';mallCust.focus();} else {mallCust.style.display='none';} };
   f.addEventListener('pointerdown',e=>e.stopPropagation());
-  f.querySelector('.sf-save').onclick=()=>{s.name=ins[0].value.trim();s.mall=ins[1].value.trim();
-    let u=ins[2].value.trim();if(u&&!/^https?:\/\//i.test(u))u='https://'+u;s.url=u;closeSpotForm();renderSpotsP(ph);toast('구매 물품 표시를 저장했어요');};
+  f.querySelector('.sf-save').onclick=()=>{
+    s.name=nameEl.value.trim();
+    s.mall = mallSel.value==='__etc__' ? mallCust.value.trim() : (mallSel.value||'');
+    let u=urlEl.value.trim();if(u&&!/^https?:\/\//i.test(u))u='https://'+u;s.url=u;
+    closeSpotForm();renderSpotsP(ph);toast('구매 물품 표시를 저장했어요');};
   f.querySelector('.sf-del').onclick=()=>{ph.spots.splice(i,1);closeSpotForm();renderSpotsP(ph);};
-  ph.layer.appendChild(f);ins[0].focus();
+  ph.layer.appendChild(f);nameEl.focus();
 }
 
 /* ================= 업로드 모달 — 항목 선택 ================= */
@@ -4354,7 +4481,7 @@ function saveDraft(){
   // 사진: 현재 화면(모자이크 반영본) + 설명 + 구매표시 저장
   const photoData=photos.map(ph=>{
     let img=''; try{ img=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,0.7):((ph.img&&ph.img.src)||''); }catch(e){ img=(ph.img&&ph.img.src)||''; }
-    return { img, desc:(ph.desc||'').trim(), spots:(ph.spots||[]).filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url})) };
+    return { img, desc:(ph.desc||'').trim(), env:ph.env===true, spots:(ph.spots||[]).filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url})) };
   });
   const draft={
     id:_currentDraftId || ('d'+Date.now()),
@@ -4429,7 +4556,7 @@ async function resumeDraft(id){
   imgs.forEach((im,i)=>{
     if(!im)return;
     const pd=list[i];
-    const ph={img:im,boxes:[],spots:(pd.spots||[]).map(s=>({...s})),desc:pd.desc||'',mosaicOn:false,addSpotMode:false,_restored:true};
+    const ph={img:im,boxes:[],spots:(pd.spots||[]).map(s=>({...s})),desc:pd.desc||'',env:pd.env===true,mosaicOn:false,addSpotMode:false,_restored:true};
     photos.push(ph); buildPhotoCard(ph,true);
     const ta=ph.el&&ph.el.querySelector('.photo-desc'); if(ta)ta.value=ph.desc;
     renderSpotsP(ph);
@@ -4757,6 +4884,7 @@ async function publishPost(){
   const images=photos.map(ph=>({
     img:cleanPhotoDataURL(ph,0.9),   // 보라색 테두리 없이 모자이크만 적용된 이미지
     desc:(ph.desc||'').trim(),
+    env:ph.env===true,               // 환경구성 사진 여부
     spots:ph.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url}))
   }));
   const topDesc = body || `${sel.age!=='선택 안함'?'['+sel.age+'] ':''}${[...sel.nuri].join(', ')||'새로 올린 놀이예요.'}`;
@@ -4772,7 +4900,7 @@ async function publishPost(){
         const up=await SB.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg'});
         if(up.error)throw up.error;
         const {data:pub}=SB.storage.from(STORAGE_BUCKET).getPublicUrl(path);
-        uploaded.push({img:pub.publicUrl,desc:images[k].desc,spots:images[k].spots});
+        uploaded.push({img:pub.publicUrl,desc:images[k].desc,env:images[k].env,spots:images[k].spots});
       }
       const atts=await uploadAttachments();
       const {error}=await SB.from('posts').insert({
