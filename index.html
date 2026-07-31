@@ -13,7 +13,7 @@
     --shadow:0 2px 14px rgba(30,30,50,.06);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:var(--bg);color:var(--ink);
+  html,body{background:var(--bg);color:var(--ink);overflow-x:hidden;
     font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,-apple-system,sans-serif;}
   a{color:inherit;text-decoration:none}
   button{font-family:inherit;cursor:pointer}
@@ -828,13 +828,28 @@
   .cg-item{background:#f5f2ee;border:1px solid #eee7e1;border-radius:12px;padding:13px 8px;font-size:13px;color:#555;font-weight:500}
   .cg-item:hover{background:var(--coral);color:#fff;border-color:var(--coral)}
 
+  .folder-more{display:none}
   @media(max-width:640px){
     .folder-row,.folder-row.savedgrid{grid-template-columns:repeat(2,1fr)}
+    .folder .fimg{aspect-ratio:1/1}                 /* 모바일: 폴더 정사각형 */
+    .folder-row.collapsed > .folder:nth-child(n+5){display:none}  /* 2줄까지만 */
+    .folder-more{display:block;grid-column:1/-1;margin-top:2px;border:1px solid var(--coral-soft);
+      background:#fff;color:var(--coral-tx);border-radius:12px;padding:10px;font-weight:700;font-size:13px}
     .role-grid{grid-template-columns:repeat(2,1fr)}
-    .br-mini,.br-mini.three{grid-template-columns:repeat(2,1fr)}
+    .br-mini{grid-template-columns:repeat(2,1fr)}
+    .br-mini.three{grid-template-columns:repeat(3,1fr)}   /* 인기놀이: 한 줄(3개) */
     .cat-nav{width:130px}
     .cg-grid{grid-template-columns:repeat(2,1fr)}
+    /* 마이페이지 통계: 숫자 위, 라벨 아래로 세로 배치 → 한 줄에 다 들어옴 */
+    .pc-stats{gap:16px}
+    .pc-stats div{display:flex;flex-direction:column;align-items:center;gap:1px}
+    .pc-stats small{margin-left:0}
+    /* 페이지 제목 가운데 정렬 → 좌우 고정 아이콘(카테고리·알림)에 안 가림 */
+    .main-head{flex-direction:column;align-items:center;text-align:center;gap:8px}
+    /* 소개 마지막 문구 줄바꿈 */
+    .mob-br{display:inline}
   }
+  .mob-br{display:none}
   @media(max-width:520px){
     .browse-grid{columns:1}
   }
@@ -941,7 +956,7 @@
             <li><b>팔로우</b> — 관심 있는 교사를 팔로우하면 새로 업로드되는 놀이를 한 곳에서 모아볼 수 있어요.</li>
           </ul>
         </div>
-        <div class="about-foot">놀이를 나누는 교사들이 모일수록, 유아들의 하루가 더 즐거워져요 🌷<br><span>놀이모아와 함께해요.</span></div>
+        <div class="about-foot">놀이를 나누는 교사들이 모일수록, <br class="mob-br">유아들의 하루가 더 즐거워져요 🌷<br><span>놀이모아와 함께해요.</span></div>
       </div>
     </section>
 
@@ -2718,6 +2733,19 @@ function renderFolderRow(ctx, editable, container){
     add.innerHTML=`<div class="fimg"><div class="fnew">＋</div></div><div class="ft" style="color:var(--coral-tx)">새 폴더</div>`;
     add.onclick=()=>openNewFolder(ctx);box.appendChild(add);}
   if(!editable && !box.children.length)box.innerHTML='<div class="empty">아직 놀이가 없어요</div>';
+  maybeCollapseFolders(box);
+}
+// 모바일: 폴더가 4개(2줄) 넘으면 접고 '전체보기' 버튼으로 펼치기 (데스크톱은 CSS로 항상 전체 표시)
+function maybeCollapseFolders(box){
+  const old=box.querySelector('.folder-more'); if(old)old.remove();
+  const tiles=box.querySelectorAll(':scope > .folder');
+  if(tiles.length>4){
+    box.classList.add('collapsed');
+    const more=document.createElement('button'); more.className='folder-more';
+    more.textContent='전체보기';
+    more.onclick=()=>{const c=box.classList.toggle('collapsed'); more.textContent=c?'전체보기':'접기';};
+    box.appendChild(more);
+  } else { box.classList.remove('collapsed'); }
 }
 let _folderDrag=null;
 function folderDrop(ctx,targetId,container){
@@ -3647,21 +3675,35 @@ function buildPhotoCard(ph, skipDetect){
   card.querySelector('.cropapply').onclick=()=>applyCrop(ph);
   card.querySelector('.cropcancel').onclick=()=>cancelCrop(ph);
   // 얼굴 박스: 눌러서 켜고 끄기 + 빈 곳 드래그로 추가 (자르기 모드면 자르기 영역 지정)
+  ph.cv.style.touchAction='none'; // 터치로 캔버스를 드래그해도 화면이 스크롤되지 않게
   ph.cv.addEventListener('pointerdown',e=>{const p=posP(ph,e);
     if(ph.cropMode){ph.cropRect={x0:p.x,y0:p.y,x1:p.x,y1:p.y};ph.cropping=true;return;}
     const hit=ph.boxes.find(b=>p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h);
     if(hit){hit.on=!hit.on;renderCanvasP(ph);return;}
-    ph.drag={x:p.x,y:p.y,cur:p};});
+    ph.drag={x:p.x,y:p.y,cur:p,type:e.pointerType,moved:false};
+    try{ph.cv.setPointerCapture(e.pointerId);}catch(_){}});
   ph.cv.addEventListener('pointermove',e=>{
     if(ph.cropMode){if(!ph.cropping)return;const p=posP(ph,e);ph.cropRect.x1=p.x;ph.cropRect.y1=p.y;drawCropOverlay(ph);return;}
     if(!ph.drag)return;ph.drag.cur=posP(ph,e);
+    if(Math.abs(ph.drag.cur.x-ph.drag.x)>6||Math.abs(ph.drag.cur.y-ph.drag.y)>6)ph.drag.moved=true;
     renderCanvasP(ph);const c=ph.ctx;c.strokeStyle='#c04a6e';c.lineWidth=2;c.setLineDash([5,4]);
     c.strokeRect(ph.drag.x,ph.drag.y,ph.drag.cur.x-ph.drag.x,ph.drag.cur.y-ph.drag.y);c.setLineDash([]);});
+  ph.cv.addEventListener('pointercancel',()=>{ph.drag=null;});
   ph.cv.addEventListener('pointerup',()=>{
     if(ph.cropMode){ph.cropping=false;drawCropOverlay(ph);return;}
     if(!ph.drag)return;const d=ph.drag;
-    const x=Math.min(d.x,d.cur.x),y=Math.min(d.y,d.cur.y),w=Math.abs(d.cur.x-d.x),h=Math.abs(d.cur.y-d.y);
-    if(w>12&&h>12)ph.boxes.push({x,y,w,h,on:true});ph.drag=null;renderCanvasP(ph);});
+    if(!d.moved){
+      // 탭/터치 → 그 자리에 일정 크기의 모자이크 박스를 놓음 (모바일에서 드래그 없이 사용)
+      const bw=Math.max(44,ph.cv.width*0.22), bh=Math.max(44,ph.cv.height*0.16);
+      const x=Math.max(0,Math.min(ph.cv.width-bw, d.x-bw/2));
+      const y=Math.max(0,Math.min(ph.cv.height-bh, d.y-bh/2));
+      ph.boxes.push({x,y,w:bw,h:bh,on:true});
+      if(ph.status)ph.status.textContent='모자이크를 추가했어요 · 다시 누르면 켜고 끌 수 있어요';
+    } else {
+      const x=Math.min(d.x,d.cur.x),y=Math.min(d.y,d.cur.y),w=Math.abs(d.cur.x-d.x),h=Math.abs(d.cur.y-d.y);
+      if(w>12&&h>12)ph.boxes.push({x,y,w,h,on:true});
+    }
+    ph.drag=null;renderCanvasP(ph);});
   // 구매표시 추가 모드: 빈 곳 클릭으로 배치
   ph.layer.addEventListener('click',e=>{if(!ph.addSpotMode)return;
     const r=ph.layer.getBoundingClientRect();
@@ -3704,7 +3746,7 @@ async function runDetectP(ph){
   }catch(e){found=[];}
   ph.boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
   renderCanvasP(ph);
-  ph.status.textContent=ph.boxes.length?`✅ 얼굴 ${ph.boxes.length}개 모자이크 · 얼굴을 눌러 켜고 끌 수 있어요`:'얼굴을 못 찾았어요. 빈 곳을 드래그해 직접 가려주세요.';
+  ph.status.textContent=ph.boxes.length?`✅ 얼굴 ${ph.boxes.length}개 모자이크 · 얼굴을 눌러 켜고 끌 수 있어요`:'얼굴을 못 찾았어요. 가릴 곳을 눌러(또는 드래그해) 직접 가려주세요.';
 }
 function renderCanvasP(ph){
   const c=ph.ctx,cv=ph.cv;c.clearRect(0,0,cv.width,cv.height);c.drawImage(ph.img,0,0,cv.width,cv.height);
@@ -4129,17 +4171,24 @@ function toggleDD(which){
 }
 /* 해시태그 편집 */
 function renderTags(){
-  const box=$('#tagEdit');box.innerHTML='';
+  const box=$('#tagEdit');
+  // 입력창은 한 번만 만들고 계속 재사용 → Enter 후에도 커서(포커스)가 그대로 유지됨
+  let inp=document.getElementById('tagInput');
+  if(!inp){
+    inp=document.createElement('input');inp.id='tagInput';inp.placeholder='태그 입력 후 Enter (띄어쓰기는 자동으로 붙어요)';
+    inp.onkeydown=e=>{
+      if(e.key==='Enter'&&inp.value.trim()){e.preventDefault();
+        const t=noSpace(inp.value.trim().replace(/^#/,''));if(t&&!sel.tags.includes(t))sel.tags.push(t);inp.value='';renderTags();inp.focus();}
+      else if(e.key==='Backspace'&&!inp.value&&sel.tags.length){sel.tags.pop();renderTags();inp.focus();}
+    };
+    box.appendChild(inp);
+  }
+  // 태그 칩만 다시 그림 (입력창은 건드리지 않고, 칩을 입력창 앞에 삽입)
+  box.querySelectorAll('.t').forEach(el=>el.remove());
   sel.tags.forEach((tg,i)=>{const el=document.createElement('span');el.className='t';
     el.innerHTML=`#${esc(noSpace(tg))} <span class="x">×</span>`;
-    el.querySelector('.x').onclick=e=>{e.stopPropagation();sel.tags.splice(i,1);renderTags();};box.appendChild(el);});
-  const inp=document.createElement('input');inp.id='tagInput';inp.placeholder='태그 입력 후 Enter (띄어쓰기는 자동으로 붙어요)';
-  inp.onkeydown=e=>{
-    if(e.key==='Enter'&&inp.value.trim()){e.preventDefault();
-      const t=noSpace(inp.value.trim().replace(/^#/,''));if(t&&!sel.tags.includes(t))sel.tags.push(t);inp.value='';renderTags();$('#tagInput').focus();}
-    else if(e.key==='Backspace'&&!inp.value&&sel.tags.length){sel.tags.pop();renderTags();$('#tagInput').focus();}
-  };
-  box.appendChild(inp);
+    el.querySelector('.x').onclick=e=>{e.stopPropagation();sel.tags.splice(i,1);renderTags();};
+    box.insertBefore(el,inp);});
 }
 /* (구매 물품은 사진 위 주황 동그라미로만 관리 — 별도 목록 없음) */
 
