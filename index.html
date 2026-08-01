@@ -329,12 +329,10 @@
   .cat-fab{position:fixed;top:18px;left:18px;z-index:50;width:46px;height:46px;border-radius:50%;border:none;
     background:#fff;box-shadow:0 4px 16px rgba(30,30,50,.14);color:var(--coral-tx);cursor:pointer;display:none;align-items:center;justify-content:center}
   .cat-fab:active{transform:scale(.94)}
-  /* 모바일: 카테고리·알림 버튼은 '둘러보기' 페이지에서만 표시 */
+  /* 모바일: 떠 있던 카테고리·알림 버튼은 숨김 (둘러보기 상단바에 통합) */
   @media(max-width:980px){
     .cat-fab{display:none}
     .bell-btn{display:none}
-    body.nav-browse .cat-fab{display:inline-flex}
-    body.nav-browse .bell-btn{display:block}
   }
   #notifOverlay{z-index:90}
   .notif-row{display:flex;align-items:flex-start;gap:11px;padding:13px 20px;border-bottom:1px solid var(--line);cursor:pointer}
@@ -826,12 +824,19 @@
     .side{display:none}
     .right{display:none}
     .browse-grid{columns:2}
-    /* 좌측 카테고리 버튼·우측 알림 벨을 피해 검색창을 가운데로 */
-    .br-search{margin-left:52px;margin-right:52px}
   }
   /* ---------- browse ---------- */
   .br-search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eee;border-radius:24px;padding:11px 18px;box-shadow:var(--shadow);margin-bottom:16px}
-  .br-search input{flex:1;border:none;outline:none;font-size:14px;background:none;font-family:inherit}
+  .br-search input{flex:1;border:none;outline:none;font-size:14px;background:none;font-family:inherit;min-width:0}
+  /* 모바일 상단바: 카테고리 · 놀이모아 · 검색창 · 알림 한 줄 */
+  .br-topbar{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+  .br-topbar .br-search{flex:1;margin-bottom:0;min-width:0}
+  .bt-cat,.bt-bell{display:none;flex:0 0 auto;width:42px;height:42px;border-radius:50%;border:1px solid #eee;background:#fff;box-shadow:var(--shadow);align-items:center;justify-content:center;color:var(--coral-tx);cursor:pointer;position:relative;font-size:19px}
+  .bt-brand{display:none;flex:0 0 auto;font-weight:800;font-size:16px;color:var(--coral-tx);cursor:pointer;white-space:nowrap}
+  @media(max-width:980px){
+    .bt-cat,.bt-bell{display:inline-flex}
+    .bt-brand{display:inline-block}
+  }
   .br-sec{margin-bottom:20px}
   .br-sec h4{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
   .br-date{color:var(--sub);font-size:12px;font-weight:400;margin-left:auto}
@@ -939,7 +944,12 @@
 
     <!-- 둘러보기 -->
     <section class="view on" id="v-browse">
-      <div class="br-search"><span>🔍</span><input id="brSearch" type="search" name="nolimoa-search-field" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="놀이 주제, 해시태그, 선생님 이름으로 검색" oninput="renderBrowseFeed()"></div>
+      <div class="br-topbar">
+        <button class="bt-cat" onclick="openCat()" aria-label="카테고리" title="카테고리"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <span class="bt-brand" onclick="go('browse')">놀이모아</span>
+        <div class="br-search"><span>🔍</span><input id="brSearch" type="search" name="nolimoa-search-field" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="놀이 주제·해시태그·선생님 검색" oninput="renderBrowseFeed()"></div>
+        <button class="bt-bell" onclick="openNotif()" aria-label="알림" title="알림">🔔<span class="bell-badge" id="btBellBadge"></span></button>
+      </div>
       <div class="main-head"><div><h1>둘러보기</h1><p>놀이를 구경하고, 저장해보세요</p></div>
         <div class="auth-btns" id="browseAuth"></div></div>
       <div id="noticeBar"></div>
@@ -2615,6 +2625,8 @@ function renderEditImages(){
     const card=document.createElement('div');card.className='edit-img';
     card.innerHTML=`<div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt=""><span class="ei-no">${idx+1}</span>${markersHtml}<span class="ei-edit">✏️ 사진 수정</span><label class="env-check ei-env" data-i="${idx}" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox"> 환경구성이면 체크</label></div>
       <div class="ei-btns">
+        <button type="button" class="fa-btn ei-up" data-i="${idx}" ${idx===0?'disabled':''}>▲ 앞으로</button>
+        <button type="button" class="fa-btn ei-down" data-i="${idx}" ${idx===_editImages.length-1?'disabled':''}>▼ 뒤로</button>
         <button type="button" class="fa-btn ei-edit-btn" data-i="${idx}">🖼️ 사진 수정 (모자이크·자르기·회전)</button>
         <button type="button" class="fa-btn ei-del-btn" data-i="${idx}">🗑 사진 삭제</button>
       </div>
@@ -2633,6 +2645,8 @@ function renderEditImages(){
   });
   box.querySelectorAll('.ei-photo, .ei-edit-btn').forEach(el=>el.onclick=()=>openEditImage(+el.dataset.i));
   box.querySelectorAll('.ei-del-btn').forEach(b=>b.onclick=()=>deleteEditImage(+b.dataset.i));
+  box.querySelectorAll('.ei-up').forEach(b=>b.onclick=()=>moveEditImage(+b.dataset.i,-1));
+  box.querySelectorAll('.ei-down').forEach(b=>b.onclick=()=>moveEditImage(+b.dataset.i,1));
   box.querySelectorAll('.ecap').forEach(tx=>tx.addEventListener('input',e=>{_editImages[+e.target.dataset.i].desc=e.target.value;}));
   box.querySelectorAll('.espot input[data-k]').forEach(inp=>inp.addEventListener('input',e=>{
     _editImages[+e.target.dataset.i].spots[+e.target.dataset.s][e.target.dataset.k]=e.target.value;}));
@@ -2681,6 +2695,12 @@ function deleteEditImage(idx){
   _editImages.splice(idx,1);
   renderEditImages();
   toast('사진을 삭제했어요');
+}
+function moveEditImage(idx,dir){
+  if(!_editImages)return;
+  const j=idx+dir; if(idx<0||j<0||j>=_editImages.length)return;
+  const t=_editImages[idx]; _editImages[idx]=_editImages[j]; _editImages[j]=t; // 자리 바꾸기
+  renderEditImages();
 }
 /* 이미지(dataURL)에 얼굴 자동 모자이크를 입혀 깨끗한 dataURL로 반환 */
 async function autoMosaicDataURL(src){
@@ -2758,7 +2778,7 @@ function seedNotifs(){
   ];
 }
 function unreadCount(){return notifications.filter(n=>!n.read).length;}
-function renderBell(){const bd=$('#bellBadge');if(!bd)return;const c=unreadCount();bd.textContent=c;bd.style.display=c?'grid':'none';}
+function renderBell(){const c=unreadCount();['bellBadge','btBellBadge'].forEach(id=>{const bd=$('#'+id);if(bd){bd.textContent=c;bd.style.display=c?'grid':'none';}});}
 async function openNotif(){
   renderNotifList();open_('notifOverlay');notifications.forEach(n=>n.read=true);renderBell();
   if(SB && authUser){ try{await SB.from('notifications').update({read:true}).eq('user_id',authUser.id).eq('read',false);}catch(e){} }
