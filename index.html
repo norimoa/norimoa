@@ -83,6 +83,9 @@
   .tags{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 8px}
   .tag{background:var(--pink-bg);color:var(--pink-tx);font-size:12.5px;padding:5px 11px;border-radius:16px}
   .views{color:var(--sub);font-size:12.5px;margin:2px 0 10px;display:flex;align-items:center;gap:5px}
+  .card-metrics{display:flex;align-items:center;gap:16px;color:var(--sub);font-size:12.5px;font-weight:600;margin:6px 2px 2px}
+  .card-metrics span{display:inline-flex;align-items:center;gap:5px}
+  .card-metrics svg{width:15px;height:15px;flex:0 0 auto}
   .post-foot{display:flex;align-items:center;gap:18px;border-top:1px solid var(--line);
     padding:12px 4px 4px;margin-top:4px}
   .post-foot button{border:none;background:none;color:#70707a;font-size:13px;
@@ -320,9 +323,8 @@
   .prof-sec h4{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
   .prof-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 
-  /* ---------- 알림 벨 ---------- */
-  .bell-btn{position:fixed;top:18px;right:18px;z-index:50;width:46px;height:46px;border-radius:50%;
-    border:none;background:#fff;box-shadow:0 4px 16px rgba(30,30,50,.14);font-size:20px;cursor:pointer}
+  /* ---------- 알림 벨 (고정형은 사용 안 함 — 검색창 옆 인라인 알림으로 대체) ---------- */
+  .bell-btn{display:none !important}
   .bell-badge{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;background:var(--coral);
     color:#fff;font-size:11px;font-weight:700;padding:0 5px;display:none;place-items:center}
   /* 모바일 좌측 상단 고정 카테고리 버튼 (사이드바 없는 화면에서만) */
@@ -796,6 +798,10 @@
   .cmt-head .cmt-label svg{width:20px;height:20px;display:block}
   .cmt-head .pa-btn.like{font-size:14px;font-weight:600}
   .cmt-head .pa-btn.like b{font-weight:600}
+  .cmt-head .pa-btn.stat{cursor:default}
+  .cmt-head .pa-btn.stat svg{width:20px;height:20px;display:block}
+  .cmt-head .pa-btn.save.on{color:var(--coral-tx)}
+  .cmt-head .pa-btn.save svg{width:19px;height:19px;display:block}
   .cmt-input{display:flex;gap:10px;align-items:center;margin-top:14px}
   .cmt-input .av.sm{width:34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 auto}
   .cmt-input input{flex:1;border:1px solid #e7dcd6;border-radius:20px;padding:11px 15px;font-size:13.5px;background:#fafafb;font-family:inherit}
@@ -828,14 +834,15 @@
   /* ---------- browse ---------- */
   .br-search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eee;border-radius:24px;padding:11px 18px;box-shadow:var(--shadow);margin-bottom:16px}
   .br-search input{flex:1;border:none;outline:none;font-size:14px;background:none;font-family:inherit;min-width:0}
+  .br-search .search-ic{display:inline-flex;align-items:center;color:var(--coral-tx);flex:0 0 auto}
+  .br-search .search-ic svg{width:17px;height:17px}
   /* 모바일 상단바: 카테고리 · 놀이모아 · 검색창 · 알림 한 줄 */
   .br-topbar{display:flex;align-items:center;gap:8px;margin-bottom:16px}
   .br-topbar .br-search{flex:1;margin-bottom:0;min-width:0}
   .bt-cat,.bt-bell{display:none;flex:0 0 auto;width:42px;height:42px;border-radius:50%;border:1px solid #eee;background:#fff;box-shadow:var(--shadow);align-items:center;justify-content:center;color:var(--coral-tx);cursor:pointer;position:relative;font-size:19px}
-  .bt-brand{display:none;flex:0 0 auto;font-weight:800;font-size:16px;color:var(--coral-tx);cursor:pointer;white-space:nowrap}
+  .bt-bell{display:inline-flex}  /* 알림은 데스크톱·모바일 모두 검색창 옆에 */
   @media(max-width:980px){
-    .bt-cat,.bt-bell{display:inline-flex}
-    .bt-brand{display:inline-block}
+    .bt-cat{display:inline-flex}  /* 카테고리 버튼은 모바일에서만 (데스크톱은 사이드바) */
   }
   .br-sec{margin-bottom:20px}
   .br-sec h4{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
@@ -946,9 +953,8 @@
     <section class="view on" id="v-browse">
       <div class="br-topbar">
         <button class="bt-cat" onclick="openCat()" aria-label="카테고리" title="카테고리"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        <span class="bt-brand" onclick="go('browse')">놀이모아</span>
-        <div class="br-search"><span>🔍</span><input id="brSearch" type="search" name="nolimoa-search-field" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="놀이 주제·해시태그·선생님 검색" oninput="renderBrowseFeed()"></div>
-        <button class="bt-bell" onclick="openNotif()" aria-label="알림" title="알림">🔔<span class="bell-badge" id="btBellBadge"></span></button>
+        <div class="br-search"><span class="search-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input id="brSearch" type="search" name="nolimoa-search-field" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="" oninput="renderBrowseFeed()"></div>
+        <button class="bt-bell" onclick="openNotif()" aria-label="알림" title="알림"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="bell-badge" id="btBellBadge"></span></button>
       </div>
       <div class="main-head"><div><h1>둘러보기</h1><p>놀이를 구경하고, 저장해보세요</p></div>
         <div class="auth-btns" id="browseAuth"></div></div>
@@ -1607,7 +1613,7 @@
 </button>
 
 <!-- ============ 알림 벨 ============ -->
-<button class="bell-btn" id="bellBtn" onclick="openNotif()">🔔<span class="bell-badge" id="bellBadge"></span></button>
+<button class="bell-btn" id="bellBtn" onclick="openNotif()" aria-label="알림"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="bell-badge" id="bellBadge"></span></button>
 <div class="overlay" id="notifOverlay" onclick="if(event.target===this)close_('notifOverlay')">
   <div class="modal">
     <div class="modal-head"><b>🔔 알림</b><button class="x" onclick="close_('notifOverlay')">×</button></div>
@@ -1758,11 +1764,9 @@ function renderFeed(){
       ${descPreview(p,`openFeedPost(${i})`)}
       ${photoGrid(p)}
       <div class="tags">${(p.tags||[]).map(x=>`<span class="tag" onclick="event.stopPropagation();filterByLabel('${tagQ(x)}')">#${esc(noSpace(x))}</span>`).join('')}</div>
-      <div class="views">👁 조회 ${p.views||'0'} · ♥ ${(p.like||0).toLocaleString()}</div>
+      ${cardMetrics(p)}
       <div class="post-foot" onclick="event.stopPropagation()">
         <button onclick="openFeedPost(${i})" class="more" style="margin-left:0">자세히 보기 ›</button>
-        <button style="margin-left:auto">💬 ${(p.cmt||0).toLocaleString()}</button>
-        <button>🔗 공유</button>
       </div>`;
     wrap.appendChild(el);
   });
@@ -2005,15 +2009,22 @@ document.addEventListener('DOMContentLoaded',()=>{
   const pb=$('#pBody'); if(pb)pb.addEventListener('input',markDirty);
 });
 async function saveProfile(){
-  profile.nick=$('#peNick').value.trim()||'윤서쌤';
+  const newNick=$('#peNick').value.trim()||'선생님';
+  // 실제 계정: 먼저 DB에 저장하고, 성공했을 때만 화면에 반영 (실패 시 되돌아가는 문제 방지)
+  if(SB && authUser){
+    const {error}=await SB.from('profiles').upsert({id:authUser.id,nickname:newNick,
+      role:peSel.role,icon:peSel.icon,avatar_url:peSel.photo||null});
+    if(error){
+      const dup=/duplicate|unique/i.test(error.message||'');
+      toast(dup?'이미 사용 중인 닉네임이에요. 다른 이름으로 해주세요.':'저장 오류: '+(error.message||error));
+      return; // 저장 실패 → 닉네임 그대로 두기 (새로고침해도 안 바뀌게)
+    }
+  }
+  profile.nick=newNick;
   profile.role=peSel.role;profile.roleShort=peSel.role.replace(' 교사','');
   profile.icon=peSel.icon;profile.photo=peSel.photo;
   renderProfile();applyAuthUI();close_('profileOverlay');
-  if(SB && authUser){
-    const {error}=await SB.from('profiles').upsert({id:authUser.id,nickname:profile.nick,
-      role:profile.role,icon:profile.icon,avatar_url:profile.photo||null});
-    toast(error?'저장 오류: '+error.message:'프로필을 저장했어요 (동기화됨)');
-  }else{toast('프로필을 저장했어요');}
+  toast(SB&&authUser?'프로필을 저장했어요 (동기화됨)':'프로필을 저장했어요');
 }
 
 /* ---------------- 로그인 / 회원가입 ---------------- */
@@ -2070,7 +2081,7 @@ async function googleAuth(){
   if(error)toast('구글 로그인 오류: '+error.message);
 }
 // 구글 계정 연결 기능 On/Off (Supabase 수동연결+구글 로그인 켜지면 true 로 바꾸면 됨)
-const GOOGLE_LINK_ON=false;
+const GOOGLE_LINK_ON=true;
 function isGoogleLinked(){
   return !!(authUser && (authUser.identities||[]).some(i=>i.provider==='google'));
 }
@@ -2234,11 +2245,12 @@ function whenText(ts){
 /* 글마다 좋아요/댓글/조회수 집계 (loadDbPosts에서 호출) */
 async function loadEngagement(){
   if(!SB)return;
-  const like={}, mine=new Set(), cmt={}, view={};
+  const like={}, mine=new Set(), cmt={}, view={}, sv={};
   try{const {data}=await SB.from('likes').select('post_id,user_id');(data||[]).forEach(r=>{like[r.post_id]=(like[r.post_id]||0)+1;if(authUser&&r.user_id===authUser.id)mine.add(r.post_id);});}catch(e){}
   try{const {data}=await SB.from('comments').select('post_id');(data||[]).forEach(r=>cmt[r.post_id]=(cmt[r.post_id]||0)+1);}catch(e){}
   try{const {data}=await SB.from('post_views').select('post_id');(data||[]).forEach(r=>view[r.post_id]=(view[r.post_id]||0)+1);}catch(e){}
-  (window._dbPosts||[]).forEach(p=>{p.like=like[p.id]||0;p.liked=mine.has(p.id);p.cmt=cmt[p.id]||0;p.views=String(view[p.id]||0);});
+  try{const {data}=await SB.from('post_saves').select('post_id');(data||[]).forEach(r=>sv[r.post_id]=(sv[r.post_id]||0)+1);}catch(e){}
+  (window._dbPosts||[]).forEach(p=>{p.like=like[p.id]||0;p.liked=mine.has(p.id);p.cmt=cmt[p.id]||0;p.views=String(view[p.id]||0);p.saves=sv[p.id]||0;});
 }
 /* 알림 생성: 상대에게(내가 아닐 때만) */
 async function createNotif(recipient, kind, postId, text){
@@ -2342,6 +2354,20 @@ function descPreview(p,openCall){
   return `<div class="desc clamp">${linkifyTags(stripSizeMarks(p.desc),p.tags)}</div>`+
     (long?`<button class="more-link" onclick="event.stopPropagation();${openCall}">더보기</button>`:'');
 }
+// 카드 하단 지표(조회·좋아요·댓글·공유) — 깔끔한 흑백 아이콘 한 줄
+function cardMetrics(p){
+  const A='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">';
+  const eye=A+'<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const heart=A+'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>';
+  const chat=A+'<path d="M21 11.5a8.5 8.5 0 0 1-11.9 7.8L3 21l1.7-5.9A8.5 8.5 0 1 1 21 11.5z"/></svg>';
+  const share=A+'<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 13.3l7.4 4.3M15.7 6.4l-7.4 4.3"/></svg>';
+  return `<div class="card-metrics">
+    <span title="조회">${eye}${p.views||'0'}</span>
+    <span title="좋아요">${heart}${(p.like||0).toLocaleString()}</span>
+    <span title="댓글">${chat}${(p.cmt||0).toLocaleString()}</span>
+    <span title="공유">${share}</span>
+  </div>`;
+}
 function wrapSel(id,mark){
   const t=document.getElementById(id);if(!t)return;
   const s=t.selectionStart,e=t.selectionEnd,v=t.value;
@@ -2404,10 +2430,7 @@ function renderPostPage(p){
     ${(p.attachments&&p.attachments.length)?`<div class="pd-sec"><h4>📎 첨부파일</h4><div class="attach-list">${p.attachments.map(a=>`<a class="attach-chip" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name)}">📄 <b>${esc(a.name)}</b><span>${fmtSize(a.size)} · 다운로드</span></a>`).join('')}</div></div>`:''}
     ${refsHTML(p)}
     <div class="pd-sec">
-      <div class="cmt-head">
-        <button class="pa-btn like" id="cmtLikeBtn" onclick="togglePostLike()"><span class="hi">♡</span> <b>0</b></button>
-        <span class="cmt-label">${ICO.comment} 댓글</span>
-      </div>
+      <div class="cmt-head" id="cmtHead"></div>
       <div id="cmtList"></div>
       <div class="cmt-input"><div class="av sm" style="${avStyle(myAv())}">${avInner(myAv())}</div>
         <input id="cmtInput" type="text" name="nolimoa-comment-field" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="댓글 달기…" onkeydown="if(event.key==='Enter')addComment()"><button onclick="addComment()">등록</button></div>
@@ -2432,37 +2455,47 @@ const ICO={
 };
 function renderPostActions(){
   const p=_currentPost, box=$('#phActions');if(!p||!box)return;
-  const saved=isSaved(p);
   box.innerHTML=`
-    <button class="pa-btn like ${p.liked?'on':''}" onclick="togglePostLike()" title="좋아요"><span class="hi">${ICO.heart(p.liked)}</span> <b>${(p.like||0).toLocaleString()}</b></button>
-    <button class="pa-ico ${saved?'on':''}" onclick="togglePostSave()" title="${saved?'저장됨':'저장'}">${ICO.bookmark(saved)}</button>
     <button class="pa-ico" onclick="sharePost()" title="공유">${ICO.share}</button>
     ${canEdit(p)?`<button class="pa-ico" onclick="openEdit()" title="수정">${ICO.edit}</button>
       <button class="pa-ico del" onclick="deletePost()" title="삭제">${ICO.trash}</button>`:''}`;
-  const cl=$('#cmtLikeBtn');
-  if(cl){cl.className='pa-btn like'+(p.liked?' on':'');
-    cl.innerHTML=`<span class="hi">${ICO.heart(p.liked)}</span> <b>${(p.like||0).toLocaleString()}</b>`;}
+  renderPostEngage();
+}
+// 글 내용 아래 참여 지표: 하트-하트수-댓글-댓글수-저장-저장수
+function renderPostEngage(){
+  const p=_currentPost, box=$('#cmtHead'); if(!p||!box)return;
+  const saved=isSaved(p);
+  box.innerHTML=`
+    <button class="pa-btn like ${p.liked?'on':''}" onclick="togglePostLike()" title="좋아요"><span class="hi">${ICO.heart(p.liked)}</span> <b>${(p.like||0).toLocaleString()}</b></button>
+    <span class="pa-btn stat" title="댓글">${ICO.comment} <b>${(p.cmt||0).toLocaleString()}</b></span>
+    <button class="pa-btn save ${saved?'on':''}" onclick="togglePostSave()" title="${saved?'저장됨':'저장'}">${ICO.bookmark(saved)} <b>${(p.saves||0).toLocaleString()}</b></button>`;
 }
 async function togglePostLike(){
   const p=_currentPost;if(!p)return;
   if(SB){
     if(!authUser){toast('로그인 후 좋아요할 수 있어요');return;}
-    p.liked=!p.liked; p.like=(p.like||0)+(p.liked?1:-1); renderPostActions();
+    p.liked=!p.liked; p.like=(p.like||0)+(p.liked?1:-1); renderPostEngage();
     try{
       if(p.liked){ await SB.from('likes').upsert({post_id:p.id,user_id:authUser.id}); createNotif(p.user_id,'like',p.id); }
       else { await SB.from('likes').delete().eq('post_id',p.id).eq('user_id',authUser.id); }
     }catch(e){}
     return;
   }
-  p.liked=!p.liked;p.like=(p.like||0)+(p.liked?1:-1);renderPostActions();if(p.liked)notifyAuthor(p,'like');
+  p.liked=!p.liked;p.like=(p.like||0)+(p.liked?1:-1);renderPostEngage();if(p.liked)notifyAuthor(p,'like');
 }
-function togglePostSave(){const p=_currentPost;if(!p)return;
+async function togglePostSave(){const p=_currentPost;if(!p)return;
   const i=savedPosts.indexOf(p);
-  if(i>=0)savedPosts.splice(i,1); else savedPosts.unshift(p);
-  renderPostActions();
+  const wasSaved=i>=0;
+  if(wasSaved)savedPosts.splice(i,1); else savedPosts.unshift(p);
+  p.saves=Math.max(0,(p.saves||0)+(wasSaved?-1:1)); // 저장 인원 수
+  renderPostEngage();
   if($('#v-my').classList.contains('on'))renderMyFolders();
   saveUserData();
-  toast(i>=0?'저장을 취소했어요':'저장했어요 · 마이페이지 → 저장한 놀이에서 볼 수 있어요');
+  if(SB && authUser && p.db){ // 전역 저장 수 집계용 테이블에도 반영
+    try{ if(wasSaved) await SB.from('post_saves').delete().eq('post_id',p.id).eq('user_id',authUser.id);
+      else await SB.from('post_saves').upsert({post_id:p.id,user_id:authUser.id}); }catch(e){}
+  }
+  toast(wasSaved?'저장을 취소했어요':'저장했어요 · 마이페이지 → 저장한 놀이에서 볼 수 있어요');
 }
 function sharePost(){toast('공유 링크가 복사되었어요 (데모)');}
 
@@ -2622,18 +2655,24 @@ function renderEditImages(){
         <button class="espot-del" data-i="${idx}" data-s="${si}">✕</button>
       </div>`).join('');
     const markersHtml=im.spots.map((s,si)=>`<span class="ei-marker" data-i="${idx}" data-s="${si}" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%">${si+1}</span>`).join('');
-    const card=document.createElement('div');card.className='edit-img';
-    card.innerHTML=`<div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt=""><span class="ei-no">${idx+1}</span>${markersHtml}<span class="ei-edit">✏️ 사진 수정</span><label class="env-check ei-env" data-i="${idx}" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox"> 환경구성이면 체크</label></div>
-      <div class="ei-btns">
-        <button type="button" class="fa-btn ei-up" data-i="${idx}" ${idx===0?'disabled':''}>▲ 앞으로</button>
-        <button type="button" class="fa-btn ei-down" data-i="${idx}" ${idx===_editImages.length-1?'disabled':''}>▼ 뒤로</button>
-        <button type="button" class="fa-btn ei-edit-btn" data-i="${idx}">🖼️ 사진 수정 (모자이크·자르기·회전)</button>
-        <button type="button" class="fa-btn ei-del-btn" data-i="${idx}">🗑 사진 삭제</button>
+    const card=document.createElement('div');card.className='photo-card edit-img';
+    card.innerHTML=`
+      <div class="photo-head">
+        <span class="pnum">사진</span>
+        <div class="pmove">
+          <button type="button" class="mmove ei-up" data-i="${idx}" title="위로">▲</button>
+          <button type="button" class="mmove ei-down" data-i="${idx}" title="아래로">▼</button>
+          <button type="button" class="btn g ei-del-btn" data-i="${idx}">🗑 삭제</button>
+        </div>
+      </div>
+      <div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt="">${markersHtml}<span class="ei-edit">✏️ 사진 수정</span><label class="env-check ei-env" data-i="${idx}" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox"> 환경구성이면 체크</label></div>
+      <div class="ai-controls">
+        <button type="button" class="btn g ei-edit-btn" data-i="${idx}">🖼️ 사진 수정 (모자이크·자르기·회전)</button>
+        <button type="button" class="add-spot addspot2" data-i="${idx}">＋ 구매 링크 추가</button>
       </div>
       <textarea class="photo-desc ecap" data-i="${idx}" placeholder="이 사진 설명">${esc(im.desc||'')}</textarea>
       ${im.spots.length?'<div class="espot-hint">🛒 사진 위 <b>핑크 동그라미를 드래그</b>해 상품 위치를 지정하세요</div>':''}
-      <div class="espots">${spotsHtml}</div>
-      <button class="fa-btn addspot2" data-i="${idx}">＋ 상품 태그 추가</button>`;
+      <div class="espots">${spotsHtml}</div>`;
     box.appendChild(card);
   });
   box.querySelectorAll('.ei-marker').forEach(m=>enableEiMarkerDrag(m));
@@ -2985,6 +3024,7 @@ function renderRelGrid(sel,list,empty){
 }
 function renderComments(p){
   if(!p.comments)p.comments=[];
+  p.cmt=commentCount(p); if($('#cmtHead'))renderPostEngage(); // 댓글 수 갱신 → 참여 지표 반영
   const box=$('#cmtList');if(!box)return;box.innerHTML='';
   if(!p.comments.length){box.innerHTML='<div class="empty" style="padding:14px 4px">아직 댓글이 없어요. 첫 댓글을 남겨보세요!</div>';return;}
   p.comments.forEach((c,ci)=>{
@@ -3402,11 +3442,9 @@ function renderBrowseFeed(){
       ${descPreview(p,`openBrowsePost(${i})`)}
       ${photoGrid(p)}
       <div class="tags">${p.tags.map(x=>`<span class="tag" onclick="event.stopPropagation();filterByLabel('${tagQ(x)}')">#${esc(noSpace(x))}</span>`).join('')}</div>
-      <div class="views">👁 조회 ${p.views} · ♥ ${(p.like||0).toLocaleString()}</div>
+      ${cardMetrics(p)}
       <div class="post-foot" onclick="event.stopPropagation()">
         <button onclick="openBrowsePost(${i})" class="more" style="margin-left:0">자세히 보기 ›</button>
-        <button style="margin-left:auto">💬 ${(p.cmt||0).toLocaleString()}</button>
-        <button>🔗 공유</button>
       </div>`;
     box.appendChild(el);
   });
@@ -3957,9 +3995,10 @@ function buildPhotoCard(ph, skipDetect){
   ph.cv.style.touchAction='none'; // 터치로 캔버스를 드래그해도 화면이 스크롤되지 않게
   ph.cv.addEventListener('pointerdown',e=>{const p=posP(ph,e);
     if(ph.cropMode){ph.cropRect={x0:p.x,y0:p.y,x1:p.x,y1:p.y};ph.cropping=true;return;}
-    const hit=ph.boxes.find(b=>p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h);
-    if(hit){hit.on=!hit.on;renderCanvasP(ph);return;}
-    ph.drag={x:p.x,y:p.y,cur:p,type:e.pointerType,moved:false};
+    const hit=ph.boxes.find(b=>boxHit(b,p));
+    // 모바일에서 원형 모자이크를 다시 누르면 '키우기'하려고 토글하지 않고 통과
+    if(hit && !(e.pointerType==='touch' && hit.shape==='circle')){hit.on=!hit.on;renderCanvasP(ph);return;}
+    ph.drag={x:p.x,y:p.y,cur:p,type:e.pointerType,moved:false,grow:(hit&&hit.shape==='circle')?hit:null};
     try{ph.cv.setPointerCapture(e.pointerId);}catch(_){}});
   ph.cv.addEventListener('pointermove',e=>{
     if(ph.cropMode){if(!ph.cropping)return;const p=posP(ph,e);ph.cropRect.x1=p.x;ph.cropRect.y1=p.y;drawCropOverlay(ph);return;}
@@ -3972,12 +4011,17 @@ function buildPhotoCard(ph, skipDetect){
     if(ph.cropMode){ph.cropping=false;drawCropOverlay(ph);return;}
     if(!ph.drag)return;const d=ph.drag;
     if(!d.moved){
-      // 탭/터치 → 그 자리에 일정 크기의 모자이크 박스를 놓음 (모바일에서 드래그 없이 사용)
-      const bw=Math.max(44,ph.cv.width*0.22), bh=Math.max(44,ph.cv.height*0.16);
-      const x=Math.max(0,Math.min(ph.cv.width-bw, d.x-bw/2));
-      const y=Math.max(0,Math.min(ph.cv.height-bh, d.y-bh/2));
-      ph.boxes.push({x,y,w:bw,h:bh,on:true});
-      if(ph.status)ph.status.textContent='모자이크를 추가했어요 · 다시 누르면 켜고 끌 수 있어요';
+      if(d.type==='touch'){
+        // 모바일: 누르면 원형 모자이크가 생기고, 같은 곳을 다시 누르면 커짐
+        addOrGrowCircle(ph,d);
+        if(ph.status)ph.status.textContent='원형 모자이크 · 같은 곳을 다시 누르면 커져요';
+      } else {
+        // 데스크톱 클릭: 기존과 동일한 사각형 모자이크
+        const bw=Math.max(44,ph.cv.width*0.22), bh=Math.max(44,ph.cv.height*0.16);
+        const x=Math.max(0,Math.min(ph.cv.width-bw, d.x-bw/2));
+        const y=Math.max(0,Math.min(ph.cv.height-bh, d.y-bh/2));
+        ph.boxes.push({x,y,w:bw,h:bh,on:true});
+      }
     } else {
       const x=Math.min(d.x,d.cur.x),y=Math.min(d.y,d.cur.y),w=Math.abs(d.cur.x-d.x),h=Math.abs(d.cur.y-d.y);
       if(w>12&&h>12)ph.boxes.push({x,y,w,h,on:true});
@@ -3996,6 +4040,25 @@ function buildPhotoCard(ph, skipDetect){
 }
 function posP(ph,e){const r=ph.cv.getBoundingClientRect();
   return {x:(e.clientX-r.left)*ph.cv.width/r.width,y:(e.clientY-r.top)*ph.cv.height/r.height};}
+// 점이 박스(사각형/원) 안에 있는지
+function boxHit(b,p){
+  if(b.shape==='circle'){const cx=b.x+b.w/2,cy=b.y+b.h/2,r=b.w/2;return Math.hypot(p.x-cx,p.y-cy)<=r;}
+  return p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h;
+}
+// 모바일 탭: 새 원형 모자이크 추가 / 기존 원을 다시 누르면 키우기
+function addOrGrowCircle(ph,d){
+  const cv=ph.cv, maxR=Math.min(cv.width,cv.height)/2;
+  if(d.grow){
+    const b=d.grow, cx=b.x+b.w/2, cy=b.y+b.h/2;
+    const r=Math.min(maxR, b.w/2 + Math.max(16, cv.width*0.06));
+    b.x=Math.max(0,Math.min(cv.width-2*r, cx-r)); b.y=Math.max(0,Math.min(cv.height-2*r, cy-r));
+    b.w=2*r; b.h=2*r; b.on=true;
+  } else {
+    const r=Math.min(maxR, Math.max(28, cv.width*0.13));
+    const x=Math.max(0,Math.min(cv.width-2*r, d.x-r)), y=Math.max(0,Math.min(cv.height-2*r, d.y-r));
+    ph.boxes.push({x,y,w:2*r,h:2*r,on:true,shape:'circle'});
+  }
+}
 function movePhoto(ph,dir){
   const i=photos.indexOf(ph), j=i+dir;
   if(i<0||j<0||j>=photos.length)return;
@@ -4031,7 +4094,9 @@ function renderCanvasP(ph){
   const c=ph.ctx,cv=ph.cv;c.clearRect(0,0,cv.width,cv.height);c.drawImage(ph.img,0,0,cv.width,cv.height);
   if(ph.mosaicOn)ph.boxes.filter(b=>b.on).forEach(b=>mosaicP(ph,b));
   ph.boxes.forEach(b=>{c.strokeStyle=b.on?'rgba(108,92,231,.9)':'rgba(150,150,160,.6)';
-    c.lineWidth=2;c.setLineDash(b.on?[]:[5,4]);c.strokeRect(b.x,b.y,b.w,b.h);});
+    c.lineWidth=2;c.setLineDash(b.on?[]:[5,4]);
+    if(b.shape==='circle'){c.beginPath();c.arc(b.x+b.w/2,b.y+b.h/2,b.w/2,0,Math.PI*2);c.stroke();}
+    else c.strokeRect(b.x,b.y,b.w,b.h);});
   c.setLineDash([]);
 }
 function mosaicP(ph,b){const cv=ph.cv,c=ph.ctx,px=pxStrength;
@@ -4039,7 +4104,10 @@ function mosaicP(ph,b){const cv=ph.cv,c=ph.ctx,px=pxStrength;
   if(w<=0||h<=0)return;const sw=Math.max(1,Math.round(w/px)),sh=Math.max(1,Math.round(h/px));
   const tmp=document.createElement('canvas');tmp.width=sw;tmp.height=sh;
   tmp.getContext('2d').drawImage(cv,x,y,w,h,0,0,sw,sh);
+  c.save();
+  if(b.shape==='circle'){c.beginPath();c.arc(b.x+b.w/2,b.y+b.h/2,Math.min(w,h)/2,0,Math.PI*2);c.clip();}
   c.imageSmoothingEnabled=false;c.drawImage(tmp,0,0,sw,sh,x,y,w,h);c.imageSmoothingEnabled=true;
+  c.restore();
 }
 /* 저장·업로드용: 모자이크는 적용하되 보라색 외곽선은 '없이' 그린 이미지 (실제 게시물엔 테두리 안 보이게) */
 function cleanPhotoDataURL(ph, quality){
@@ -4050,7 +4118,10 @@ function cleanPhotoDataURL(ph, quality){
     if(w<=0||h<=0)return;const sw=Math.max(1,Math.round(w/px)),sh=Math.max(1,Math.round(h/px));
     const tmp=document.createElement('canvas');tmp.width=sw;tmp.height=sh;
     tmp.getContext('2d').drawImage(s,x,y,w,h,0,0,sw,sh);
+    c.save();
+    if(b.shape==='circle'){c.beginPath();c.arc(b.x+b.w/2,b.y+b.h/2,Math.min(w,h)/2,0,Math.PI*2);c.clip();}
     c.imageSmoothingEnabled=false;c.drawImage(tmp,0,0,sw,sh,x,y,w,h);c.imageSmoothingEnabled=true;
+    c.restore();
   });
   return s.toDataURL('image/jpeg', quality||0.9);
 }
