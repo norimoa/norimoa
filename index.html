@@ -83,7 +83,7 @@
   .tags{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 8px}
   .tag{background:var(--pink-bg);color:var(--pink-tx);font-size:12.5px;padding:5px 11px;border-radius:16px}
   .views{color:var(--sub);font-size:12.5px;margin:2px 0 10px;display:flex;align-items:center;gap:5px}
-  .card-metrics{display:flex;align-items:center;gap:16px;color:var(--sub);font-size:12.5px;font-weight:600;margin:6px 2px 2px}
+  .card-metrics{display:flex;align-items:center;justify-content:flex-end;gap:16px;color:var(--sub);font-size:12.5px;font-weight:600;margin:6px 2px 2px}
   .card-metrics span{display:inline-flex;align-items:center;gap:5px}
   .card-metrics svg{width:15px;height:15px;flex:0 0 auto}
   .post-foot{display:flex;align-items:center;gap:18px;border-top:1px solid var(--line);
@@ -865,6 +865,11 @@
   .cat-ov{justify-content:flex-start;align-items:stretch;padding:0}
   .cat-drawer{display:flex;background:#fff;width:min(760px,100%);height:100%;box-shadow:8px 0 40px rgba(0,0,0,.2);animation:slideIn .22s ease}
   @keyframes slideIn{from{transform:translateX(-24px);opacity:.6}to{transform:none;opacity:1}}
+  /* 모바일: 카테고리를 왼쪽 2/3만 덮고, 오른쪽 1/3은 뒤 페이지가 보이게 */
+  @media(max-width:640px){
+    .overlay.cat-ov{background:rgba(20,20,30,.18)}
+    .cat-drawer{width:66%}
+  }
   .cat-nav{width:200px;flex:0 0 auto;border-right:1px solid var(--line);padding:18px 12px;background:#fafafa}
   .cat-nav-head{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:15px;padding:2px 6px 16px}
   .cat-nav-head button{border:none;background:none;font-size:20px;color:#999}
@@ -956,7 +961,7 @@
         <div class="br-search"><span class="search-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input id="brSearch" type="search" name="nolimoa-search-field" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="" oninput="renderBrowseFeed()"></div>
         <button class="bt-bell" onclick="openNotif()" aria-label="알림" title="알림"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="bell-badge" id="btBellBadge"></span></button>
       </div>
-      <div class="main-head"><div><h1>둘러보기</h1><p>놀이를 구경하고, 저장해보세요</p></div>
+      <div class="main-head"><div><h1>둘러보기</h1></div>
         <div class="auth-btns" id="browseAuth"></div></div>
       <div id="noticeBar"></div>
       <div id="brFilterBar"></div>
@@ -2360,11 +2365,13 @@ function cardMetrics(p){
   const eye=A+'<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const heart=A+'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>';
   const chat=A+'<path d="M21 11.5a8.5 8.5 0 0 1-11.9 7.8L3 21l1.7-5.9A8.5 8.5 0 1 1 21 11.5z"/></svg>';
+  const save=A+'<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
   const share=A+'<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 13.3l7.4 4.3M15.7 6.4l-7.4 4.3"/></svg>';
   return `<div class="card-metrics">
     <span title="조회">${eye}${p.views||'0'}</span>
     <span title="좋아요">${heart}${(p.like||0).toLocaleString()}</span>
     <span title="댓글">${chat}${(p.cmt||0).toLocaleString()}</span>
+    <span title="저장">${save}${(p.saves||0).toLocaleString()}</span>
     <span title="공유">${share}</span>
   </div>`;
 }
@@ -2668,6 +2675,7 @@ function renderEditImages(){
       <div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt="">${markersHtml}<span class="ei-edit">✏️ 사진 수정</span><label class="env-check ei-env" data-i="${idx}" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox"> 환경구성이면 체크</label></div>
       <div class="ai-controls">
         <button type="button" class="btn g ei-edit-btn" data-i="${idx}">🖼️ 사진 수정 (모자이크·자르기·회전)</button>
+        ${idx<_editImages.length-1?`<button type="button" class="btn g ei-collage" data-i="${idx}">🖼️ 아래 사진과 콜라주</button>`:''}
         <button type="button" class="add-spot addspot2" data-i="${idx}">＋ 구매 링크 추가</button>
       </div>
       <textarea class="photo-desc ecap" data-i="${idx}" placeholder="이 사진 설명">${esc(im.desc||'')}</textarea>
@@ -2686,6 +2694,7 @@ function renderEditImages(){
   box.querySelectorAll('.ei-del-btn').forEach(b=>b.onclick=()=>deleteEditImage(+b.dataset.i));
   box.querySelectorAll('.ei-up').forEach(b=>b.onclick=()=>moveEditImage(+b.dataset.i,-1));
   box.querySelectorAll('.ei-down').forEach(b=>b.onclick=()=>moveEditImage(+b.dataset.i,1));
+  box.querySelectorAll('.ei-collage').forEach(b=>b.onclick=()=>mergeEditCollage(+b.dataset.i));
   box.querySelectorAll('.ecap').forEach(tx=>tx.addEventListener('input',e=>{_editImages[+e.target.dataset.i].desc=e.target.value;}));
   box.querySelectorAll('.espot input[data-k]').forEach(inp=>inp.addEventListener('input',e=>{
     _editImages[+e.target.dataset.i].spots[+e.target.dataset.s][e.target.dataset.k]=e.target.value;}));
@@ -2740,6 +2749,22 @@ function moveEditImage(idx,dir){
   const j=idx+dir; if(idx<0||j<0||j>=_editImages.length)return;
   const t=_editImages[idx]; _editImages[idx]=_editImages[j]; _editImages[j]=t; // 자리 바꾸기
   renderEditImages();
+}
+// 수정 화면: 현재 사진과 아래 사진을 가로로 나란히 콜라주(하나로 합치기)
+async function mergeEditCollage(idx){
+  if(!_editImages||idx<0||idx+1>=_editImages.length){ toast('합칠 다음 사진이 없어요 (사진이 2장 이상이어야 해요)'); return; }
+  const load=src=>new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>res(null);im.src=src;});
+  const [imA,imB]=await Promise.all([load(_editImages[idx].img), load(_editImages[idx+1].img)]);
+  if(!imA||!imB){ toast('사진을 불러오지 못했어요'); return; }
+  const H=Math.min(imA.height,imB.height)||imA.height, gap=6;
+  const wA=Math.round(imA.width*(H/imA.height)), wB=Math.round(imB.width*(H/imB.height));
+  const c=document.createElement('canvas'); c.width=wA+wB+gap; c.height=H;
+  const cx=c.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,c.width,c.height);
+  cx.drawImage(imA,0,0,wA,H); cx.drawImage(imB,wA+gap,0,wB,H);
+  const keep=_editImages[idx];
+  _editImages.splice(idx,2,{img:c.toDataURL('image/jpeg',0.9), desc:keep.desc||'', env:keep.env===true, spots:[]});
+  renderEditImages();
+  toast('아래 사진과 콜라주로 합쳤어요 · 모자이크는 🖼️ 사진 수정에서 하면 돼요');
 }
 /* 이미지(dataURL)에 얼굴 자동 모자이크를 입혀 깨끗한 dataURL로 반환 */
 async function autoMosaicDataURL(src){
