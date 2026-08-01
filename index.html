@@ -296,6 +296,7 @@
   .pc-stats small{color:var(--sub);font-size:11.5px;margin-left:4px}
   .my-sec{margin-top:22px}
   .my-sec h4{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .my-sec h4 .sec-ic{width:18px;height:18px;flex:0 0 auto;color:var(--coral-tx)}
   .my-sec h4 .drag-hint{font-size:11.5px;font-weight:400;color:var(--sub)}
   .folder-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
   .folder-row.savedgrid{grid-template-columns:repeat(4,1fr)}
@@ -463,6 +464,7 @@
   #folderOverlay{z-index:80}
   #newFolderOverlay,#pickerOverlay{z-index:85}
   #editOverlay{z-index:88}
+  #imgEditOverlay{z-index:95}
   .edit-img{border:1px solid #efe7e2;border-radius:12px;padding:12px;margin-bottom:14px}
   .edit-img>img{width:100%;max-height:200px;object-fit:cover;border-radius:10px;display:block}
   .edit-img .ecap{margin-top:10px}
@@ -588,6 +590,8 @@
   .detail-cap{color:#fff;padding:16px 6px 4px}
   .detail-cap h3{font-size:16px;margin-bottom:8px}
   .detail-cap p{font-size:13.5px;line-height:1.6;color:#d8d8dd}
+  .detail-dl{margin-top:12px;display:inline-flex;align-items:center;gap:6px;background:#fff;color:#4a3f39;border:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:10px;cursor:pointer}
+  .detail-dl:active{transform:scale(.97)}
   .dots{display:flex;gap:6px;justify-content:center;margin-top:14px}
   .dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35)}
   .dots span.on{background:#fff}
@@ -774,9 +778,13 @@
   .pa-btn.like svg{width:20px;height:20px}
   .ph-nuri{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
   .nuri-chip{background:#eef2ff;color:#5b6bd6;font-size:12.5px;padding:6px 12px;border-radius:14px;font-weight:600}
-  .author-card{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;margin-bottom:14px}
+  .author-card{display:flex;align-items:center;gap:12px;padding:14px 18px;margin-bottom:14px}
+  .author-card .ac-who{display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer}
+  .author-card .ac-actions{margin-left:auto;display:flex;gap:8px;flex:0 0 auto}
   .author-card .av{width:44px;height:44px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;flex:0 0 auto}
   .author-card b{font-size:15px}.author-card small{display:block;color:var(--sub);font-size:12.5px}
+  .ph-meta .pm-views{display:inline-flex;align-items:center;gap:5px}
+  .ph-meta .pm-views svg{width:16px;height:16px}
   .post-detail-body{padding:20px;font-size:14.5px;line-height:1.9;white-space:pre-wrap;margin-bottom:4px}
   .htag{color:var(--coral-tx);cursor:pointer;font-weight:700}
   .htag:hover{text-decoration:underline}
@@ -787,6 +795,8 @@
   .pdp{position:relative;border-radius:10px;overflow:hidden;background:#e9e9ee;cursor:pointer;aspect-ratio:1/1}
   .pdp img{width:100%;height:100%;object-fit:cover}
   .pdp .pcount{background:#dd5b8d;color:#fff;left:8px;right:auto;bottom:8px;top:auto}
+  .pdp-dl{position:absolute;right:6px;bottom:6px;z-index:3;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:11px;font-weight:700;padding:4px 9px;border-radius:8px;cursor:pointer}
+  .pdp-dl:hover{background:var(--coral)}
   .cmt-row{display:flex;gap:10px;padding:12px 4px;border-bottom:1px solid var(--line)}
   .cmt-row .av{width:34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 auto}
   .cmt-row .cb b{font-size:13.5px}.cmt-row .cb .when{color:var(--sub);font-size:11.5px;margin-left:6px}
@@ -1103,11 +1113,11 @@
         <button class="btn-line" onclick="openProfileEdit()">프로필 편집</button>
       </div>
       <div class="my-sec">
-        <h4>📁 내가 올린 놀이 <span class="drag-hint">폴더를 드래그하면 순서를 바꿀 수 있어요</span></h4>
+        <h4><svg class="sec-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> 내가 올린 놀이 <span class="drag-hint">폴더를 드래그하면 순서를 바꿀 수 있어요</span></h4>
         <div class="folder-row" id="myPlaysRow"></div>
       </div>
       <div class="my-sec">
-        <h4>🔖 저장한 놀이 <span class="drag-hint">폴더를 드래그하면 순서를 바꿀 수 있어요</span></h4>
+        <h4><svg class="sec-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> 저장한 놀이 <span class="drag-hint">폴더를 드래그하면 순서를 바꿀 수 있어요</span></h4>
         <div class="folder-row savedgrid" id="savedPlaysRow"></div>
       </div>
       <div class="my-foot">
@@ -1230,6 +1240,7 @@
     <div class="detail-cap">
       <h3 id="detailTitle"></h3>
       <p id="detailDesc"></p>
+      <button class="detail-dl" onclick="downloadDetailImg()">⬇ 이 사진 기기에 저장</button>
       <div class="dots" id="detailDots"></div>
     </div>
   </div>
@@ -2258,6 +2269,8 @@ async function loadEngagement(){
   try{const {data}=await SB.from('comments').select('post_id');(data||[]).forEach(r=>cmt[r.post_id]=(cmt[r.post_id]||0)+1);}catch(e){}
   try{const {data}=await SB.from('post_views').select('post_id');(data||[]).forEach(r=>view[r.post_id]=(view[r.post_id]||0)+1);}catch(e){}
   try{const {data}=await SB.from('post_saves').select('post_id');(data||[]).forEach(r=>sv[r.post_id]=(sv[r.post_id]||0)+1);}catch(e){}
+  const dl={}; try{const {data}=await SB.from('attachment_downloads').select('url');(data||[]).forEach(r=>dl[r.url]=(dl[r.url]||0)+1);}catch(e){}
+  window._dlCounts=dl; // 첨부파일별 다운로드(받은 사람) 수
   (window._dbPosts||[]).forEach(p=>{p.like=like[p.id]||0;p.liked=mine.has(p.id);p.cmt=cmt[p.id]||0;p.views=String(view[p.id]||0);p.saves=sv[p.id]||0;});
 }
 /* 알림 생성: 상대에게(내가 아닐 때만) */
@@ -2417,27 +2430,32 @@ function renderPostPage(p){
   const a=authorOf(p), imgs=imagesOf(p);
   const nuriChips=(p.nuri||[]).map(n=>`<span class="nuri-chip">${nuriLabel(n)}</span>`).join('');
   const catCards=(p.tags||[]).slice(0,4).map(tg=>`<button class="rel-card" onclick="filterByLabel('${tagQ(tg)}')"><div class="rc-ic">🏷️</div><b>#${esc(noSpace(tg))}</b><span>›</span></button>`).join('');
-  const photos=imgs.map((im,idx)=>`<div class="pdp" onclick="openPhotos(_currentPost,${idx})"><img src="${im.img}" alt="">${(im.spots&&im.spots.length)?'<span class="pcount">🏷️ 상품 태그</span>':''}</div>`).join('');
+  const photos=imgs.map((im,idx)=>`<div class="pdp"><img src="${im.img}" alt="" onclick="openPhotos(_currentPost,${idx})">${(im.spots&&im.spots.length)?'<span class="pcount">🏷️ 상품 태그</span>':''}<button class="pdp-dl" onclick="event.stopPropagation();dlPostImg(${idx})" title="기기에 저장">⬇ 저장</button></div>`).join('');
   $('#ptMini').textContent=(p.title||'놀이').replace(/^#/,'');
   const hashLine=(p.tags||[]).map(x=>'#'+noSpace(x)).join(' ');
   $('#postBody').innerHTML=`
     <div class="post-hero">
       <h1 class="ph-title">${esc((p.title||'놀이').replace(/^#/,''))}</h1>
       ${hashLine?`<div class="ph-hash">${linkifyTags(hashLine,p.tags)}</div>`:''}
-      <div class="ph-meta"><span>👁 조회 <span id="phViews">${p.views||'0'}</span></span>${p.date?`<span class="ph-date">${esc(p.date)}</span>`:''}</div>
-      <div class="ph-actions" id="phActions"></div>
+      <div class="ph-meta"><span class="pm-views"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> <span id="phViews">${p.views||'0'}</span></span>${p.date?`<span class="ph-date">${esc(p.date)}</span>`:''}</div>
       ${nuriChips?`<div class="ph-nuri">${nuriChips}</div>`:''}
     </div>
-    <div class="card author-card" onclick="openAuthor(_currentPost)">
-      <div class="av" style="${avStyle(a)}">${avInner(a)}</div>
-      <div><b>${a?a.name:'선생님'}</b><small>${(a&&a.org)||''}</small></div>
+    <div class="card author-card">
+      <div class="ac-who" onclick="openAuthor(_currentPost)">
+        <div class="av" style="${avStyle(a)}">${avInner(a)}</div>
+        <div><b>${a?a.name:'선생님'}</b><small>${(a&&a.org)||''}</small></div>
+      </div>
+      ${canEdit(p)?`<div class="ac-actions">
+        <button class="pa-ico" onclick="openEdit()" title="수정">${ICO.edit}</button>
+        <button class="pa-ico del" onclick="deletePost()" title="삭제">${ICO.trash}</button>
+      </div>`:''}
     </div>
     <div class="card post-detail-body">${linkifyTags(p.desc,p.tags)}</div>
     <div class="pd-sec">
-      <h4>🖼️ 놀이 사진 <span class="hint">사진을 클릭하면 상품 태그를 확인할 수 있어요</span></h4>
+      <h4>🖼️ 놀이 사진 <span class="hint">사진을 클릭하면 크게 보고, ⬇ 저장으로 기기·앨범에 내려받을 수 있어요</span></h4>
       <div class="pd-photos">${photos}</div>
     </div>
-    ${(p.attachments&&p.attachments.length)?`<div class="pd-sec"><h4>📎 첨부파일</h4><div class="attach-list">${p.attachments.map(a=>`<a class="attach-chip" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name)}">📄 <b>${esc(a.name)}</b><span>${fmtSize(a.size)} · 다운로드</span></a>`).join('')}</div></div>`:''}
+    ${(p.attachments&&p.attachments.length)?`<div class="pd-sec"><h4>📎 첨부파일</h4><div class="attach-list">${p.attachments.map((a,ai)=>`<a class="attach-chip" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name)}" onclick="recordDownload('${(a.url||'').replace(/'/g,"\\'")}','${p.id||''}',${ai})">📄 <b>${esc(a.name)}</b><span>${fmtSize(a.size)} · ⬇ <b id="dln-${ai}">${(window._dlCounts&&window._dlCounts[a.url])||0}</b>명</span></a>`).join('')}</div></div>`:''}
     ${refsHTML(p)}
     <div class="pd-sec">
       <div class="cmt-head" id="cmtHead"></div>
@@ -2448,7 +2466,7 @@ function renderPostPage(p){
     <div class="pd-sec"><h4>🏷️ 관련</h4><div class="rel-cards">${catCards}</div></div>
     <div class="pd-sec"><h4>🎨 ${a?a.name:'글쓴이'}의 관련 놀이</h4><div class="rel-grid" id="authorRel"></div></div>
     <div class="pd-sec"><h4>📌 다른 선생님들의 관련 글</h4><div class="rel-grid" id="otherRel"></div></div>`;
-  renderPostActions();
+  renderPostEngage();
   renderComments(p);
   renderRelGrid('#authorRel', authorRelated(p), '아직 관련 놀이가 없어요');
   renderRelGrid('#otherRel', otherRelated(p), '아직 관련 글이 없어요');
@@ -2478,7 +2496,8 @@ function renderPostEngage(){
   box.innerHTML=`
     <button class="pa-btn like ${p.liked?'on':''}" onclick="togglePostLike()" title="좋아요"><span class="hi">${ICO.heart(p.liked)}</span> <b>${(p.like||0).toLocaleString()}</b></button>
     <span class="pa-btn stat" title="댓글">${ICO.comment} <b>${(p.cmt||0).toLocaleString()}</b></span>
-    <button class="pa-btn save ${saved?'on':''}" onclick="togglePostSave()" title="${saved?'저장됨':'저장'}">${ICO.bookmark(saved)} <b>${(p.saves||0).toLocaleString()}</b></button>`;
+    <button class="pa-btn save ${saved?'on':''}" onclick="togglePostSave()" title="${saved?'저장됨':'저장'}">${ICO.bookmark(saved)} <b>${(p.saves||0).toLocaleString()}</b></button>
+    <button class="pa-btn share" onclick="sharePost()" title="공유">${ICO.share}</button>`;
 }
 async function togglePostLike(){
   const p=_currentPost;if(!p)return;
@@ -2507,7 +2526,45 @@ async function togglePostSave(){const p=_currentPost;if(!p)return;
   }
   toast(wasSaved?'저장을 취소했어요':'저장했어요 · 마이페이지 → 저장한 놀이에서 볼 수 있어요');
 }
-function sharePost(){toast('공유 링크가 복사되었어요 (데모)');}
+function shareUrlFor(p){ const base=location.origin+location.pathname; return (p&&p.db&&p.id)?`${base}#play=${p.id}`:base; }
+async function sharePost(){
+  const p=_currentPost; if(!p)return;
+  const url=shareUrlFor(p);
+  const title='놀이모아 · '+(p.title||'놀이').replace(/^#/,'');
+  // 모바일: 기기 공유 시트 / 데스크톱: 링크 복사
+  if(navigator.share){
+    try{ await navigator.share({title, text:(p.title||'놀이').replace(/^#/,''), url}); }catch(e){}
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(url);
+    toast('링크가 복사되었어요 · 붙여넣기로 공유하세요');
+  }catch(e){
+    // 클립보드가 막힌 환경(구형/일부 브라우저) 대비
+    const t=document.createElement('textarea'); t.value=url; t.style.position='fixed'; t.style.opacity='0'; document.body.appendChild(t); t.select();
+    try{ document.execCommand('copy'); toast('링크가 복사되었어요'); }catch(_){ toast('공유 링크: '+url); }
+    t.remove();
+  }
+}
+// 공유 링크(#play=<id>)로 들어오면 해당 글 열기
+function openSharedPost(){
+  const m=(location.hash||'').match(/play=([\w-]+)/);
+  if(!m)return false;
+  const p=allPosts().find(x=>String(x.id)===m[1]);
+  if(p){ history.replaceState(null,'',location.pathname); openPost(p); return true; }
+  return false;
+}
+// 첨부파일 다운로드 기록 (받은 사람 수 집계) — 같은 사람이 여러 번 받아도 1명
+async function recordDownload(url, postId, ai){
+  window._dlCounts=window._dlCounts||{};
+  let n=window._dlCounts[url]||0;
+  if(SB && authUser){
+    try{ await SB.from('attachment_downloads').upsert({post_id:postId||null,url,user_id:authUser.id}); }catch(e){}
+    try{ const r=await SB.from('attachment_downloads').select('url',{count:'exact',head:true}).eq('url',url); if(typeof r.count==='number')n=r.count; }catch(e){}
+  } else { n=n+1; } // 데모
+  window._dlCounts[url]=n;
+  const el=document.getElementById('dln-'+ai); if(el)el.textContent=n;
+}
 
 /* ===== 놀이 수정 ===== */
 let _editPost=null, _editImages=null, _editBaseline=null;
@@ -3142,6 +3199,33 @@ function _openDetail(p,startIdx){
   renderDetail();open_('detailOverlay');
 }
 function detailNav(d){_dIdx=(_dIdx+d+_dImgs.length)%_dImgs.length;renderDetail();}
+/* 사진을 실제 파일로 기기(앨범·컴퓨터)에 저장 — 마이페이지 '저장'(북마크)과는 다른 기능 */
+async function saveImageToDevice(src, name){
+  name=name||'nolimoa.jpg';
+  if(!src){toast('사진을 찾을 수 없어요');return;}
+  try{
+    const resp=await fetch(src, /^data:/.test(src)?undefined:{mode:'cors'});
+    const blob=await resp.blob();
+    // 모바일: 공유 시트의 '이미지 저장'으로 사진 앨범에 바로 저장
+    try{
+      const file=new File([blob], name, {type:blob.type||'image/jpeg'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file]}); return;
+      }
+    }catch(e){ if(e&&e.name==='AbortError')return; }
+    // 데스크톱·그 외: 파일 다운로드
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    toast('사진을 기기에 저장했어요');
+  }catch(e){
+    try{ window.open(src,'_blank'); toast('사진을 새 탭에서 열었어요 · 길게 눌러 저장하세요'); }
+    catch(_){ toast('저장하지 못했어요'); }
+  }
+}
+function downloadDetailImg(){ const im=_dImgs[_dIdx]||{}; saveImageToDevice(im.img, (String(_dTitle||'nolimoa').replace(/[^가-힣\w]+/g,'_').replace(/^_+|_+$/g,'')||'nolimoa')+'_'+(_dIdx+1)+'.jpg'); }
+function dlPostImg(idx){ const im=(imagesOf(_currentPost)||[])[idx]; if(im)saveImageToDevice(im.img,'nolimoa_'+(idx+1)+'.jpg'); }
 function renderDetail(){
   const im=_dImgs[_dIdx]||{};
   $('#detailImg').src=im.img||'';
@@ -3651,7 +3735,10 @@ function renderEnv(){
   const box=$('#envGrid'); if(!box)return; box.innerHTML='';
   const q=(($('#envSearch')&&$('#envSearch').value)||'').trim();
   let tiles=envTiles();
-  if(q){ const qn=dePlay(q)||noSpace(q.toLowerCase()); tiles=tiles.filter(t=>dePlay(t.title).includes(qn)); }
+  if(q){ const qn=dePlay(q)||noSpace(q.toLowerCase());
+    tiles=tiles.filter(t=>{ const p=t.post||{};
+      const hay=dePlay([t.title, p.title||'', (p.categories||[]).join(' '), (p.tags||[]).join(' ')].join(' '));
+      return hay.includes(qn); }); }
   if(!tiles.length){
     box.innerHTML=`<div class="placeholder" style="grid-column:1/-1"><div class="big">🖼️</div>${q?'조건에 맞는 환경구성 사진이 없어요':'아직 환경구성으로 표시된 사진이 없어요.<br>글 쓸 때 사진 우측하단 ‘환경구성이면 체크’를 눌러보세요.'}</div>`;
     return;
@@ -4370,19 +4457,30 @@ function initIeCanvas(){
   _ie.cv=cv; _ie.ctx=cv.getContext('2d');
   cv.addEventListener('pointerdown',e=>{const p=posP(_ie,e);
     if(_ie.cropMode){_ie.cropRect={x0:p.x,y0:p.y,x1:p.x,y1:p.y};_ie.cropping=true;return;}
-    const hit=_ie.boxes.find(b=>p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h);
-    if(hit){hit.on=!hit.on;renderCanvasP(_ie);return;}
-    _ie.drag={x:p.x,y:p.y,cur:p};});
+    const hit=_ie.boxes.find(b=>boxHit(b,p));
+    if(hit && !(e.pointerType==='touch' && hit.shape==='circle')){hit.on=!hit.on;renderCanvasP(_ie);return;}
+    _ie.drag={x:p.x,y:p.y,cur:p,type:e.pointerType,moved:false,grow:(hit&&hit.shape==='circle')?hit:null};
+    try{cv.setPointerCapture(e.pointerId);}catch(_){}});
   cv.addEventListener('pointermove',e=>{
     if(_ie.cropMode){if(!_ie.cropping)return;const p=posP(_ie,e);_ie.cropRect.x1=p.x;_ie.cropRect.y1=p.y;drawIeCrop();return;}
     if(!_ie.drag)return;_ie.drag.cur=posP(_ie,e);
+    if(Math.abs(_ie.drag.cur.x-_ie.drag.x)>6||Math.abs(_ie.drag.cur.y-_ie.drag.y)>6)_ie.drag.moved=true;
     renderCanvasP(_ie);const c=_ie.ctx;c.strokeStyle='#c04a6e';c.lineWidth=2;c.setLineDash([5,4]);
     c.strokeRect(_ie.drag.x,_ie.drag.y,_ie.drag.cur.x-_ie.drag.x,_ie.drag.cur.y-_ie.drag.y);c.setLineDash([]);});
+  cv.addEventListener('pointercancel',()=>{_ie.drag=null;});
   cv.addEventListener('pointerup',()=>{
     if(_ie.cropMode){_ie.cropping=false;drawIeCrop();return;}
     if(!_ie.drag)return;const d=_ie.drag;
-    const x=Math.min(d.x,d.cur.x),y=Math.min(d.y,d.cur.y),w=Math.abs(d.cur.x-d.x),h=Math.abs(d.cur.y-d.y);
-    if(w>12&&h>12)_ie.boxes.push({x,y,w,h,on:true});_ie.drag=null;renderCanvasP(_ie);});
+    if(!d.moved){
+      if(d.type==='touch'){ addOrGrowCircle(_ie,d); const st=$('#ieStatus'); if(st)st.textContent='원형 모자이크 · 같은 곳을 다시 누르면 커져요'; }
+      else { const bw=Math.max(44,cv.width*0.22),bh=Math.max(44,cv.height*0.16);
+        const x=Math.max(0,Math.min(cv.width-bw,d.x-bw/2)),y=Math.max(0,Math.min(cv.height-bh,d.y-bh/2));
+        _ie.boxes.push({x,y,w:bw,h:bh,on:true}); }
+    } else {
+      const x=Math.min(d.x,d.cur.x),y=Math.min(d.y,d.cur.y),w=Math.abs(d.cur.x-d.x),h=Math.abs(d.cur.y-d.y);
+      if(w>12&&h>12)_ie.boxes.push({x,y,w,h,on:true});
+    }
+    _ie.drag=null;renderCanvasP(_ie);});
 }
 function ieFit(im){ const maxW=520,sc=Math.min(1,maxW/im.width); _ie.cv.width=Math.round(im.width*sc); _ie.cv.height=Math.round(im.height*sc); }
 function openImgEdit(src, opts){
@@ -5104,10 +5202,10 @@ syncStats();
 (function(){const bs=$('#brSearch');if(bs){bs.value='';setTimeout(()=>{if(bs.value&&document.activeElement!==bs)bs.value='';},400);}})();
 renderBrowse(); // 기본 화면(둘러보기) 먼저 그리고
 if(SB){
-  refreshSession().then(restoreLastView); // 로그인 상태 확인 후 마지막 페이지 복원
+  refreshSession().then(()=>{ if(!openSharedPost()) restoreLastView(); }); // 공유 링크로 왔으면 그 글, 아니면 마지막 페이지
   SB.auth.onAuthStateChange(()=>refreshSession());
 } else {
-  restoreLastView(); // 데모 모드는 바로 복원
+  if(!openSharedPost()) restoreLastView(); // 데모 모드
 }
 </script>
 </body>
