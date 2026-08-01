@@ -877,10 +877,13 @@
   .cat-nav-item.on{background:#f6ddd8;color:var(--coral-tx);font-weight:700}
   .cat-content{flex:1;overflow:auto;padding:22px 24px}
   .cat-title{font-size:19px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px}
-  .cat-env-btn{display:flex;align-items:center;justify-content:center;width:calc(100% - 56px);margin:0 auto 22px;
+  .cat-env-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:calc(100% - 56px);margin:0 auto 22px;
     border:1px solid #f3d3ce;background:#fff7f9;color:var(--coral-tx);border-radius:12px;padding:14px 16px;
-    font-size:14.5px;font-weight:700;cursor:pointer;text-align:center}
+    font-size:14.5px;font-weight:700;cursor:pointer;text-align:center;white-space:nowrap}
   .cat-env-btn:hover{background:#fbe9ec}
+  @media(max-width:640px){
+    .cat-env-btn{width:calc(100% - 16px);font-size:12.5px;padding:12px 6px}  /* 모바일: 한 줄에 들어가게 */
+  }
   .side-env-btn{display:block;width:calc(100% - 24px);margin:0 auto 18px;border:1px solid #f3d3ce;background:#fff7f9;
     color:var(--coral-tx);border-radius:11px;padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
   .side-env-btn:hover{background:#fbe9ec}
@@ -946,7 +949,7 @@
       <div class="main-head">
         <div>
           <h1>팔로잉</h1>
-          <p>팔로우한 선생님들의 최신 글</p>
+          <p>팔로우한 교사들의 최신 글</p>
         </div>
         <button class="follow-chip" id="followCount" onclick="openFollowing()">1명 팔로우 중</button>
       </div>
@@ -958,7 +961,7 @@
     <section class="view on" id="v-browse">
       <div class="br-topbar">
         <button class="bt-cat" onclick="openCat()" aria-label="카테고리" title="카테고리"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        <div class="br-search"><span class="search-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input id="brSearch" type="search" name="nolimoa-search-field" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="" oninput="renderBrowseFeed()"></div>
+        <div class="br-search"><span class="search-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input id="brSearch" type="search" name="nolimoa-search-field" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="놀이 주제·유형, 닉네임으로 검색" oninput="renderBrowseFeed()"></div>
         <button class="bt-bell" onclick="openNotif()" aria-label="알림" title="알림"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="bell-badge" id="btBellBadge"></span></button>
       </div>
       <div class="main-head"><div><h1>둘러보기</h1></div>
@@ -1775,7 +1778,7 @@ function renderFeed(){
       </div>`;
     wrap.appendChild(el);
   });
-  if(!filtered.length)wrap.innerHTML='<div class="placeholder"><div class="big">👋</div>팔로우한 선생님의 최신 놀이가 여기에 모여요.<br>둘러보기에서 마음에 드는 선생님을 팔로우해보세요!</div>';
+  if(!filtered.length)wrap.innerHTML='<div class="placeholder"><div class="big">👋</div>팔로우한 교사의 최신 놀이가 여기에 모여요.<br>둘러보기에서 마음에 드는 교사를 팔로우해보세요!</div>';
   renderStories();
   const n = SB ? myFollowing.size : teachers.filter(x=>x.following).length;
   $('#followCount').textContent=`${n}명 팔로우 중`;
@@ -1832,7 +1835,7 @@ async function renderSocial(){
     let ids=[];
     if(socialTab==='following'){ ids=[...myFollowing]; }
     else { try{const {data}=await SB.from('follows').select('follower_id').eq('following_id',authUser.id);ids=(data||[]).map(r=>r.follower_id);}catch(e){} }
-    if(!ids.length){box.innerHTML=`<div class="empty">${socialTab==='following'?'아직 팔로우한 선생님이 없어요':'아직 팔로워가 없어요'}</div>`;return;}
+    if(!ids.length){box.innerHTML=`<div class="empty">${socialTab==='following'?'아직 팔로우한 교사가 없어요':'아직 팔로워가 없어요'}</div>`;return;}
     let profs=[]; try{const r=await SB.from('profiles').select('id,nickname,role,icon,avatar_url').in('id',ids);profs=r.data||[];}catch(e){}
     box.innerHTML='';
     profs.forEach(pr=>{
@@ -1858,7 +1861,7 @@ async function renderSocial(){
     if(!followers.length)box.innerHTML='<div class="empty">팔로워가 없어요</div>';
   } else {
     const flw=teachers.filter(x=>x.following);
-    if(!flw.length){box.innerHTML='<div class="empty">아직 팔로우한 선생님이 없어요</div>';return;}
+    if(!flw.length){box.innerHTML='<div class="empty">아직 팔로우한 교사가 없어요</div>';return;}
     flw.forEach(tt=>{
       const r=document.createElement('div');r.className='foll-row';
       r.innerHTML=`<div class="av" style="background:${tt.color}">${tt.init}</div>
@@ -3899,6 +3902,15 @@ function go(v){
   if(v==='my')renderMyPage();
   if(v==='comm'){ renderCommunity(); loadCommunity().then(renderCommunity); }
   if(v==='env')renderEnv();
+  // 새로고침 시 복원할 수 있게 현재 페이지 기억 (상세/프로필처럼 대상이 필요한 화면은 제외)
+  try{ if(['browse','sub','my','comm','env','about','privacy'].includes(v)) localStorage.setItem('nolimoa_view', v); }catch(e){}
+}
+function restoreLastView(){
+  let v=null; try{ v=localStorage.getItem('nolimoa_view'); }catch(e){}
+  if(!v || v==='browse') return;
+  if(!['sub','my','comm','env','about','privacy'].includes(v)) return;
+  if(v==='comm' && isGuest()) return; // 커뮤니티는 로그인 상태에서만
+  go(v);
 }
 
 /* ================= 멀티 사진 업로드 (얼굴 모자이크 + 구매 물품 표시) ================= */
@@ -5090,10 +5102,12 @@ renderBrowseAuth();
 renderSideCats();
 syncStats();
 (function(){const bs=$('#brSearch');if(bs){bs.value='';setTimeout(()=>{if(bs.value&&document.activeElement!==bs)bs.value='';},400);}})();
-renderBrowse(); // 새로고침 시 기본 화면 = 둘러보기
+renderBrowse(); // 기본 화면(둘러보기) 먼저 그리고
 if(SB){
-  refreshSession();
+  refreshSession().then(restoreLastView); // 로그인 상태 확인 후 마지막 페이지 복원
   SB.auth.onAuthStateChange(()=>refreshSession());
+} else {
+  restoreLastView(); // 데모 모드는 바로 복원
 }
 </script>
 </body>
