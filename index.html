@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>놀이모아 — 놀이 검색 플랫폼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet"><!-- 워터마크 손글씨 폰트 -->
+<script>try{ if(document.fonts&&document.fonts.load) document.fonts.load("16px 'Nanum Pen Script'"); }catch(e){}</script>
 <!-- ===== 앱(홈 화면 추가) 설정 : 놀이모아 ===== -->
 <meta name="theme-color" content="#86736b">
 <meta name="mobile-web-app-capable" content="yes">
@@ -621,6 +625,13 @@
   .prod-buy{background:var(--coral);color:#fff;border-radius:20px;padding:10px 16px;font-size:13px;font-weight:700;white-space:nowrap;flex:0 0 auto}
   .prod-sub{padding:12px 20px 2px;font-size:13px;color:#666}
   .prod-sub b{color:var(--coral-tx)}
+  /* 상세 페이지 상품 태그 목록 */
+  .prod-list{display:flex;flex-direction:column;gap:8px}
+  .prod-list .prod-item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#faf6f3;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .prod-list .prod-info{display:flex;flex-direction:column;gap:2px;align-items:flex-start;min-width:0}
+  .prod-list .prod-info b{font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .prod-list .prod-mall{font-size:12px;color:var(--sub)}
+  .prod-list .prod-nolink{color:var(--sub);font-size:12.5px;white-space:nowrap;flex:0 0 auto}
   .detail-cap{color:#fff;padding:16px 6px 4px}
   .detail-cap h3{font-size:16px;margin-bottom:8px}
   .detail-cap p{font-size:13.5px;line-height:1.6;color:#d8d8dd}
@@ -1049,7 +1060,7 @@
         <h4>🗞️ 요즘 이슈 놀이 <span class="ai-tag" id="issueAiTag">AI</span> <button class="issue-mgr-btn" id="issueMgrBtn" onclick="openIssueMgr()" style="display:none">🛠 이슈 관리</button></h4>
         <div class="issue-note" id="issueNote"></div>
         <div class="issue-chips" id="issueChips"></div>
-        <div class="br-mini" id="brRecommend"></div>
+        <div class="br-mini three" id="brRecommend"></div>
       </div>
       <div class="br-sec" id="popularSec">
         <h4>🔥 오늘의 인기놀이 <span class="br-date">7월 21일 기준</span></h4>
@@ -2623,6 +2634,7 @@ function renderPostPage(p){
     </div>
     ${(p.attachments&&p.attachments.length)?`<div class="pd-sec"><h4>📎 첨부파일</h4><div class="attach-list">${p.attachments.map((a,ai)=>`<a class="attach-chip" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name)}" onclick="recordDownload('${(a.url||'').replace(/'/g,"\\'")}','${p.id||''}',${ai})">📄 <b>${esc(a.name)}</b><span>${fmtSize(a.size)} · ⬇ <b id="dln-${ai}">${(window._dlCounts&&window._dlCounts[a.url])||0}</b>명</span></a>`).join('')}</div></div>`:''}
     ${refsHTML(p)}
+    ${productsHTML(p)}
     <div class="pd-sec">
       <div class="cmt-head" id="cmtHead"></div>
       <div id="cmtList"></div>
@@ -3549,12 +3561,12 @@ function renderBrowse(){
   renderIssues();
   const pop=$('#brPopular');pop.innerHTML='';
   if(SB){
-    const top=(window._dbPosts||[]).slice().sort((a,b)=>(b.like||0)-(a.like||0)).slice(0,3);
+    const top=(window._dbPosts||[]).slice().sort((a,b)=>(b.like||0)-(a.like||0)).slice(0,6);   // 2줄 = 6장까지
     if(top.length) top.forEach(p=>pop.appendChild(miniCardPost(p)));
     else pop.innerHTML='<div class="empty" style="grid-column:1/-1">아직 인기 놀이가 없어요</div>';
     const dl=document.querySelector('#popularSec .br-date'); if(dl){const d=new Date();dl.textContent=`${d.getMonth()+1}월 ${d.getDate()}일 기준`;}
   } else {
-    brPopular.forEach(c=>pop.appendChild(miniCard(c)));
+    brPopular.slice(0,6).forEach(c=>pop.appendChild(miniCard(c)));
   }
   const tg=$('#brTags');tg.innerHTML='';
   const tags = SB ? popularTags(10) : brTagList;
@@ -3592,7 +3604,7 @@ function renderIssues(){
   }
   const rec=$('#brRecommend');rec.innerHTML='';
   if(matches.length){
-    matches.slice(0,8).forEach(p=>rec.appendChild(miniCardPost(p)));
+    matches.slice(0,6).forEach(p=>rec.appendChild(miniCardPost(p)));   // 2줄(3개씩) = 6장까지
   }else{
     rec.innerHTML=`<div class="empty" style="grid-column:1/-1">${iss.admin?`'${esc(iss.label)}'에 넣은 글이 아직 없어요. 이슈 관리에서 글을 골라주세요.`:`아직 '${iss.label}'에 맞는 놀이가 없어요. 관련 놀이를 올려보세요!`}</div>`;
   }
@@ -4202,6 +4214,23 @@ function refsHTML(p){
   }).join('');
   return `<div class="pd-sec"><h4>🔗 참고 · 출처</h4><div class="ref-cards">${cards}${backCards}</div></div>`;
 }
+/* 상세 페이지: 사진에 태그된 상품(구매 물품)들을 한곳에 자동 정리 */
+function productsHTML(p){
+  const seen=new Set(), items=[];
+  imagesOf(p).forEach(im=>(im.spots||[]).forEach(s=>{
+    if(!(s&&(s.name||s.url)))return;
+    const key=((s.name||'').trim().toLowerCase())+'|'+((s.url||'').trim().toLowerCase());
+    if(seen.has(key))return; seen.add(key);
+    items.push(s);
+  }));
+  if(!items.length)return '';
+  const cards=items.map(s=>{
+    const mall=s.mall?`<span class="prod-mall">${esc(s.mall)}</span>`:'';
+    const link=s.url?`<a class="prod-buy" href="${esc(s.url&&!/^https?:\/\//i.test(s.url)?'https://'+s.url:s.url)}" target="_blank" rel="noopener noreferrer">구매하기 ↗</a>`:'<span class="prod-nolink">링크 준비중</span>';
+    return `<div class="prod-item"><div class="prod-info"><b>${esc(s.name||'상품')}</b>${mall}</div>${link}</div>`;
+  }).join('');
+  return `<div class="pd-sec"><h4>🛒 상품 태그 <span class="hint">이 놀이에 쓴 재료·교구예요</span></h4><div class="prod-list">${cards}</div></div>`;
+}
 function openRefTarget(refId){
   if(!refId)return;
   const target=allPosts().find(p=>postRefId(p)===refId);
@@ -4537,14 +4566,15 @@ function cleanPhotoDataURL(ph, quality){
 /* '놀이모아' 워터마크를 사진 우측하단에 새겨넣기 (저장·캡처·우클릭 저장에도 항상 남음) */
 function drawWatermark(ctx, w, h){
   if(!w||!h)return;
-  const fs=Math.max(12, Math.round(w*0.045));
+  const fs=Math.max(11, Math.round(w*0.033));               // 더 작게
   ctx.save();
-  ctx.font=`800 ${fs}px 'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif`;
+  // 손글씨 느낌 폰트 (없으면 시스템 폰트로 대체)
+  ctx.font=`400 ${fs}px 'Nanum Pen Script','Gaegu','Apple SD Gothic Neo','Malgun Gothic',cursive,sans-serif`;
   ctx.textBaseline='alphabetic'; ctx.textAlign='right';
-  const pad=Math.round(fs*0.7);
+  const pad=Math.round(fs*0.75);
   const x=w-pad, y=h-pad;
-  ctx.shadowColor='rgba(0,0,0,.45)'; ctx.shadowBlur=Math.max(2,fs*0.22); ctx.shadowOffsetX=0; ctx.shadowOffsetY=1;
-  ctx.fillStyle='rgba(255,255,255,.9)';
+  ctx.shadowColor='rgba(0,0,0,.28)'; ctx.shadowBlur=Math.max(2,fs*0.2); ctx.shadowOffsetX=0; ctx.shadowOffsetY=1;
+  ctx.fillStyle='rgba(255,255,255,.5)';                     // 약간 비치는 반투명
   ctx.fillText('놀이모아', x, y);
   ctx.restore();
 }
@@ -4882,7 +4912,7 @@ function openSpotFormP(ph,i){closeSpotForm();const s=ph.spots[i];
   const f=document.createElement('div');f.className='spot-form';f.id='spotForm';
   f.style.left=Math.min(55,s.x)+'%';f.style.top=s.y+'%';
   const etc=!!s.mall && !MALL_OPTIONS.includes(s.mall);
-  f.innerHTML=`<input class="sf-name" placeholder="물품 이름 (예: 무한변신 배)">
+  f.innerHTML=`<input class="sf-name" placeholder="물품 이름">
     <select class="sf-mall">${mallOptionsHTML(s.mall||'')}</select>
     <input class="sf-mall-custom" placeholder="구매처 직접 입력" value="${esc(etc?s.mall:'')}" style="${etc?'':'display:none'}">
     <input class="sf-url" placeholder="https:// 구매링크 붙여넣기">
