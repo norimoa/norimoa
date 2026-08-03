@@ -237,6 +237,9 @@
     background:#2b2b2f;color:#fff;padding:12px 20px;border-radius:24px;font-size:13.5px;
     z-index:80;opacity:0;transition:.25s;pointer-events:none}
   .toast.on{opacity:1}
+  .auth-msg{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.6;background:#fbf1ee;border:1px solid #f0d9d2;color:#8d5a44}
+  .auth-msg.err{background:#fdecec;border-color:#f3c9c9;color:#b5423a}
+  .auth-msg button{margin-top:8px;background:#8d5a44;color:#fff;border:none;border-radius:9px;padding:8px 12px;font-size:12.5px;font-weight:700;cursor:pointer}
 
   .placeholder{background:#fff;border-radius:16px;box-shadow:var(--shadow);
     padding:60px 20px;text-align:center;color:var(--sub)}
@@ -1297,7 +1300,8 @@
       <div class="pe-field" id="authNickField"><label>닉네임 <span style="font-weight:400;color:var(--sub);font-size:11.5px">· 다른 분과 겹치지 않아야 해요</span></label>
         <input id="authNick" placeholder="닉네임을 정해주세요" oninput="checkNick()" autocomplete="off">
         <div class="nick-status" id="nickStatus"></div></div>
-      <button class="btn-fill wide" style="margin-top:6px" onclick="doAuth()">계속하기</button>
+      <button class="btn-fill wide" id="authSubmitBtn" style="margin-top:6px" onclick="doAuth()">계속하기</button>
+      <div id="authMsg" class="auth-msg" style="display:none"></div>
     </div>
   </div>
 </div>
@@ -2109,6 +2113,7 @@ function openAuth(mode){
   $('#authTitle').textContent=mode==='login'?'로그인':'회원가입';
   $('#authNickField').style.display=mode==='login'?'none':'block';
   const st=$('#nickStatus');if(st){st.textContent='';st.className='nick-status';}_nickOK=false;
+  if(typeof authInfoClear==='function')authInfoClear();
   open_('authOverlay');
 }
 /* 닉네임 중복 확인 (인스타 아이디처럼) */
@@ -2126,26 +2131,51 @@ async function checkNick(){
   if(taken){st.textContent='이미 사용 중인 닉네임이에요';st.className='nick-status no';}
   else{st.textContent='✓ 사용 가능해요';st.className='nick-status ok';_nickOK=true;}
 }
+function authInfo(msg, isErr){ const el=$('#authMsg'); if(!el)return; el.className='auth-msg'+(isErr?' err':''); el.innerHTML=msg; el.style.display='block'; }
+function authInfoClear(){ const el=$('#authMsg'); if(el){el.style.display='none';el.innerHTML='';} }
+async function resendConfirm(){
+  const email=$('#authEmail').value.trim(); if(!(SB&&email)){toast('이메일을 입력해주세요');return;}
+  try{ const {error}=await SB.auth.resend({type:'signup', email}); if(error)throw error;
+    authInfo('📧 인증 메일을 다시 보냈어요. 메일함(스팸함 포함)을 확인해 주세요.'); }
+  catch(e){ authInfo('메일 재발송에 실패했어요: '+(e.message||e), true); }
+}
 async function doAuth(){
   const email=$('#authEmail').value.trim(), pw=$('#authPw').value;
+  authInfoClear();
   if(authMode==='signup' && !_nickOK){toast('사용 가능한 닉네임을 정해주세요');return;}
   if(!SB){toast('데모 모드예요 — 상단 코드에 Supabase 키를 넣으면 실제로 동작해요');close_('authOverlay');return;}
   if(!email||!pw){toast('이메일과 비밀번호를 입력해주세요');return;}
+  const btn=$('#authSubmitBtn'); if(btn){btn.disabled=true; btn.textContent='잠시만요…';}
   try{
     if(authMode==='signup'){
       const nick=$('#authNick').value.trim()||'선생님';
       const {data,error}=await SB.auth.signUp({email,password:pw,options:{data:{nickname:nick}}});
       if(error)throw error;
-      if(data.user){await SB.from('profiles').upsert({id:data.user.id,nickname:nick,role:'유아교사',icon:'🧑'});}
-      toast('회원가입 완료! 이메일 인증이 필요할 수 있어요');
+      if(data.user){try{await SB.from('profiles').upsert({id:data.user.id,nickname:nick,role:'유아교사',icon:'🧑'});}catch(e){}}
+      if(data.session){                       // 이메일 인증 OFF → 바로 로그인
+        close_('authOverlay'); await refreshSession(); toast('회원가입 완료! 바로 로그인됐어요');
+      }else{                                   // 이메일 인증 필요
+        authInfo('회원가입이 접수됐어요! 📧 <b>입력하신 이메일로 온 인증 링크</b>를 누르면 로그인할 수 있어요.<br>메일이 안 보이면 <b>스팸함</b>도 확인해 주세요.<br><button onclick="resendConfirm()">인증 메일 다시 보내기</button>');
+      }
     }else{
       const {error}=await SB.auth.signInWithPassword({email,password:pw});
       if(error)throw error;
-      toast('로그인되었어요');
+      close_('authOverlay'); await refreshSession(); toast('로그인되었어요');
     }
-    close_('authOverlay');
-    await refreshSession();
-  }catch(e){toast('오류: '+(e.message||e));}
+  }catch(e){
+    const m=((e&&e.message)||e||'')+'';
+    if(/email not confirmed/i.test(m)){
+      authInfo('아직 <b>이메일 인증</b>이 안 됐어요. 📧 가입 때 받은 메일의 인증 링크를 먼저 눌러주세요.<br><button onclick="resendConfirm()">인증 메일 다시 보내기</button>', true);
+    }else if(/invalid login credentials/i.test(m)){
+      authInfo('이메일 또는 비밀번호가 올바르지 않아요. 다시 확인해 주세요.', true);
+    }else if(/already|registered/i.test(m)){
+      authInfo('이미 가입된 이메일이에요. 위 제목을 \'로그인\'으로 바꿔 들어와 주세요.', true);
+    }else if(/rate|too many/i.test(m)){
+      authInfo('잠시 후 다시 시도해 주세요. (요청이 너무 잦아요)', true);
+    }else{
+      authInfo('문제가 생겼어요: '+m, true);
+    }
+  }finally{ if(btn){btn.disabled=false; btn.textContent='계속하기';} }
 }
 async function logout(){if(SB)await SB.auth.signOut();authUser=null;myFollowing=new Set();
   profile={nick:'게스트',role:'',roleShort:'',icon:'🧑',photo:'',guest:true};
