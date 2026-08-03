@@ -238,7 +238,7 @@
 
   .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
     background:#2b2b2f;color:#fff;padding:12px 20px;border-radius:24px;font-size:13.5px;
-    z-index:80;opacity:0;transition:.25s;pointer-events:none}
+    z-index:200;opacity:0;transition:.25s;pointer-events:none}
   .toast.on{opacity:1}
   .auth-msg{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.6;background:#fbf1ee;border:1px solid #f0d9d2;color:#8d5a44}
   .auth-msg.err{background:#fdecec;border-color:#f3c9c9;color:#b5423a}
@@ -324,9 +324,9 @@
   .pc-info>b{font-size:17px}
   .pc-info>small{color:var(--sub);font-size:12.5px;display:block;margin:1px 0 8px}
   .pc-stats{display:flex;gap:22px}
-  .pc-stats div{cursor:pointer}
+  .pc-stats div{cursor:pointer;white-space:nowrap}
   .pc-stats b{font-size:15px}
-  .pc-stats small{color:var(--sub);font-size:11.5px;margin-left:4px}
+  .pc-stats small{color:var(--sub);font-size:11.5px;margin-left:4px;white-space:nowrap}
   .my-sec{margin-top:22px}
   .my-sec h4{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
   .my-sec h4 .sec-ic{width:18px;height:18px;flex:0 0 auto;color:var(--coral-tx)}
@@ -642,7 +642,12 @@
   .photo-head .pnum{font-size:13px;font-weight:700;color:var(--coral-tx);background:var(--coral-soft);padding:5px 12px;border-radius:14px}
   .pmove{display:flex;gap:6px}
   .mmove{border:1px solid #e4ded8;background:#fff;color:#666;border-radius:8px;width:32px;height:32px;font-size:12px;font-weight:700}
+  .mmove.mtop,.mmove.ei-top{width:auto;padding:0 10px;white-space:nowrap;color:var(--coral-tx)}
   .mmove:disabled{opacity:.35;cursor:default}
+  .ph-left{display:flex;align-items:center;gap:8px}
+  .drag-handle{cursor:grab;touch-action:none;color:#bfb2a8;font-size:19px;line-height:1;padding:4px 7px;border-radius:7px;user-select:none;-webkit-user-select:none}
+  .drag-handle:active{cursor:grabbing;background:#f3ece7}
+  .photo-card.dragging{opacity:.55;box-shadow:0 10px 26px rgba(0,0,0,.18);position:relative;z-index:3}
   .pmove .delphoto{padding:0 12px}
   .photo-desc{width:100%;margin-top:10px;border:1px solid #e7dcd6;border-radius:10px;padding:11px;
     font-size:13.5px;font-family:inherit;background:#fafafb;min-height:54px;resize:vertical}
@@ -774,8 +779,8 @@
   .teacher-head .tinfo{flex:1}
   .teacher-head .tinfo b{font-size:16px}
   .teacher-head .tinfo small{display:block;color:var(--sub);font-size:12.5px;margin-top:2px}
-  .prof-stats{display:flex;gap:16px;margin-top:6px}
-  .prof-stats span{font-size:12px;color:var(--sub)}
+  .prof-stats{display:flex;gap:16px;margin-top:6px;flex-wrap:wrap}
+  .prof-stats span{font-size:12px;color:var(--sub);white-space:nowrap}
   .prof-stats b{font-size:14px;color:var(--ink)}
   .teacher-posts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px 20px}
   .tpost{position:relative;border-radius:12px;overflow:hidden;background:#e9e9ee;cursor:pointer}
@@ -965,9 +970,9 @@
     .cat-nav{width:130px}
     .cg-grid{grid-template-columns:repeat(2,1fr)}
     /* 마이페이지 통계: 숫자 위, 라벨 아래로 세로 배치 → 한 줄에 다 들어옴 */
-    .pc-stats{gap:16px}
-    .pc-stats div{display:flex;flex-direction:column;align-items:center;gap:1px}
-    .pc-stats small{margin-left:0}
+    .pc-stats{gap:14px}
+    .pc-stats div{display:flex;flex-direction:column;align-items:center;gap:1px;white-space:nowrap}
+    .pc-stats small{margin-left:0;white-space:nowrap}
     /* 소개 마지막 문구 줄바꿈 (모바일: 쉼표 뒤 줄바꿈) */
     .mob-br{display:inline}
   }
@@ -2865,11 +2870,12 @@ function renderEditImages(){
         <button class="espot-del" data-i="${idx}" data-s="${si}">✕</button>
       </div>`).join('');
     const markersHtml=im.spots.map((s,si)=>`<span class="ei-marker" data-i="${idx}" data-s="${si}" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%">${si+1}</span>`).join('');
-    const card=document.createElement('div');card.className='photo-card edit-img';
+    const card=document.createElement('div');card.className='photo-card edit-img';card.dataset.i=idx;
     card.innerHTML=`
       <div class="photo-head">
-        <span class="pnum">사진</span>
+        <div class="ph-left"><span class="drag-handle" title="끌어서 순서 변경">⠿</span><span class="pnum">사진</span></div>
         <div class="pmove">
+          <button type="button" class="mmove ei-top" data-i="${idx}" title="맨 앞으로" ${idx===0?'disabled':''}>⤒ 맨앞</button>
           <button type="button" class="mmove ei-up" data-i="${idx}" title="위로">▲</button>
           <button type="button" class="mmove ei-down" data-i="${idx}" title="아래로">▼</button>
           <button type="button" class="btn g ei-del-btn" data-i="${idx}">🗑 삭제</button>
@@ -2895,8 +2901,13 @@ function renderEditImages(){
   });
   box.querySelectorAll('.ei-photo, .ei-edit-btn').forEach(el=>el.onclick=()=>openEditImage(+el.dataset.i));
   box.querySelectorAll('.ei-del-btn').forEach(b=>b.onclick=()=>deleteEditImage(+b.dataset.i));
+  box.querySelectorAll('.ei-top').forEach(b=>b.onclick=()=>moveEditImageTop(+b.dataset.i));
   box.querySelectorAll('.ei-up').forEach(b=>b.onclick=()=>moveEditImage(+b.dataset.i,-1));
   box.querySelectorAll('.ei-down').forEach(b=>b.onclick=()=>moveEditImage(+b.dataset.i,1));
+  enableDragSort(box, '.photo-card', ordered=>{
+    const newOrder=ordered.map(c=>_editImages[+c.dataset.i]).filter(Boolean);
+    if(newOrder.length===_editImages.length){ _editImages.length=0; _editImages.push(...newOrder); renderEditImages(); }
+  });
   box.querySelectorAll('.ei-collage').forEach(b=>b.onclick=()=>mergeEditCollage(+b.dataset.i));
   box.querySelectorAll('.ecap').forEach(tx=>tx.addEventListener('input',e=>{_editImages[+e.target.dataset.i].desc=e.target.value;}));
   box.querySelectorAll('.espot input[data-k]').forEach(inp=>inp.addEventListener('input',e=>{
@@ -2952,6 +2963,11 @@ function moveEditImage(idx,dir){
   const j=idx+dir; if(idx<0||j<0||j>=_editImages.length)return;
   const t=_editImages[idx]; _editImages[idx]=_editImages[j]; _editImages[j]=t; // 자리 바꾸기
   renderEditImages();
+}
+function moveEditImageTop(idx){
+  if(!_editImages||idx<=0||idx>=_editImages.length)return;
+  const t=_editImages.splice(idx,1)[0]; _editImages.unshift(t); // 맨 앞으로
+  renderEditImages(); toast('맨 앞으로 옮겼어요');
 }
 // 수정 화면: 현재 사진과 아래 사진을 가로로 나란히 콜라주(하나로 합치기)
 async function mergeEditCollage(idx){
@@ -4250,8 +4266,9 @@ function buildPhotoCard(ph, skipDetect){
   const card=document.createElement('div');card.className='photo-card';
   card.innerHTML=`
     <div class="photo-head">
-      <span class="pnum">사진</span>
+      <div class="ph-left"><span class="drag-handle" title="끌어서 순서 변경">⠿</span><span class="pnum">사진</span></div>
       <div class="pmove">
+        <button class="mmove mtop" title="맨 앞으로">⤒ 맨앞</button>
         <button class="mmove mup" title="위로">▲</button>
         <button class="mmove mdown" title="아래로">▼</button>
         <button class="btn g delphoto">🗑 삭제</button>
@@ -4276,6 +4293,11 @@ function buildPhotoCard(ph, skipDetect){
     <textarea class="photo-desc" placeholder="이 사진 설명을 적어주세요"></textarea>`;
   $('#photoList').appendChild(card);
   ph.el=card;
+  enableDragSort($('#photoList'), '.photo-card', ordered=>{
+    const newOrder=ordered.map(c=>photos.find(p=>p.el===c)).filter(Boolean);
+    if(newOrder.length===photos.length){ photos.length=0; photos.push(...newOrder); updatePhotoOrder(); }
+  });
+  card.querySelector('.mtop').onclick=()=>movePhotoTop(ph);
   card.querySelector('.mup').onclick=()=>movePhoto(ph,-1);
   card.querySelector('.mdown').onclick=()=>movePhoto(ph,1);
   ph.cv=card.querySelector('canvas');ph.ctx=ph.cv.getContext('2d');
@@ -4373,11 +4395,45 @@ function movePhoto(ph,dir){
   const list=$('#photoList');photos.forEach(p=>list.appendChild(p.el)); // 같은 DOM 노드를 옮겨 상태 유지
   updatePhotoOrder();
 }
+function movePhotoTop(ph){
+  const i=photos.indexOf(ph); if(i<=0)return;         // 이미 맨 앞이면 그대로
+  photos.splice(i,1); photos.unshift(ph);
+  const list=$('#photoList'); photos.forEach(p=>list.appendChild(p.el));
+  updatePhotoOrder(); toast('맨 앞으로 옮겼어요');
+}
+/* 손가락·마우스로 끌어서 순서 바꾸기 (드래그 핸들 ⠿ 로) */
+function enableDragSort(listEl, cardSel, onDrop){
+  if(!listEl || listEl._dragSort) return; listEl._dragSort=true;
+  let drag=null;
+  function onMove(e){
+    if(!drag)return;
+    const y=e.clientY;
+    const others=[...listEl.querySelectorAll(cardSel)].filter(c=>c!==drag.card);
+    let ref=null;
+    for(const c of others){ const r=c.getBoundingClientRect(); if(y < r.top + r.height/2){ ref=c; break; } }
+    if(ref){ if(drag.card.nextElementSibling!==ref) listEl.insertBefore(drag.card, ref); }
+    else if(drag.card!==listEl.lastElementChild){ listEl.appendChild(drag.card); }
+  }
+  listEl.addEventListener('pointerdown', e=>{
+    const h=e.target.closest('.drag-handle'); if(!h)return;
+    const card=h.closest(cardSel); if(!card)return;
+    e.preventDefault();
+    drag={card, handle:h};
+    card.classList.add('dragging');
+    try{h.setPointerCapture(e.pointerId);}catch(_){}
+    const end=()=>{ h.removeEventListener('pointermove',onMove); h.removeEventListener('pointerup',end); h.removeEventListener('pointercancel',end);
+      card.classList.remove('dragging');
+      const ordered=[...listEl.querySelectorAll(cardSel)]; drag=null; if(onDrop)onDrop(ordered); };
+    h.addEventListener('pointermove', onMove);
+    h.addEventListener('pointerup', end);
+    h.addEventListener('pointercancel', end);
+  });
+}
 function updatePhotoOrder(){
   photos.forEach((p,idx)=>{if(!p.el)return;
     const n=p.el.querySelector('.pnum');if(n)n.textContent=`${idx+1}번째 사진`;
-    const up=p.el.querySelector('.mup'),dn=p.el.querySelector('.mdown');
-    if(up)up.disabled=idx===0; if(dn)dn.disabled=idx===photos.length-1;
+    const up=p.el.querySelector('.mup'),dn=p.el.querySelector('.mdown'),tp=p.el.querySelector('.mtop');
+    if(up)up.disabled=idx===0; if(dn)dn.disabled=idx===photos.length-1; if(tp)tp.disabled=idx===0;
   });
 }
 function removePhoto(ph){markDirty();const i=photos.indexOf(ph);if(i>=0)photos.splice(i,1);ph.el.remove();closeSpotForm();
@@ -4865,9 +4921,10 @@ function renderTags(){
   if(!inp){
     inp=document.createElement('input');inp.id='tagInput';inp.placeholder='태그 입력 후 Enter (띄어쓰기는 자동으로 붙어요)';
     inp.onkeydown=e=>{
+      if(e.isComposing||e.keyCode===229)return; // 한글 조합 중 Enter는 조합 확정용 → 무시(글자 사라짐 방지)
       if(e.key==='Enter'&&inp.value.trim()){e.preventDefault();
-        const t=noSpace(inp.value.trim().replace(/^#/,''));if(t&&!sel.tags.includes(t))sel.tags.push(t);inp.value='';renderTags();inp.focus();}
-      else if(e.key==='Backspace'&&!inp.value&&sel.tags.length){sel.tags.pop();renderTags();inp.focus();}
+        const t=noSpace(inp.value.trim().replace(/^#/,''));if(t&&!sel.tags.includes(t))sel.tags.push(t);inp.value='';renderTags();const ni=document.getElementById('tagInput');if(ni)ni.focus();}
+      else if(e.key==='Backspace'&&!inp.value&&sel.tags.length){sel.tags.pop();renderTags();const ni=document.getElementById('tagInput');if(ni)ni.focus();}
     };
     box.appendChild(inp);
   }
@@ -4925,7 +4982,9 @@ function saveDraft(){
   _currentDraftId=draft.id; _draftDirty=false;   // 저장했으니 '변경 없음' 상태
   const trimmed=drafts.slice(0,12);
   const ok=lsSet(DRAFT_KEY, trimmed);
-  toast(ok?'임시저장했어요. 나중에 업로드에서 이어쓸 수 있어요.':'임시저장 공간이 부족해요. 사진을 줄여보세요.');
+  toast(ok?'✅ 임시저장되었어요':'임시저장 공간이 부족해요. 사진을 줄여보세요.');
+  if(ok){ const btn=$('#writeDraftBtn'); if(btn){ const orig=btn.innerHTML; btn.innerHTML='✓ 저장됨'; btn.disabled=true;
+    setTimeout(()=>{ btn.innerHTML=orig; btn.disabled=false; }, 1500); } }
 }
 function deleteDraft(id){
   const drafts=loadDrafts().filter(d=>d.id!==id);
@@ -5188,8 +5247,8 @@ const AI_CAT={
   '건강과 안전':['건강','안전','양치','손씻기','신호등','교통안전','소방','대피','지진'],
   '동식물':['동물','식물','강아지','고양이','토끼','물고기','화분','새싹 관찰','달팽이'],
   '교통기관':['자동차','버스','기차','비행기','자전거','교통기관','트럭'],
-  '우주':['우주','별','달','행성','로켓','태양','지구'],
-  '물':['물','비','강','수증기','물방울'],
+  '우주':['우주','행성','로켓','태양계','수성','금성','화성','목성','토성','천왕성','해왕성','명왕성','은하','블랙홀','인공위성','우주선','우주인','별자리'],
+  '물':['물놀이','물총','물풍선','물장난','물뿌리개','웅덩이','비눗방울','물길','물장구','물폭탄','수영장'],
   '공룡':['공룡','티라노','화석','쥐라기'],
   '곤충':['곤충','개미','벌','무당벌레','잠자리','매미','거미'],
   '명절':['명절','설날','추석','한복','윷놀이','송편','세배','제기'],
