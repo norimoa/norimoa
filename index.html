@@ -931,6 +931,10 @@
   .br-date{color:var(--sub);font-size:12px;font-weight:400;margin-left:auto}
   .br-mini{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
   .br-mini.three{grid-template-columns:repeat(3,1fr)}
+  .br-mini.three.collapsed > *:nth-child(n+4){display:none}   /* 접힘: 한 줄(3개)만 */
+  .more-row{display:block;margin:12px 0 2px auto;border:1px solid var(--line);background:#fff;color:var(--coral-tx);
+    border-radius:20px;padding:7px 16px;font-size:12.5px;font-weight:700;cursor:pointer}
+  .more-row:hover{background:#faf6f3}
   .mini-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer}
   .mini-card .mimg{aspect-ratio:16/10;background:#e9e9ee;overflow:hidden}
   .mini-card .mimg img{width:100%;height:100%;object-fit:cover}
@@ -1061,10 +1065,12 @@
         <div class="issue-note" id="issueNote"></div>
         <div class="issue-chips" id="issueChips"></div>
         <div class="br-mini three" id="brRecommend"></div>
+        <button class="more-row" id="recMore" onclick="expandRow('brRecommend','recMore')" style="display:none">더보기 ▾</button>
       </div>
       <div class="br-sec" id="popularSec">
         <h4>🔥 오늘의 인기놀이 <span class="br-date">7월 21일 기준</span></h4>
         <div class="br-mini three" id="brPopular"></div>
+        <button class="more-row" id="popMore" onclick="expandRow('brPopular','popMore')" style="display:none">더보기 ▾</button>
       </div>
       <div class="br-tags" id="brTags"></div>
       <div id="browseFeed"></div>
@@ -3557,6 +3563,19 @@ function renderWeekPop(){
     html+=`<div class="rank" onclick="filterByLabel('${tagQ(t)}')"><span class="n">${i+1}</span><span class="ic">🏷️</span><span class="t">#${esc(noSpace(t))}</span><span class="h">♥ ${sum.toLocaleString()}</span></div>`; });
   panel.innerHTML=html;
 }
+/* '더보기 ▾' ↔ '접기 ▴' 토글 (두 번째 줄 펼치기) */
+function expandRow(gridId, btnId){
+  const g=$('#'+gridId), b=$('#'+btnId); if(!g)return;
+  const nowCollapsed=g.classList.toggle('collapsed');
+  if(b)b.innerHTML = nowCollapsed ? '더보기 ▾' : '접기 ▴';
+}
+/* 섹션을 한 줄(3개)로 접고, 4개 이상이면 더보기 버튼 표시 */
+function setupMoreRow(gridId, btnId){
+  const g=$('#'+gridId), b=$('#'+btnId); if(!g||!b)return;
+  const real=[...g.children].filter(el=>!el.classList.contains('empty')).length;
+  if(real>3){ g.classList.add('collapsed'); b.style.display='block'; b.innerHTML='더보기 ▾'; }
+  else { g.classList.remove('collapsed'); b.style.display='none'; }
+}
 function renderBrowse(){
   renderIssues();
   const pop=$('#brPopular');pop.innerHTML='';
@@ -3568,6 +3587,7 @@ function renderBrowse(){
   } else {
     brPopular.slice(0,6).forEach(c=>pop.appendChild(miniCard(c)));
   }
+  setupMoreRow('brPopular','popMore');   // 한 줄만 보이고, 더 있으면 '더보기'
   const tg=$('#brTags');tg.innerHTML='';
   const tags = SB ? popularTags(10) : brTagList;
   tags.forEach(tag=>{const s=document.createElement('button');s.className='br-tag';s.textContent='#'+noSpace(tag);
@@ -3604,10 +3624,11 @@ function renderIssues(){
   }
   const rec=$('#brRecommend');rec.innerHTML='';
   if(matches.length){
-    matches.slice(0,6).forEach(p=>rec.appendChild(miniCardPost(p)));   // 2줄(3개씩) = 6장까지
+    matches.slice(0,6).forEach(p=>rec.appendChild(miniCardPost(p)));   // 최대 6장(2줄)까지 준비
   }else{
     rec.innerHTML=`<div class="empty" style="grid-column:1/-1">${iss.admin?`'${esc(iss.label)}'에 넣은 글이 아직 없어요. 이슈 관리에서 글을 골라주세요.`:`아직 '${iss.label}'에 맞는 놀이가 없어요. 관련 놀이를 올려보세요!`}</div>`;
   }
+  setupMoreRow('brRecommend','recMore');   // 한 줄만 보이고, 더 있으면 '더보기'
 }
 /* ===== 공지 (관리자 작성) ===== */
 async function loadNotices(){ if(!SB){window._notices=[];return;} try{const {data}=await SB.from('notices').select('*').order('created_at',{ascending:false}); window._notices=data||[];}catch(e){window._notices=[];} renderNoticeBar(); }
