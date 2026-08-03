@@ -3763,6 +3763,11 @@ function photoGrid(p){
     return `<div class="pg-cell"><img src="${im.img}" alt="">${over}</div>`;
   }).join('')+`</div>`;
 }
+/* 인기 점수: 좋아요·저장수는 크게, 조회수도 반영 */
+function popScore(p){
+  const v=parseInt(String(p&&p.views||'0').replace(/[^\d]/g,''),10)||0;
+  return ((p&&p.like)||0)*3 + ((p&&p.saves)||0)*3 + v;
+}
 function renderBrowseFeed(){
   const box=$('#browseFeed');box.innerHTML='';
   const q=($('#brSearch').value||'').trim();
@@ -3771,6 +3776,8 @@ function renderBrowseFeed(){
   if(q){const qn=dePlay(q)||noSpace(q.toLowerCase()); // '놀이' 접미사 무시하고 검색
     list=list.filter(p=>{const a=authorOf(p);
       return dePlay(p.title+' '+p.desc+' '+(p.tags||[]).join(' ')+' '+((a&&a.name)||'')).includes(qn);});}
+  // 카테고리 선택·해시태그 검색 시엔 인기순(좋아요·저장·조회 많은 순)으로 정렬
+  if(browseFilter||q){ list=list.slice().sort((a,b)=>popScore(b)-popScore(a)); }
   window._browse=list;
   const fb=$('#brFilterBar');
   fb.innerHTML=browseFilter?`<div class="filter-chip">#${esc(noSpace(browseFilter))} <span onclick="clearBrowseFilter()">✕</span></div>`:'';
