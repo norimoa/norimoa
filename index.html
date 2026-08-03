@@ -3023,7 +3023,7 @@ function moveEditImageTop(idx){
 // 수정 화면: 현재 사진과 아래 사진을 가로로 나란히 콜라주(하나로 합치기)
 async function mergeEditCollage(idx){
   if(!_editImages||idx<0||idx+1>=_editImages.length){ toast('합칠 다음 사진이 없어요 (사진이 2장 이상이어야 해요)'); return; }
-  const load=src=>new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>res(null);im.src=src;});
+  const load=src=>new Promise(res=>{const im=new Image();if(/^https?:/i.test(src))im.crossOrigin='anonymous';im.onload=()=>res(im);im.onerror=()=>res(null);im.src=src;});
   const [imA,imB]=await Promise.all([load(_editImages[idx].img), load(_editImages[idx+1].img)]);
   if(!imA||!imB){ toast('사진을 불러오지 못했어요'); return; }
   const H=Math.min(imA.height,imB.height)||imA.height, gap=6;
@@ -4155,6 +4155,17 @@ function addRefLink(){
   u.value=''; l.value=''; $('#refLinkForm').style.display='none';
   renderRefList();
 }
+/* '링크 추가' 폼에 링크/이름을 적어두고 '추가'를 안 누른 채 완료를 누른 경우 안내 */
+function refLinkPending(){
+  const u=$('#refLinkUrl'), l=$('#refLinkLabel');
+  const has = (u&&(u.value||'').trim()) || (l&&(l.value||'').trim());
+  if(!has) return false;
+  const f=$('#refLinkForm'); if(f)f.style.display='flex';
+  if(u&&u.scrollIntoView)u.scrollIntoView({block:'center'});
+  toast("작성한 링크를 '추가' 버튼으로 먼저 추가해주세요");
+  if(u)u.focus();
+  return true;
+}
 function openRefPicker(){ const s=$('#refSearch'); if(s)s.value=''; renderRefPick(); open_('refPickOverlay'); }
 function refPickCandidates(){
   // 실제 글 우선 + 데모, 지금 수정 중인 글은 제외
@@ -4835,19 +4846,24 @@ function initIeCanvas(){
 function ieFit(im){ const maxW=520,sc=Math.min(1,maxW/im.width); _ie.cv.width=Math.round(im.width*sc); _ie.cv.height=Math.round(im.height*sc); }
 function openImgEdit(src, opts){
   opts=opts||{}; initIeCanvas();
-  const im=new Image();
-  im.onload=()=>{
-    _ie.img=im; ieFit(im);
-    _ie.boxes=(opts.boxes||[]).map(b=>({...b})); _ie.mosaicOn=opts.mosaicOn!==false;
-    _ie.drag=null; _ie.cropMode=false; _ie.cropRect=null; _ie.cropping=false; _ie.onApply=opts.onApply||null;
-    const mz=$('#ieMz'); if(mz)mz.checked=_ie.mosaicOn;
-    const cb=$('#ieCropBar'); if(cb)cb.style.display='none';
-    const st=$('#ieStatus'); if(st)st.textContent=_ie.boxes.length?'얼굴을 눌러 켜고 끌 수 있어요 · 빈 곳 드래그로 추가':'빈 곳을 드래그해 가릴 부분을 추가하거나, 회전·자르기로 다듬어 보세요.';
-    renderCanvasP(_ie);
-    open_('imgEditOverlay');
+  let triedNoCors=false;
+  const load=(useCors)=>{
+    const im=new Image();
+    if(useCors && /^https?:/i.test(src)) im.crossOrigin='anonymous';   // 저장된(원격) 사진도 캔버스에 그려 저장할 수 있게
+    im.onload=()=>{
+      _ie.img=im; ieFit(im);
+      _ie.boxes=(opts.boxes||[]).map(b=>({...b})); _ie.mosaicOn=opts.mosaicOn!==false;
+      _ie.drag=null; _ie.cropMode=false; _ie.cropRect=null; _ie.cropping=false; _ie.onApply=opts.onApply||null;
+      const mz=$('#ieMz'); if(mz)mz.checked=_ie.mosaicOn;
+      const cb=$('#ieCropBar'); if(cb)cb.style.display='none';
+      const st=$('#ieStatus'); if(st)st.textContent=_ie.boxes.length?'얼굴을 눌러 켜고 끌 수 있어요 · 빈 곳 드래그로 추가':'빈 곳을 드래그해 가릴 부분을 추가하거나, 회전·자르기로 다듬어 보세요.';
+      renderCanvasP(_ie);
+      open_('imgEditOverlay');
+    };
+    im.onerror=()=>{ if(useCors && !triedNoCors){ triedNoCors=true; load(false); } else { toast('사진을 불러오지 못했어요'); } };
+    im.src=src;
   };
-  im.onerror=()=>toast('사진을 불러오지 못했어요');
-  im.src=src;
+  load(true);
 }
 function closeImgEdit(){ close_('imgEditOverlay'); _ie.drag=null; _ie.cropMode=false; _ie.cropping=false; _ie.onApply=null; }
 async function ieRedetect(){
@@ -4898,8 +4914,11 @@ function ieCropApply(){
 }
 function ieApply(){
   // 모자이크 반영(외곽선 없이) + 크롭/회전 결과를 하나의 이미지로 저장
-  const url=cleanPhotoDataURL(_ie, 0.9);
-  if(_ie.onApply)_ie.onApply(url);
+  if(!_ie || !_ie.img){ toast('사진을 아직 불러오는 중이에요. 잠시 후 다시 눌러주세요'); return; }
+  let url=null;
+  try{ url=cleanPhotoDataURL(_ie, 0.9); }
+  catch(e){ toast('이 사진은 저장하지 못했어요. 잠시 후 다시 시도해 주세요'); return; }  // 절대 멈추지 않게
+  if(url && _ie.onApply)_ie.onApply(url);
   closeImgEdit(); toast('사진을 수정했어요');
 }
 function toggleAddSpotP(ph){setAddSpot(ph,!ph.addSpotMode);}
@@ -5469,6 +5488,7 @@ function autoTidy(id){
 /* 업로드 완료 */
 async function publishPost(){
   if(!photos.length){toast('사진을 먼저 올려주세요');return;}
+  if(refLinkPending())return;   // 링크 적고 '추가' 안 누른 경우 안내
   if(SB && !authUser){toast('로그인 후 올릴 수 있어요');closeUpload();openAuth('login');return;}
   const title=($('#pTitle').value.trim()||'놀이');
   const body=composeBody();               // 항목별 칸을 합친 전체 글
