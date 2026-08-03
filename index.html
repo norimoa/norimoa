@@ -3344,6 +3344,18 @@ function _openDetail(p,startIdx){
   renderDetail();open_('detailOverlay');
 }
 function detailNav(d){_dIdx=(_dIdx+d+_dImgs.length)%_dImgs.length;renderDetail();}
+/* 모바일: 사진을 좌우로 스와이프해서 넘기기 */
+(function(){
+  const ph=document.getElementById('detailPhoto'); if(!ph)return;
+  let sx=0,sy=0,active=false,moved=false;
+  ph.addEventListener('touchstart',e=>{ if(e.touches.length!==1)return; sx=e.touches[0].clientX; sy=e.touches[0].clientY; active=true; moved=false; },{passive:true});
+  ph.addEventListener('touchmove',e=>{ if(!active)return; const t=e.touches[0]; if(Math.abs(t.clientX-sx)>10||Math.abs(t.clientY-sy)>10)moved=true; },{passive:true});
+  ph.addEventListener('touchend',e=>{ if(!active)return; active=false; if(!moved)return;
+    if(_dImgs.length<2)return;
+    const t=e.changedTouches[0], dx=t.clientX-sx, dy=t.clientY-sy;
+    if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.4){ detailNav(dx<0?1:-1); }
+  },{passive:true});
+})();
 /* 사진을 실제 파일로 기기(앨범·컴퓨터)에 저장 — 마이페이지 '저장'(북마크)과는 다른 기능 */
 async function saveImageToDevice(src, name){
   name=name||'nolimoa.jpg';
