@@ -1401,8 +1401,8 @@
       <!-- 사진 + AI 얼굴 인식 -->
       <div class="drop" id="drop" onclick="document.getElementById('file').click()">
         <div class="big">📷</div>
-        <div><b>사진 선택 또는 여기로 드래그</b></div>
-        <div style="font-size:12px;margin-top:4px">여러 장 한 번에 선택 가능 · AI가 유아 얼굴을 자동 모자이크해요</div>
+        <div><b>사진 선택 · 드래그 · 붙여넣기(Ctrl+V)</b></div>
+        <div style="font-size:12px;margin-top:4px">여러 장 한 번에 선택 가능 · 복사한 사진을 붙여넣어도 돼요 · AI가 유아 얼굴을 자동 모자이크해요</div>
       </div>
       <input type="file" id="file" accept="image/*" multiple hidden>
       <div id="photoTop" style="display:none">
@@ -4244,6 +4244,16 @@ async function uploadAttachments(){
 ['dragover','dragleave','drop'].forEach(ev=>{
   $('#drop').addEventListener(ev,e=>{e.preventDefault();
     if(ev==='drop'&&e.dataTransfer.files.length)addFiles(e.dataTransfer.files);});
+});
+/* 사진 복사 → 붙여넣기(Ctrl+V)로 바로 업로드 */
+document.addEventListener('paste', e=>{
+  const items=(e.clipboardData&&e.clipboardData.items)||[];
+  const files=[];
+  for(const it of items){ if(it.kind==='file' && it.type && it.type.startsWith('image/')){ const f=it.getAsFile(); if(f)files.push(f); } }
+  if(!files.length)return; // 이미지가 아니면(그냥 글자 붙여넣기 등) 방해하지 않음
+  const isOn=id=>{ const el=document.getElementById(id); return el&&el.classList.contains('on'); };
+  if(isOn('editOverlay')){ e.preventDefault(); addEditPhotos(files); toast('붙여넣은 사진을 추가했어요'); }
+  else if(isOn('uploadOverlay')){ e.preventDefault(); addFiles(files); toast('붙여넣은 사진을 추가했어요'); }
 });
 $('#pxRange').addEventListener('input',e=>{pxStrength=+e.target.value;photos.forEach(renderCanvasP);});
 
