@@ -176,6 +176,7 @@
   .overlay.on{display:flex}
   .modal{background:#fff;border-radius:18px;width:100%;max-width:420px;max-height:82vh;
     overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .modal.teacher-modal{max-width:640px}   /* 프로필 팝업은 더 넓게 (스탯 한 줄 + 오른쪽 버튼 여유) */
   .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;
     border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff}
   .modal-head b{font-size:17px}
@@ -843,7 +844,7 @@
   .pf-photo{position:relative;border-radius:12px;overflow:hidden;background:#e9e9ee;cursor:pointer;align-self:center;max-width:100%}
   .pf-photo img{width:100%;display:block;max-height:70vh;object-fit:contain;background:#f3efec}
   .pf-photo .pcount{background:#dd5b8d;color:#fff;left:8px;right:auto;bottom:8px;top:auto}
-  .pf-desc{font-size:14.5px;line-height:1.7;color:#4a3f39;margin-top:10px;white-space:pre-wrap;word-break:break-word}
+  .pf-desc{font-size:14.5px;line-height:1.7;color:#4a3f39;margin-top:10px;white-space:pre-wrap;word-break:break-word;text-align:center}
   @media(max-width:980px){
     .pf-stack{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
     .pf-item{display:block}
@@ -1372,7 +1373,7 @@
 
 <!-- ============ 선생님 프로필 모달 ============ -->
 <div class="overlay" id="teacherOverlay" onclick="if(event.target===this)close_('teacherOverlay')">
-  <div class="modal">
+  <div class="modal teacher-modal">
     <div class="modal-head"><b>선생님 프로필</b><button class="x" onclick="close_('teacherOverlay')">×</button></div>
     <div class="teacher-head" id="teacherHead"></div>
     <div class="prof-body" id="teacherPosts"></div>
