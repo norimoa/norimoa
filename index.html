@@ -143,7 +143,10 @@
   .rank .n{color:var(--coral-tx);font-weight:700;width:14px}
   .rank .ic{width:22px;text-align:center}
   .rank .t{flex:1;font-weight:600}
-  .rank .h{color:var(--coral-tx);font-size:12px}
+  .rank .h{color:var(--coral-tx);font-size:12px;white-space:nowrap}
+  .rank .tr-av{width:26px;height:26px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-size:13px;color:#fff;overflow:hidden}
+  .rank .tr-av img{width:100%;height:100%;object-fit:cover}
+  .teacher-rank .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .poptags{display:flex;flex-wrap:wrap;gap:8px}
   .poptags span{background:var(--pink-bg);color:var(--pink-tx);font-size:12.5px;padding:6px 11px;border-radius:16px}
 
@@ -247,6 +250,8 @@
   .toast.on{opacity:1}
   .auth-msg{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.6;background:#fbf1ee;border:1px solid #f0d9d2;color:#8d5a44}
   .auth-msg.err{background:#fdecec;border-color:#f3c9c9;color:#b5423a}
+  .auth-switch{text-align:center;margin-top:14px;font-size:13px;color:var(--sub)}
+  .auth-switch a{color:var(--coral-tx);font-weight:700;cursor:pointer;text-decoration:underline}
   .auth-msg button{margin-top:8px;background:#8d5a44;color:#fff;border:none;border-radius:9px;padding:8px 12px;font-size:12.5px;font-weight:700;cursor:pointer}
   .pulse-btn{animation:pulseBtn 1.1s ease-in-out infinite}
   @keyframes pulseBtn{0%{box-shadow:0 0 0 0 rgba(221,91,141,.5)}70%{box-shadow:0 0 0 9px rgba(221,91,141,0)}100%{box-shadow:0 0 0 0 rgba(221,91,141,0)}}
@@ -815,15 +820,19 @@
   .ph-hash{margin-top:8px;font-size:15px;color:#8a8a92;line-height:1.6}
   .ph-hash .htag{color:var(--coral-tx);font-weight:600}
   .ph-hash-in{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:15px}   /* 글 내용 박스 안 해시태그 */
-  .engage-box{background:var(--pink-bg);border-radius:14px;padding:12px 18px;margin:4px 0 12px}  /* 연분홍 참여 지표 박스 */
+  .engage-box{background:var(--pink-bg);border-radius:14px 14px 0 0;padding:12px 18px;margin:4px 0 0}  /* 연분홍 참여 박스 — 아래 글내용 박스와 붙음 */
+  .ph-cats{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+  .cat-chip{background:var(--pink-bg);color:var(--coral-tx);border:none;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer}
+  .cat-chip:hover{background:#f3c9c9}
+  .feed-author-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--pink-bg);color:var(--coral-tx);border-radius:12px;padding:11px 15px;margin-bottom:12px;font-size:14.5px}
+  .feed-author-bar button{border:none;background:#fff;color:var(--coral-tx);border-radius:14px;padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
   .engage-box .ph-meta{margin-top:0}
   .engage-box .pa-btn{color:var(--coral-tx)}
   .ph-meta{margin-top:12px;display:flex;align-items:center;justify-content:flex-end;gap:16px;flex-wrap:wrap}  /* 오른쪽 정렬 */
   .ph-meta .pa-btn{font-size:14.5px;font-weight:600;padding:2px 0;color:#4a4a52}   /* 조회수도 하트·저장 등과 동일 */
   .ph-meta .pa-btn.stat{cursor:default}
   .ph-meta .pa-btn svg{width:20px;height:20px}
-  .ac-name{display:inline-flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-  .ac-date{color:var(--sub);font-size:12.5px;font-weight:400;white-space:nowrap}
+  .ac-date{margin-left:auto;align-self:center;color:var(--sub);font-size:13px;font-weight:400;white-space:nowrap}   /* 이름/직업 가운데 높이, 오른쪽 */
   .ph-engage{display:inline-flex;align-items:center;gap:16px}
   .ph-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:14px;padding-bottom:2px;flex-wrap:wrap}
   .pa-btn{border:none;background:none;color:#4a4a52;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 2px}
@@ -843,12 +852,12 @@
   .nuri-chip{background:#eef2ff;color:#5b6bd6;font-size:12.5px;padding:6px 12px;border-radius:14px;font-weight:600}
   .author-card{display:flex;align-items:center;gap:12px;padding:14px 18px;margin-bottom:14px}
   .author-card .ac-who{display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer}
-  .author-card .ac-actions{margin-left:auto;display:flex;gap:8px;flex:0 0 auto}
+  .author-card .ac-actions{margin-left:12px;display:flex;gap:8px;flex:0 0 auto}
   .author-card .av{width:44px;height:44px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;flex:0 0 auto}
   .author-card b{font-size:15px}.author-card small{display:block;color:var(--sub);font-size:12.5px}
   .ph-meta .pm-views{display:inline-flex;align-items:center;gap:5px}
   .ph-meta .pm-views svg{width:16px;height:16px}
-  .post-detail-body{padding:20px;font-size:16.5px;line-height:1.95;color:#3a352f;white-space:pre-wrap;margin-bottom:4px}
+  .post-detail-body{padding:20px;font-size:16.5px;line-height:1.95;color:#3a352f;white-space:pre-wrap;margin:0 0 14px;border-top-left-radius:0;border-top-right-radius:0}   /* 위 핑크 박스와 붙게 */
   .htag{color:var(--coral-tx);cursor:pointer;font-weight:700}
   .htag:hover{text-decoration:underline}
   .pd-sec{margin-top:24px}
@@ -892,7 +901,7 @@
   .cmt-input{display:flex;gap:10px;align-items:center;margin-top:14px}
   .cmt-input .av.sm{width:34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 auto}
   .cmt-input input{flex:1;border:1px solid #e7dcd6;border-radius:20px;padding:11px 15px;font-size:13.5px;background:#fafafb;font-family:inherit}
-  .cmt-input button{border:none;background:var(--coral);color:#fff;border-radius:18px;padding:11px 16px;font-weight:700;font-size:13px}
+  .cmt-input button{border:none;background:var(--coral);color:#fff;border-radius:18px;padding:11px 16px;font-weight:700;font-size:13px;white-space:nowrap;flex:0 0 auto}
   .rel-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
   .rel-card{border:1px solid #eee;background:#fff;border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;box-shadow:var(--shadow)}
   .rel-card .rc-ic{font-size:22px;margin-bottom:6px}
@@ -1251,10 +1260,7 @@
       <div class="rank" onclick="filterByLabel('얼음')"><span class="n">2</span><span class="ic">🧊</span><span class="t">#얼음</span><span class="h">♥ 4.2k</span></div>
       <div class="rank" onclick="filterByLabel('수박 수영장')"><span class="n">3</span><span class="ic">🍉</span><span class="t">#수박 수영장</span><span class="h">♥ 5.2k</span></div>
     </div>
-    <div class="panel">
-      <h4>🏷 인기 태그</h4>
-      <div class="poptags" id="popTags"></div>
-    </div>
+    <div class="panel" id="topTeachersPanel"></div>
   </aside>
 </div>
 
@@ -1356,6 +1362,7 @@
         <div class="nick-status" id="nickStatus"></div></div>
       <button class="btn-fill wide" id="authSubmitBtn" style="margin-top:6px" onclick="doAuth()">계속하기</button>
       <div id="authMsg" class="auth-msg" style="display:none"></div>
+      <div class="auth-switch" id="authSwitch"></div>
     </div>
   </div>
 </div>
@@ -1403,7 +1410,7 @@
 <!-- ============ 선생님 프로필 모달 ============ -->
 <div class="overlay" id="teacherOverlay" onclick="if(event.target===this)close_('teacherOverlay')">
   <div class="modal teacher-modal">
-    <div class="modal-head"><b>선생님 프로필</b><button class="x" onclick="close_('teacherOverlay')">×</button></div>
+    <div class="modal-head"><b>프로필</b><button class="x" onclick="close_('teacherOverlay')">×</button></div>
     <div class="teacher-head" id="teacherHead"></div>
     <div class="prof-body" id="teacherPosts"></div>
   </div>
@@ -1856,12 +1863,21 @@ function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clea
 function t(id){return teachers.find(x=>x.id===id);}
 
 /* ---------------- render feed ---------------- */
+let _feedAuthor=null, _feedAuthorName='';
+function showTeacherFeed(key, name){ _feedAuthor=key; _feedAuthorName=name||'선생님'; renderFeed(); window.scrollTo(0,0); }
+function clearTeacherFeed(){ _feedAuthor=null; renderFeed(); }
 function renderFeed(){
   const wrap=$('#feed');wrap.innerHTML='';
-  const filtered = SB
+  let filtered = SB
     ? (window._dbPosts||[]).filter(p=>myFollowing.has(p.user_id))
     : posts.filter(p=>t(p.tid).following);
+  if(_feedAuthor){ filtered = allPosts().filter(p=>authorKey(p)===_feedAuthor); }  // 선택한 선생님 글만 최신순
   window._feed=filtered;
+  if(_feedAuthor){
+    const bar=document.createElement('div'); bar.className='feed-author-bar';
+    bar.innerHTML=`<span><b>${esc(_feedAuthorName)}</b> 선생님의 글</span><button onclick="clearTeacherFeed()">✕ 전체 보기</button>`;
+    wrap.appendChild(bar);
+  }
   filtered.forEach((p,i)=>{
     const a=authorOf(p);
     const isMe = !!((p.user_id&&authUser&&p.user_id===authUser.id)||(a&&a.id==='me'));
@@ -1900,11 +1916,11 @@ function renderStories(){
     (window._dbPosts||[]).forEach(p=>{ if(myFollowing.has(p.user_id)&&!seen.has(p.user_id)){seen.add(p.user_id);
       const a=authorOf(p); const d=document.createElement('div');d.className='story';
       d.innerHTML=`<div class="ring"><div class="av" style="${avStyle(a)}">${avInner(a)}</div></div><small>${esc((a.name||'').replace(' 선생님',''))}</small>`;
-      d.querySelector('.ring').onclick=()=>openAuthor(p); s.appendChild(d); }});
+      d.querySelector('.ring').onclick=()=>showTeacherFeed(authorKey(p),(a.name||'선생님')); s.appendChild(d); }});
   }else{
     teachers.filter(x=>x.following).forEach(tt=>{
       const d=document.createElement('div');d.className='story';
-      d.innerHTML=`<div class="ring" onclick="openFollowing()"><div class="av" style="background:${tt.color}">${tt.init}</div></div><small>${tt.name.replace(' 선생님','')}</small>`;
+      d.innerHTML=`<div class="ring" onclick="showTeacherFeed('${tt.id}','${(tt.name||'').replace(/'/g,"\\'")}')"><div class="av" style="background:${tt.color}">${tt.init}</div></div><small>${tt.name.replace(' 선생님','')}</small>`;
       s.appendChild(d);
     });
   }
@@ -2184,6 +2200,9 @@ function openAuth(mode){
   const pw2f=$('#authPw2Field'); if(pw2f)pw2f.style.display=mode==='login'?'none':'block';   // 비밀번호 확인: 회원가입에서만
   const pw2=$('#authPw2'); if(pw2)pw2.value='';
   const pwm=$('#pwMatch'); if(pwm){pwm.textContent='';pwm.className='nick-status';}
+  const sw=$('#authSwitch'); if(sw)sw.innerHTML = mode==='login'
+    ? `계정이 없으신가요? <a onclick="openAuth('signup')">회원가입</a>`
+    : `이미 계정이 있으신가요? <a onclick="openAuth('login')">로그인</a>`;
   const st=$('#nickStatus');if(st){st.textContent='';st.className='nick-status';}_nickOK=false;
   if(typeof authInfoClear==='function')authInfoClear();
   open_('authOverlay');
@@ -2639,6 +2658,7 @@ function renderPostPage(p){
   const a=authorOf(p), imgs=imagesOf(p);
   const nuriChips=(p.nuri||[]).map(n=>`<span class="nuri-chip">${nuriLabel(n)}</span>`).join('');
   const catCards=(p.tags||[]).slice(0,4).map(tg=>`<button class="rel-card" onclick="filterByLabel('${tagQ(tg)}')"><div class="rc-ic">🏷️</div><b>#${esc(noSpace(tg))}</b><span>›</span></button>`).join('');
+  const catChips=(p.categories||[]).map(c=>`<button class="cat-chip" onclick="filterByLabel('${String(c).replace(/'/g,"\\'")}')">${esc(c)}</button>`).join('');
   const photos=imgs.map((im,idx)=>{
     const spot=(im.spots&&im.spots.length)?'<span class="pcount">🏷️ 상품 태그</span>':'';
     const desc=(im.desc&&im.desc.trim())?`<div class="pf-desc">${linkifyTags(im.desc,p.tags)}</div>`:'';
@@ -2649,13 +2669,15 @@ function renderPostPage(p){
   $('#postBody').innerHTML=`
     <div class="post-hero">
       <h1 class="ph-title">${esc((p.title||'놀이').replace(/^#/,''))}</h1>
+      ${catChips?`<div class="ph-cats">${catChips}</div>`:''}
       ${nuriChips?`<div class="ph-nuri">${nuriChips}</div>`:''}
     </div>
     <div class="card author-card">
       <div class="ac-who" onclick="openAuthor(_currentPost)">
         <div class="av" style="${avStyle(a)}">${avInner(a)}</div>
-        <div><div class="ac-name"><b>${a?a.name:'선생님'}</b>${p.date?`<span class="ac-date">${esc(p.date)}</span>`:''}</div><small>${(a&&a.org)||''}</small></div>
+        <div><b>${a?a.name:'선생님'}</b><small>${(a&&a.org)||''}</small></div>
       </div>
+      ${p.date?`<span class="ac-date">${esc(p.date)}</span>`:''}
       ${canEdit(p)?`<div class="ac-actions">
         <button class="pa-ico" onclick="openEdit()" title="수정">${ICO.edit}</button>
         <button class="pa-ico del" onclick="deletePost()" title="삭제">${ICO.trash}</button>
@@ -2664,7 +2686,6 @@ function renderPostPage(p){
     <div class="engage-box"><div class="ph-meta"><span class="pa-btn stat" title="조회"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> <b id="phViews">${p.views||'0'}</b></span><span class="ph-engage" id="phEngage"></span></div></div>
     <div class="card post-detail-body">${linkifyTags(p.desc,p.tags)}${hashLine?`<div class="ph-hash ph-hash-in">${linkifyTags(hashLine,p.tags)}</div>`:''}</div>
     <div class="pd-sec">
-      <h4>🖼️ 놀이 사진 <span class="hint">사진을 클릭하면 크게 볼 수 있어요 · ⬇ 저장으로 기기·앨범에 내려받기</span></h4>
       <div class="pf-stack">${photos}</div>
     </div>
     ${(p.attachments&&p.attachments.length)?`<div class="pd-sec"><h4>📎 첨부파일</h4><div class="attach-list">${p.attachments.map((a,ai)=>`<a class="attach-chip" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name)}" onclick="recordDownload('${(a.url||'').replace(/'/g,"\\'")}','${p.id||''}',${ai})">📄 <b>${esc(a.name)}</b><span>${fmtSize(a.size)} · ⬇ <b id="dln-${ai}">${(window._dlCounts&&window._dlCounts[a.url])||0}</b>명</span></a>`).join('')}</div></div>`:''}
@@ -3142,6 +3163,7 @@ function seedNotifs(){
 function unreadCount(){return notifications.filter(n=>!n.read).length;}
 function renderBell(){const c=unreadCount();['bellBadge','btBellBadge'].forEach(id=>{const bd=$('#'+id);if(bd){bd.textContent=c;bd.style.display=c?'grid':'none';}});}
 async function openNotif(){
+  if(!SB && !notifications.length){ try{ seedNotifs(); }catch(e){} }   // 데모/미리보기: 예시 알림 표시
   try{ renderNotifList(); }catch(e){ const b=$('#notifList'); if(b)b.innerHTML='<div class="empty">새 알림이 없어요</div>'; }
   open_('notifOverlay');
   try{ localStorage.setItem('nolimoa_notif_seen', String(Date.now())); }catch(e){}
@@ -3591,6 +3613,33 @@ function renderWeekPop(){
     html+=`<div class="rank" onclick="filterByLabel('${tagQ(t)}')"><span class="n">${i+1}</span><span class="ic">🏷️</span><span class="t">#${esc(noSpace(t))}</span><span class="h">♥ ${sum.toLocaleString()}</span></div>`; });
   panel.innerHTML=html;
 }
+/* 이 달의 인기 선생님: 조회·좋아요·댓글·저장 합산 상위 5명 */
+function teacherScore(p){
+  const v=parseInt(String(p&&p.views||'0').replace(/[^\d]/g,''),10)||0;
+  return ((p&&p.like)||0)*3 + ((p&&p.saves)||0)*3 + ((p&&p.cmt)||0)*2 + v;
+}
+function renderTopTeachers(){
+  const panel=$('#topTeachersPanel'); if(!panel)return;
+  const map={};
+  allPosts().forEach(p=>{
+    const key=authorKey(p); if(!key)return;
+    if(!map[key]){ const a=authorOf(p)||{}; map[key]={key, a, name:(a&&a.name)||'선생님', score:0, post:p}; }
+    map[key].score += teacherScore(p);
+  });
+  const top=Object.values(map).sort((a,b)=>b.score-a.score).slice(0,5);
+  window.__topT={}; top.forEach(t=>window.__topT[t.key]=t.post);
+  let html='<h4>🏆 이 달의 인기 선생님</h4>';
+  if(!top.length || top[0].score===0){ html+='<div class="empty" style="padding:8px 0;font-size:12.5px">아직 순위가 모이는 중이에요</div>'; }
+  else top.forEach((t,i)=>{
+    const a=t.a||{};
+    html+=`<div class="rank teacher-rank" onclick="openAuthor(window.__topT['${String(t.key).replace(/'/g,"\\'")}'])">`+
+      `<span class="n">${i+1}</span>`+
+      `<span class="tr-av" style="${avStyle(a)}">${avInner(a)}</span>`+
+      `<span class="t">${esc(t.name)}</span>`+
+      `<span class="h">🔥 ${t.score.toLocaleString()}</span></div>`;
+  });
+  panel.innerHTML=html;
+}
 /* '더보기 ▾' ↔ '접기 ▴' 토글 (두 번째 줄 펼치기) */
 function expandRow(gridId, btnId){
   const g=$('#'+gridId), b=$('#'+btnId); if(!g)return;
@@ -3621,6 +3670,7 @@ function renderBrowse(){
   tags.forEach(tag=>{const s=document.createElement('button');s.className='br-tag';s.textContent='#'+noSpace(tag);
     s.onclick=()=>filterByLabel(tag);tg.appendChild(s);});
   renderWeekPop();
+  renderTopTeachers();
   renderNoticeBar();
   renderBrowseFeed();
 }
@@ -3766,12 +3816,20 @@ function miniCardPost(p){
   return el;
 }
 function authorOf(p){return p.author?p.author:t(p.tid);}
-/* 라벨(카테고리/태그)로 관련 놀이 필터 — 태그·제목·카테고리·누리 모두 확인 */
+/* 같은 뜻으로 취급할 동의어 그룹 (검색·필터에서 서로 같은 걸로 인식) */
+const SYN_GROUPS=[['재활용','업사이클링','업사이클','리사이클','리사이클링']];
+function synForms(label){
+  const L=dePlay(label)||noSpace(String(label||'').toLowerCase());
+  for(const g of SYN_GROUPS){ const gd=g.map(dePlay); if(gd.some(x=>x===L||x.includes(L)||L.includes(x))) return gd.filter(Boolean); }
+  return [L].filter(Boolean);
+}
+/* 라벨(카테고리/태그)로 관련 놀이 필터 — 태그·제목·카테고리·누리 모두 확인 (동의어 포함) */
 function matchesFilter(p,label){
   if(!label)return true;
-  const L=dePlay(label)||noSpace(label.toLowerCase()); // 공백·'놀이' 무시 → '수박'과 '수박놀이' 동일 취급
-  const inArr=a=>(a||[]).some(x=>dePlay(x).includes(L));
-  return inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||dePlay(p.title||'').includes(L);
+  const forms=synForms(label); // 공백·'놀이' 무시 + 동의어
+  const hit=v=>{const d=dePlay(v); return forms.some(L=>L&&d.includes(L));};
+  const inArr=a=>(a||[]).some(hit);
+  return inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||hit(p.title||'');
 }
 function filterByLabel(label){
   ['detailOverlay','teacherOverlay','catOverlay','socialOverlay'].forEach(id=>close_(id));
@@ -3798,9 +3856,10 @@ function renderBrowseFeed(){
   const q=($('#brSearch').value||'').trim();
   let list=(window._dbPosts||[]).concat(posts);  // 실제 글 먼저, 그 뒤 데모
   if(browseFilter)list=list.filter(p=>matchesFilter(p,browseFilter));
-  if(q){const qn=dePlay(q)||noSpace(q.toLowerCase()); // '놀이' 접미사 무시하고 검색
+  if(q){const forms=synForms(q); // '놀이' 접미사 무시 + 동의어(재활용=업사이클링)
     list=list.filter(p=>{const a=authorOf(p);
-      return dePlay(p.title+' '+p.desc+' '+(p.tags||[]).join(' ')+' '+((a&&a.name)||'')).includes(qn);});}
+      const hay=dePlay(p.title+' '+p.desc+' '+(p.tags||[]).join(' ')+' '+((a&&a.name)||''));
+      return forms.some(f=>f&&hay.includes(f));});}
   // 카테고리 선택·해시태그 검색 시엔 인기순(좋아요·저장·조회 많은 순)으로 정렬
   if(browseFilter||q){ list=list.slice().sort((a,b)=>popScore(b)-popScore(a)); }
   window._browse=list;
@@ -4092,7 +4151,7 @@ function renderAuthorInto(p, headEl, bodyEl, full){
   const fwId=full?'pfFollowers2':'pfFollowers', fgId=full?'pfFollowing2':'pfFollowing';
   const statsHTML = `<div class="prof-stats"><span><b>${tp.length}</b> 게시물</span><span><b id="${fwId}">–</b> 팔로워</span><span><b id="${fgId}">–</b> 팔로잉</span></div>`;
   const actions = (followBtn || !full)
-    ? `<div class="prof-actions-col">${followBtn}${!full?'<button class="prof-expand" onclick="expandProfile()">프로필 보러 가기 ›</button>':''}</div>`
+    ? `<div class="prof-actions-col">${followBtn}${!full?'<button class="prof-expand" onclick="expandProfile()">프로필 보기 ›</button>':''}</div>`
     : '';
   headEl.innerHTML=`<div class="av" style="${avStyle(a)}">${avInner(a)}</div>
     <div class="tinfo"><b>${esc(a.name||'선생님')}</b><small>${esc(a.org||'')}</small>${statsHTML}</div>${actions}`;
@@ -4319,7 +4378,7 @@ function go(v){
   document.body.classList.toggle('nav-browse', v==='browse'); // 카테고리·알림 버튼은 둘러보기에서만
   window.scrollTo(0,0);
   if(v==='browse')renderBrowse();
-  if(v==='sub')renderFeed();     // 팔로잉 탭 열 때마다 최신 팔로우 반영
+  if(v==='sub'){ _feedAuthor=null; renderFeed(); }     // 팔로잉 탭: 전체 보기로 초기화
   if(v==='my')renderMyPage();
   if(v==='comm'){ renderCommunity(); loadCommunity().then(renderCommunity); }
   if(v==='env')renderEnv();
