@@ -822,10 +822,12 @@
   .ph-hash-in{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:15px}   /* 글 내용 박스 안 해시태그 */
   .engage-box{background:var(--pink-bg);border-radius:14px 14px 0 0;padding:12px 18px;margin:4px 0 0}  /* 연분홍 참여 박스 — 아래 글내용 박스와 붙음 */
   .ph-cats{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
-  .cat-chip{background:var(--coral);color:#fff;border:none;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer}   /* 연갈색 + 흰 글씨 */
-  .cat-chip:hover{background:#786860}
-  .cat-chip .cc-par{font-weight:600;opacity:.92}
-  .cat-chip .cc-sep{opacity:.7;margin:0 5px;font-weight:400}
+  .cat-chip{display:inline-flex;align-items:center;background:var(--line);color:var(--ink);border:1px solid #e2dcd6;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700}   /* 크림색 + 검정 글씨 */
+  .cat-chip .cc-par{font-weight:600;color:var(--sub)}
+  .cat-chip .cc-sep{color:var(--sub);opacity:.85;margin:0 5px;font-weight:400}
+  .cat-chip .cc-it{cursor:pointer}
+  .cat-chip .cc-it:hover{text-decoration:underline}
+  .cat-chip .cc-mid{color:var(--sub);opacity:.55;margin:0 6px;font-weight:400}
   .feed-author-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--pink-bg);color:var(--coral-tx);border-radius:12px;padding:11px 15px;margin-bottom:12px;font-size:14.5px}
   .feed-author-bar button{border:none;background:#fff;color:var(--coral-tx);border-radius:14px;padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
   .engage-box .ph-meta{margin-top:0}
@@ -2661,10 +2663,17 @@ function renderPostPage(p){
   const a=authorOf(p), imgs=imagesOf(p);
   const nuriChips=(p.nuri||[]).map(n=>`<span class="nuri-chip">${nuriLabel(n)}</span>`).join('');
   const catCards=(p.tags||[]).slice(0,4).map(tg=>`<button class="rel-card" onclick="filterByLabel('${tagQ(tg)}')"><div class="rc-ic">🏷️</div><b>#${esc(noSpace(tg))}</b><span>›</span></button>`).join('');
-  const catChips=(p.categories||[]).map(c=>{
-    const par=catParent(c);
-    const inner = par ? `<span class="cc-par">${esc(par)}</span><span class="cc-sep">›</span>${esc(c)}` : esc(c);
-    return `<button class="cat-chip" onclick="filterByLabel('${String(c).replace(/'/g,"\\'")}')">${inner}</button>`;
+  // 상위 항목별로 묶기: 같은 부모(놀이유형 등)의 자식들을 한 칩에 모아서 표시
+  const _cg={}, _cOrder=[];
+  (p.categories||[]).forEach(c=>{
+    const par=catParent(c)||'';
+    if(!(par in _cg)){ _cg[par]=[]; _cOrder.push(par); }
+    if(!_cg[par].includes(c))_cg[par].push(c);
+  });
+  const catChips=_cOrder.map(par=>{
+    const items=_cg[par].map(c=>`<span class="cc-it" onclick="filterByLabel('${String(c).replace(/'/g,"\\'")}')">${esc(c)}</span>`).join('<span class="cc-mid">·</span>');
+    const head = par ? `<span class="cc-par">${esc(par)}</span><span class="cc-sep">›</span>` : '';
+    return `<span class="cat-chip">${head}${items}</span>`;
   }).join('');
   const photos=imgs.map((im,idx)=>{
     const spot=(im.spots&&im.spots.length)?'<span class="pcount">🏷️ 상품 태그</span>':'';
