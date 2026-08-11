@@ -822,8 +822,10 @@
   .ph-hash-in{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:15px}   /* 글 내용 박스 안 해시태그 */
   .engage-box{background:var(--pink-bg);border-radius:14px 14px 0 0;padding:12px 18px;margin:4px 0 0}  /* 연분홍 참여 박스 — 아래 글내용 박스와 붙음 */
   .ph-cats{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
-  .cat-chip{background:var(--pink-bg);color:var(--coral-tx);border:none;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer}
-  .cat-chip:hover{background:#f3c9c9}
+  .cat-chip{background:var(--coral);color:#fff;border:none;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer}   /* 연갈색 + 흰 글씨 */
+  .cat-chip:hover{background:#786860}
+  .cat-chip .cc-par{font-weight:600;opacity:.92}
+  .cat-chip .cc-sep{opacity:.7;margin:0 5px;font-weight:400}
   .feed-author-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--pink-bg);color:var(--coral-tx);border-radius:12px;padding:11px 15px;margin-bottom:12px;font-size:14.5px}
   .feed-author-bar button{border:none;background:#fff;color:var(--coral-tx);border-radius:14px;padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
   .engage-box .ph-meta{margin-top:0}
@@ -2645,6 +2647,7 @@ function openPost(p){
   $('#v-post').classList.add('on');window.scrollTo(0,0);
   if(!fromDetail) backGuardPush();   // 뒤로가기로 목록으로 돌아올 수 있게
 }
+function viewLabel(v){ return ({browse:'둘러보기',sub:'팔로잉',my:'마이페이지',comm:'커뮤니티',env:'환경구성',about:'놀이모아 소개',privacy:'개인정보처리방침'})[v]||'둘러보기'; }
 function postBack(fromPop){
   if(!fromPop) backGuardConsume();
   const to=_postBack, y=_scrollPos[to]||0;
@@ -2658,13 +2661,17 @@ function renderPostPage(p){
   const a=authorOf(p), imgs=imagesOf(p);
   const nuriChips=(p.nuri||[]).map(n=>`<span class="nuri-chip">${nuriLabel(n)}</span>`).join('');
   const catCards=(p.tags||[]).slice(0,4).map(tg=>`<button class="rel-card" onclick="filterByLabel('${tagQ(tg)}')"><div class="rc-ic">🏷️</div><b>#${esc(noSpace(tg))}</b><span>›</span></button>`).join('');
-  const catChips=(p.categories||[]).map(c=>`<button class="cat-chip" onclick="filterByLabel('${String(c).replace(/'/g,"\\'")}')">${esc(c)}</button>`).join('');
+  const catChips=(p.categories||[]).map(c=>{
+    const par=catParent(c);
+    const inner = par ? `<span class="cc-par">${esc(par)}</span><span class="cc-sep">›</span>${esc(c)}` : esc(c);
+    return `<button class="cat-chip" onclick="filterByLabel('${String(c).replace(/'/g,"\\'")}')">${inner}</button>`;
+  }).join('');
   const photos=imgs.map((im,idx)=>{
     const spot=(im.spots&&im.spots.length)?'<span class="pcount">🏷️ 상품 태그</span>':'';
     const desc=(im.desc&&im.desc.trim())?`<div class="pf-desc">${linkifyTags(im.desc,p.tags)}</div>`:'';
     return `<div class="pf-item"><div class="pf-photo" onclick="openPhotos(_currentPost,${idx})"><img src="${im.img}" alt="">${spot}<button class="pdp-dl" onclick="event.stopPropagation();dlPostImg(${idx})" title="기기에 저장">⬇ 저장</button></div>${desc}</div>`;
   }).join('');
-  $('#ptMini').textContent=(p.title||'놀이').replace(/^#/,'');
+  $('#ptMini').textContent=viewLabel(_postBack);   // '뒤로' 옆에 돌아갈 이전 페이지 이름
   const hashLine=(p.tags||[]).map(x=>'#'+noSpace(x)).join(' ');
   $('#postBody').innerHTML=`
     <div class="post-hero">
@@ -3164,19 +3171,24 @@ function unreadCount(){return notifications.filter(n=>!n.read).length;}
 function renderBell(){const c=unreadCount();['bellBadge','btBellBadge'].forEach(id=>{const bd=$('#'+id);if(bd){bd.textContent=c;bd.style.display=c?'grid':'none';}});}
 async function openNotif(){
   if(!SB && !notifications.length){ try{ seedNotifs(); }catch(e){} }   // 데모/미리보기: 예시 알림 표시
-  try{ renderNotifList(); }catch(e){ const b=$('#notifList'); if(b)b.innerHTML='<div class="empty">새 알림이 없어요</div>'; }
   open_('notifOverlay');
+  // 지난 알림(좋아요·댓글·팔로우 기록)을 항상 최신으로 불러와서 목록에 그대로 표시
+  if(SB && authUser){
+    const box=$('#notifList');
+    if(box && !notifications.length) box.innerHTML='<div class="empty">알림을 불러오는 중…</div>';
+    try{ await loadNotifs(); }catch(e){}   // loadNotifs 내부에서 열려 있으면 목록을 다시 그림
+  }
+  try{ renderNotifList(); }catch(e){ const b=$('#notifList'); if(b)b.innerHTML='<div class="empty">아직 받은 알림이 없어요</div>'; }
   try{ localStorage.setItem('nolimoa_notif_seen', String(Date.now())); }catch(e){}
   notifications.forEach(n=>n.read=true); renderBell();
   if(SB && authUser){
     try{await SB.from('notifications').update({read:true}).eq('user_id',authUser.id).eq('read',false);}catch(e){}
-    loadNotifs(); // 최신 반응 다시 불러오기
   }
 }
 function notifPost(n){ return n.post || (n.postId ? allPosts().find(p=>p.id===n.postId) : null); }
 function renderNotifList(){
   const box=$('#notifList');box.innerHTML='';
-  if(!notifications.length){box.innerHTML='<div class="empty">새 알림이 없어요</div>';return;}
+  if(!notifications.length){box.innerHTML='<div class="empty">아직 받은 알림이 없어요<br><span style="font-size:12px;color:#a89a90">다른 선생님이 내 놀이에 좋아요·댓글을 남기거나 나를 팔로우하면 여기에 쌓여요</span></div>';return;}
   notifications.forEach(n=>{
     const post=notifPost(n);
     const t=post?`'${(post.title||'놀이').replace(/^#/,'')}'`:'';
@@ -3822,6 +3834,14 @@ function synForms(label){
   const L=dePlay(label)||noSpace(String(label||'').toLowerCase());
   for(const g of SYN_GROUPS){ const gd=g.map(dePlay); if(gd.some(x=>x===L||x.includes(L)||L.includes(x))) return gd.filter(Boolean); }
   return [L].filter(Boolean);
+}
+/* 카테고리 항목의 상위 그룹(놀이 주제·놀이 유형 등) 찾기 */
+let _catParentMap=null;
+function catParent(item){
+  if(!_catParentMap){ _catParentMap={};
+    try{ Object.values(catDrawer).forEach(sec=>(sec.groups||[]).forEach(g=>(g.items||[]).forEach(it=>{ if(!_catParentMap[it])_catParentMap[it]=g.g; }))); }catch(e){}
+  }
+  return _catParentMap[item]||'';
 }
 /* 라벨(카테고리/태그)로 관련 놀이 필터 — 태그·제목·카테고리·누리 모두 확인 (동의어 포함) */
 function matchesFilter(p,label){
