@@ -181,6 +181,14 @@
   .overlay{position:fixed;inset:0;background:rgba(20,20,30,.45);z-index:60;
     display:none;align-items:center;justify-content:center;padding:18px}
   .overlay.on{display:flex}
+  /* 업로드/수정 진행 중 로딩 창 */
+  .upload-mask{position:fixed;inset:0;z-index:130;display:none;align-items:center;justify-content:center;background:rgba(20,20,30,.5)}
+  .upload-mask.on{display:flex}
+  .upl-box{background:#fff;border-radius:16px;padding:26px 32px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:80vw}
+  .upl-box b{display:block;margin-top:15px;font-size:15px;color:#3a3a3f}
+  .upl-box small{display:block;margin-top:5px;font-size:12px;color:#8a8a92}
+  .upl-spin{width:38px;height:38px;border-radius:50%;border:4px solid #eee;border-top-color:var(--coral);margin:0 auto;animation:uplspin .8s linear infinite}
+  @keyframes uplspin{to{transform:rotate(360deg)}}
   .modal{background:#fff;border-radius:18px;width:100%;max-width:420px;max-height:82vh;
     overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
   .modal.teacher-modal{max-width:640px}   /* 프로필 팝업은 더 넓게 (스탯 한 줄 + 오른쪽 버튼 여유) */
@@ -642,16 +650,22 @@
   .detail-cap{color:#fff;padding:16px 6px 4px}
   .detail-cap h3{font-size:16px;margin-bottom:8px}
   .detail-cap p{font-size:13.5px;line-height:1.6;color:#d8d8dd}
-  .detail-dl{margin-top:12px;display:inline-flex;align-items:center;gap:6px;background:#fff;color:#4a3f39;border:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:10px;cursor:pointer}
+  .detail-dl{margin-top:12px;display:inline-flex;align-items:center;justify-content:center;background:#fff;color:#4a3f39;border:none;padding:9px;width:40px;height:40px;border-radius:50%;cursor:pointer}
   .detail-dl:active{transform:scale(.97)}
   .dots{display:flex;gap:6px;justify-content:center;margin-top:14px}
   .dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35)}
   .dots span.on{background:#fff}
-  .dnav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;
-    border:none;background:rgba(255,255,255,.92);color:#333;font-size:22px;line-height:1;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:7;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+  .dnav{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;
+    border:none;background:rgba(0,0,0,.28);color:rgba(255,255,255,.9);font-size:22px;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:7;box-shadow:none}
+  .dnav:active{background:rgba(0,0,0,.45)}
   .dnav.prev{left:10px}
   .dnav.next{right:10px}
+  /* 사진 오른쪽 위 투명 저장 버튼 */
+  .detail-dl-top{position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:50%;
+    border:none;background:rgba(0,0,0,.32);color:#fff;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;z-index:8}
+  .detail-dl-top:active{background:rgba(0,0,0,.5)}
 
   /* ---------- multi-photo upload ---------- */
   .up-strength{display:flex;align-items:center;gap:10px;font-size:13px;color:#555;margin:8px 0 14px}
@@ -1275,7 +1289,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812b</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812d</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1341,11 +1355,12 @@
       <img id="detailImg" src="">
       <button class="dnav prev" id="detailPrev" onclick="detailNav(-1)">‹</button>
       <button class="dnav next" id="detailNext" onclick="detailNav(1)">›</button>
+      <button class="detail-dl-top" onclick="downloadDetailImg()" aria-label="기기에 저장" title="기기에 저장"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
     </div>
     <div class="detail-cap">
       <h3 id="detailTitle"></h3>
       <p id="detailDesc"></p>
-      <button class="detail-dl" onclick="downloadDetailImg()">⬇ 이 사진 기기에 저장</button>
+      <button class="detail-dl" onclick="downloadDetailImg()" aria-label="기기에 저장" title="기기에 저장"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <div class="dots" id="detailDots"></div>
     </div>
   </div>
@@ -1511,7 +1526,11 @@
             <button type="button" class="fmt-sw" style="background:#e2749a" title="핑크" onclick="richColor('#e2749a')"></button>
             <button type="button" class="fmt-sw" style="background:#e8863d" title="주황" onclick="richColor('#e8863d')"></button>
             <button type="button" class="fmt-sw" style="background:#3cb4a0" title="초록" onclick="richColor('#3cb4a0')"></button>
-            <button type="button" class="fmt-sw" style="background:#5b8def" title="파랑" onclick="richColor('#5b8def')"></button>
+            <button type="button" class="fmt-sw" style="background:#5b8def" title="하늘" onclick="richColor('#5b8def')"></button>
+            <button type="button" class="fmt-sw" style="background:#e23b3b" title="빨강" onclick="richColor('#e23b3b')"></button>
+            <button type="button" class="fmt-sw" style="background:#2e9e3f" title="초록" onclick="richColor('#2e9e3f')"></button>
+            <button type="button" class="fmt-sw" style="background:#2563eb" title="파랑" onclick="richColor('#2563eb')"></button>
+            <button type="button" class="fmt-sw" style="background:#8b5cf6" title="보라" onclick="richColor('#8b5cf6')"></button>
           </span>
           <span class="fmt-div"></span>
           <span class="fmt-label">크기</span>
@@ -1711,7 +1730,11 @@
             <button type="button" class="fmt-sw" style="background:#e2749a" title="핑크" onclick="richColor('#e2749a')"></button>
             <button type="button" class="fmt-sw" style="background:#e8863d" title="주황" onclick="richColor('#e8863d')"></button>
             <button type="button" class="fmt-sw" style="background:#3cb4a0" title="초록" onclick="richColor('#3cb4a0')"></button>
-            <button type="button" class="fmt-sw" style="background:#5b8def" title="파랑" onclick="richColor('#5b8def')"></button>
+            <button type="button" class="fmt-sw" style="background:#5b8def" title="하늘" onclick="richColor('#5b8def')"></button>
+            <button type="button" class="fmt-sw" style="background:#e23b3b" title="빨강" onclick="richColor('#e23b3b')"></button>
+            <button type="button" class="fmt-sw" style="background:#2e9e3f" title="초록" onclick="richColor('#2e9e3f')"></button>
+            <button type="button" class="fmt-sw" style="background:#2563eb" title="파랑" onclick="richColor('#2563eb')"></button>
+            <button type="button" class="fmt-sw" style="background:#8b5cf6" title="보라" onclick="richColor('#8b5cf6')"></button>
           </span>
           <span class="fmt-div"></span>
           <span class="fmt-label">크기</span>
@@ -1749,6 +1772,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="upload-mask" id="uploadingOverlay"><div class="upl-box"><div class="upl-spin"></div><b id="uploadingMsg">글이 올라가는 중이에요…</b><small>잠시만 기다려 주세요</small></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1864,6 +1888,13 @@ const browsePosts = [
 /* ---------------- helpers ---------------- */
 const $=s=>document.querySelector(s);
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._);t._=setTimeout(()=>t.classList.remove('on'),1900);}
+/* 업로드/수정 중 로딩 창 표시 + 완료 버튼 잠금(중복 클릭 방지) */
+let _publishing=false;
+function showUploading(on,msg){
+  const m=$('#uploadingOverlay');
+  if(m){ if(msg){const t=$('#uploadingMsg'); if(t)t.textContent=msg;} m.classList.toggle('on',!!on); }
+  const b=$('#writeSubmit'); if(b){ b.disabled=!!on; b.style.opacity=on?'.55':''; b.style.pointerEvents=on?'none':''; }
+}
 function t(id){return teachers.find(x=>x.id===id);}
 
 /* ---------------- render feed ---------------- */
@@ -1954,7 +1985,8 @@ window.addEventListener('popstate', function(){
   if(_popSuppress>0){ _popSuppress--; return; }   // 화면에서 닫아서 생긴 back → 이미 닫힘
   closeTopScreen();                               // 기기·브라우저 뒤로가기 → 화면 하나 닫기
 });
-function open_(id){ const e=document.getElementById(id); if(!e)return; const was=e.classList.contains('on'); e.classList.add('on'); if(!was)backGuardPush(); }
+let _overlayOpenTs=0, _overlayOpenId='';
+function open_(id){ const e=document.getElementById(id); if(!e)return; const was=e.classList.contains('on'); e.classList.add('on'); _overlayOpenTs=Date.now(); _overlayOpenId=id; if(!was)backGuardPush(); }
 function close_(id){ const e=document.getElementById(id); if(!e)return; const was=e.classList.contains('on'); e.classList.remove('on'); if(was)backGuardConsume(); }
 /* 입력칸 안에서 드래그(글자 선택)하다 마우스를 창 밖(배경)에서 떼도 창이 닫히지 않게:
    드래그 시작 위치가 배경(overlay)이 아니면, 그 배경 클릭으로 인한 닫기를 막는다 */
@@ -1963,8 +1995,11 @@ function close_(id){ const e=document.getElementById(id); if(!e)return; const wa
   document.addEventListener('pointerdown', e=>{ _downT=e.target; }, true);
   document.addEventListener('click', e=>{
     const t=e.target;
-    if(t && t.classList && t.classList.contains('overlay') && _downT!==t){
-      e.stopImmediatePropagation(); e.preventDefault();   // 창 안에서 시작한 드래그 → 배경에서 놓아도 안 닫힘
+    if(t && t.classList && t.classList.contains('overlay')){
+      // 1) 창 안에서 시작한 드래그 → 배경에서 놓아도 안 닫힘
+      if(_downT!==t){ e.stopImmediatePropagation(); e.preventDefault(); return; }
+      // 2) 모바일 유령 클릭: 방금(약 0.5초 내) 열린 창은 배경 클릭으로 바로 닫지 않음
+      if(t.id===_overlayOpenId && (Date.now()-_overlayOpenTs)<500){ e.stopImmediatePropagation(); e.preventDefault(); return; }
     }
   }, true);
 })();
@@ -3152,7 +3187,10 @@ async function addEditPhotos(fileList){
   toast('사진을 추가했어요. 얼굴을 더 가리려면 사진을 눌러 수정하세요.');
 }
 async function saveEdit(){
+  if(_publishing) return;       // 중복 클릭(더블 저장) 방지
   const p=_editPost;if(!p)return;
+  _publishing=true; showUploading(true,'수정 내용을 저장하는 중이에요…');
+  try{
   const title=$('#pTitle').value.trim()||'놀이';
   const body=richToMarks($('#pBody'));
   syncBodyTags(true);
@@ -3179,6 +3217,7 @@ async function saveEdit(){
   _editPost=null;setWriteMode(false);close_('writeOverlay');renderPostPage(p);renderFeed();
   if($('#v-browse').classList.contains('on'))renderBrowseFeed();
   toast('수정되었어요');
+  } finally { _publishing=false; showUploading(false); }
 }
 
 /* ===== 알림 ===== */
@@ -5632,9 +5671,12 @@ function autoTidy(id){
 
 /* 업로드 완료 */
 async function publishPost(){
+  if(_publishing) return;       // 이미 올리는 중이면 두 번째 클릭 무시(더블 업로드 방지)
   if(!photos.length){toast('사진을 먼저 올려주세요');return;}
   if(refLinkPending())return;   // 링크 적고 '추가' 안 누른 경우 안내
   if(SB && !authUser){toast('로그인 후 올릴 수 있어요');closeUpload();openAuth('login');return;}
+  _publishing=true; showUploading(true,'글이 올라가는 중이에요…');
+  try{
   const title=($('#pTitle').value.trim()||'놀이');
   const body=composeBody();               // 항목별 칸을 합친 전체 글
   syncBodyTags(true);                     // 본문 맨 끝 해시태그까지 마저 수집
@@ -5686,6 +5728,7 @@ async function publishPost(){
     views:'0',like:0,cmt:0,liked:false,emoji:'🎨', spots:images[0].spots, attachments:demoAtts, refs:postRefs.slice()});
   toast(`놀이 ${images.length}장 업로드! (데모)`);
   clearPublishedDraft();resetUpload();closeUpload();go('browse');renderBrowse();
+  } finally { _publishing=false; showUploading(false); }
 }
 function resetUpload(){
   photos=[];$('#photoList').innerHTML='';closeSpotForm();resetSel();
