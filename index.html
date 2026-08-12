@@ -1289,7 +1289,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812e</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812f</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1360,7 +1360,6 @@
     <div class="detail-cap">
       <h3 id="detailTitle"></h3>
       <p id="detailDesc"></p>
-      <button class="detail-dl" onclick="downloadDetailImg()" aria-label="기기에 저장" title="기기에 저장"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <div class="dots" id="detailDots"></div>
     </div>
   </div>
@@ -2589,9 +2588,23 @@ function imagesOf(p){return (p.images&&p.images.length)?p.images:[{img:p.img,des
 function allPosts(){return (window._dbPosts||[]).concat(posts);}
 function authorKey(p){return (p&&p.user_id) || (p&&p.tid) || (p&&p.author&&p.author.name) || '';}
 function sameAuthor(a,b){return authorKey(a)&&authorKey(a)===authorKey(b);}
-function shareTag(a,b){const B=(b.tags||[]).map(dePlay).filter(Boolean);return (a.tags||[]).some(x=>{const d=dePlay(x);return d&&B.includes(d);});}
-function authorRelated(p){const l=allPosts().filter(q=>q!==p&&sameAuthor(q,p));const s=l.filter(q=>shareTag(q,p));return s.length?s:l;}
-function otherRelated(p){return allPosts().filter(q=>q!==p&&!sameAuthor(q,p)&&shareTag(q,p));}
+/* 관련도 계산: 카테고리 + 해시태그가 겹치면 '관련 있는' 놀이 (동의어·'놀이' 접미사·띄어쓰기 무시) */
+function relKeys(p){
+  const raw=[...(p.tags||[]), ...(p.categories||[])];
+  const set=new Set();
+  raw.forEach(x=>{
+    let forms=[x];
+    try{ if(typeof synForms==='function'){ const f=synForms(x); if(Array.isArray(f)&&f.length)forms=f; } }catch(e){}
+    forms.forEach(f=>{ const d=dePlay(f); if(d)set.add(d); });
+  });
+  return set;
+}
+function relScore(a,b){ const A=relKeys(a), B=relKeys(b); let n=0; A.forEach(k=>{ if(B.has(k))n++; }); return n; }
+function shareTag(a,b){ return relScore(a,b)>0; }
+// 글쓴이의 '관련' 놀이: 같은 사람 글 중 카테고리·태그가 겹치는 것만, 많이 겹치는 순
+function authorRelated(p){ return allPosts().filter(q=>q!==p&&sameAuthor(q,p)&&relScore(q,p)>0).sort((x,y)=>relScore(y,p)-relScore(x,p)); }
+// 다른 선생님들의 '관련' 글: 다른 사람 글 중 카테고리·태그가 겹치는 것만, 많이 겹치는 순
+function otherRelated(p){ return allPosts().filter(q=>q!==p&&!sameAuthor(q,p)&&relScore(q,p)>0).sort((x,y)=>relScore(y,p)-relScore(x,p)); }
 function nuriLabel(item){for(const g of nuriData){if(g.items.includes(item))return g.g+' &gt; '+item;}return item;}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 /* 업로드 날짜 표시 (예: 2026. 7. 29.) */
@@ -2729,7 +2742,7 @@ function renderPostPage(p){
   const photos=imgs.map((im,idx)=>{
     const spot=(im.spots&&im.spots.length)?'<span class="pcount">🏷️ 상품 태그</span>':'';
     const desc=(im.desc&&im.desc.trim())?`<div class="pf-desc">${linkifyTags(im.desc,p.tags)}</div>`:'';
-    return `<div class="pf-item"><div class="pf-photo" onclick="openPhotos(_currentPost,${idx})"><img src="${im.img}" alt="">${spot}<button class="pdp-dl" onclick="event.stopPropagation();dlPostImg(${idx})" title="기기에 저장">⬇ 저장</button></div>${desc}</div>`;
+    return `<div class="pf-item"><div class="pf-photo" onclick="openPhotos(_currentPost,${idx})"><img src="${im.img}" alt="">${spot}</div>${desc}</div>`;
   }).join('');
   $('#ptMini').textContent=viewLabel(_postBack);   // '뒤로' 옆에 돌아갈 이전 페이지 이름
   const hashLine=(p.tags||[]).map(x=>'#'+noSpace(x)).join(' ');
