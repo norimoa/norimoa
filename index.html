@@ -1275,7 +1275,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀</div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812b</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -3194,18 +3194,23 @@ function seedNotifs(){
 function unreadCount(){return notifications.filter(n=>!n.read).length;}
 function renderBell(){const c=unreadCount();['bellBadge','btBellBadge'].forEach(id=>{const bd=$('#'+id);if(bd){bd.textContent=c;bd.style.display=c?'grid':'none';}});}
 async function openNotif(){
-  if(!SB && !notifications.length){ try{ seedNotifs(); }catch(e){} }   // 데모/미리보기: 예시 알림 표시
-  open_('notifOverlay');
-  // 1) 지금 갖고 있는 알림을 먼저 그린다 (재조회가 실패해도 화면은 비지 않도록)
-  try{ renderNotifList(); }catch(e){ const b=$('#notifList'); if(b)b.innerHTML='<div class="empty">아직 받은 알림이 없어요</div>'; }
-  // 2) 읽음 처리
-  try{ localStorage.setItem('nolimoa_notif_seen', String(Date.now())); }catch(e){}
-  notifications.forEach(n=>n.read=true); renderBell();
-  if(SB && authUser){
-    try{await SB.from('notifications').update({read:true}).eq('user_id',authUser.id).eq('read',false);}catch(e){}
-  }
-  // 3) 그 다음 서버에서 최신 알림을 다시 불러온다 (성공하면 loadNotifs가 목록을 새로 그림)
-  if(SB && authUser){ try{ await loadNotifs(); }catch(e){} }
+  try{
+    if(!SB && !notifications.length){ try{ seedNotifs(); }catch(e){} }   // 데모/미리보기: 예시 알림 표시
+    open_('notifOverlay');
+    // 창이 실제로 열렸는지 확인 — 혹시 안 열렸으면(요소 없음 등) 최소한 토스트로 알림
+    const ov=$('#notifOverlay');
+    if(!ov || !ov.classList.contains('on')){ try{ toast('알림 창을 열 수 없어요'); }catch(e){} }
+    // 1) 지금 갖고 있는 알림을 먼저 그린다 (재조회가 실패해도 화면은 비지 않도록)
+    try{ renderNotifList(); }catch(e){ const b=$('#notifList'); if(b)b.innerHTML='<div class="empty">아직 받은 알림이 없어요</div>'; }
+    // 2) 읽음 처리
+    try{ localStorage.setItem('nolimoa_notif_seen', String(Date.now())); }catch(e){}
+    notifications.forEach(n=>n.read=true); renderBell();
+    if(SB && authUser){
+      try{await SB.from('notifications').update({read:true}).eq('user_id',authUser.id).eq('read',false);}catch(e){}
+    }
+    // 3) 그 다음 서버에서 최신 알림을 다시 불러온다 (성공하면 loadNotifs가 목록을 새로 그림)
+    if(SB && authUser){ try{ await loadNotifs(); }catch(e){} }
+  }catch(err){ try{ toast('알림을 여는 중 문제가 생겼어요'); }catch(e){} try{ console.warn('openNotif error', err); }catch(e){} }
 }
 function notifPost(n){ return n.post || (n.postId ? allPosts().find(p=>p.id===n.postId) : null); }
 function renderNotifList(){
