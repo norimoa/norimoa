@@ -1981,6 +1981,17 @@ const followers=[
 let socialTab='followers';
 function openFollowing(){openSocial('following');}
 function openSocial(tab){switchSocial(tab);open_('socialOverlay');}
+/* 팔로워·팔로잉 목록에서 프로필(사진·이름) 클릭 → 그 사람 프로필 자세히 보기 */
+function openSocialPerson(person){
+  close_('socialOverlay');
+  if(person.tid){ openTeacher(person.tid); return; }
+  openAuthor({db:true, user_id:person.user_id,
+    author:{name:person.name||'선생님', org:person.org||'', icon:person.icon, photo:person.photo,
+      init:(person.name||'선')[0], color:person.color||'#86736b'}});
+}
+function wireSocialRowClick(rowEl, person){
+  ['.av','.info'].forEach(sel=>{ const el=rowEl.querySelector(sel); if(el){ el.style.cursor='pointer'; el.onclick=()=>openSocialPerson(person); } });
+}
 function switchSocial(tab){socialTab=tab;
   $('#tabFollowers').classList.toggle('on',tab==='followers');
   $('#tabFollowing').classList.toggle('on',tab==='following');
@@ -2003,6 +2014,7 @@ async function renderSocial(){
         <div class="info"><b>${esc(pr.nickname||'선생님')}</b><small>${esc((pr.role||'').replace(' 교사',''))}</small></div>
         <button class="sr-btn" data-uid="${pr.id}">${myFollowing.has(pr.id)?'언팔로우':'+ 팔로우'}</button>`;
       r.querySelector('.sr-btn').onclick=()=>toggleFollowUser(pr.id).then(()=>{renderSocial();renderFeed();});
+      wireSocialRowClick(r, {user_id:pr.id, name:pr.nickname, org:(pr.role||'').replace(' 교사',''), icon:pr.icon, photo:pr.avatar_url});
       box.appendChild(r);
     });
     return;
@@ -2014,6 +2026,7 @@ async function renderSocial(){
       r.innerHTML=`<div class="av" style="background:${f.color}">${f.init}</div>
         <div class="info"><b>${f.name}</b><small>${f.org}</small></div>
         <button class="sr-btn" onclick="removeFollower(${i})">삭제</button>`;
+      wireSocialRowClick(r, {user_id:'demo-'+i, name:f.name, org:f.org, color:f.color});
       box.appendChild(r);
     });
     if(!followers.length)box.innerHTML='<div class="empty">팔로워가 없어요</div>';
@@ -2025,6 +2038,7 @@ async function renderSocial(){
       r.innerHTML=`<div class="av" style="background:${tt.color}">${tt.init}</div>
         <div class="info"><b>${tt.name}</b><small>${tt.org}</small></div>
         <button class="sr-btn" onclick="toggleFollow('${tt.id}')">언팔로우</button>`;
+      wireSocialRowClick(r, {tid:tt.id});
       box.appendChild(r);
     });
   }
@@ -2510,7 +2524,8 @@ async function loadNotifs(){
       add({actorId:r.follower_id,init:(m.name||'선')[0],name:m.name||'선생님',icon:m.icon,photo:m.photo,color:'#86736b',kind:'follow',postId:null,ts,when:whenText(r.created_at),read:ts<=seen}); });
   }catch(e){}
   list.sort((a,b)=>(b.ts||0)-(a.ts||0));
-  notifications=list.slice(0,80);
+  // 재조회가 (일시적 오류로) 빈 결과일 때, 이미 있던 알림을 지우지 않는다
+  if(list.length || !notifications.length){ notifications=list.slice(0,80); }
   renderBell(); if($('#notifOverlay')&&$('#notifOverlay').classList.contains('on'))renderNotifList();
 }
 /* 댓글 불러오기 (대댓글 중첩) */
@@ -3181,18 +3196,16 @@ function renderBell(){const c=unreadCount();['bellBadge','btBellBadge'].forEach(
 async function openNotif(){
   if(!SB && !notifications.length){ try{ seedNotifs(); }catch(e){} }   // 데모/미리보기: 예시 알림 표시
   open_('notifOverlay');
-  // 지난 알림(좋아요·댓글·팔로우 기록)을 항상 최신으로 불러와서 목록에 그대로 표시
-  if(SB && authUser){
-    const box=$('#notifList');
-    if(box && !notifications.length) box.innerHTML='<div class="empty">알림을 불러오는 중…</div>';
-    try{ await loadNotifs(); }catch(e){}   // loadNotifs 내부에서 열려 있으면 목록을 다시 그림
-  }
+  // 1) 지금 갖고 있는 알림을 먼저 그린다 (재조회가 실패해도 화면은 비지 않도록)
   try{ renderNotifList(); }catch(e){ const b=$('#notifList'); if(b)b.innerHTML='<div class="empty">아직 받은 알림이 없어요</div>'; }
+  // 2) 읽음 처리
   try{ localStorage.setItem('nolimoa_notif_seen', String(Date.now())); }catch(e){}
   notifications.forEach(n=>n.read=true); renderBell();
   if(SB && authUser){
     try{await SB.from('notifications').update({read:true}).eq('user_id',authUser.id).eq('read',false);}catch(e){}
   }
+  // 3) 그 다음 서버에서 최신 알림을 다시 불러온다 (성공하면 loadNotifs가 목록을 새로 그림)
+  if(SB && authUser){ try{ await loadNotifs(); }catch(e){} }
 }
 function notifPost(n){ return n.post || (n.postId ? allPosts().find(p=>p.id===n.postId) : null); }
 function renderNotifList(){
