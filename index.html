@@ -1289,7 +1289,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812f</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812g</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1521,14 +1521,13 @@
           <span class="fmt-label">색상</span>
           <span class="fmt-sw-row" onmousedown="event.preventDefault()">
             <button type="button" class="fmt-sw" style="background:#3a3a3f" title="검정" onclick="richColor('#3a3a3f')"></button>
-            <button type="button" class="fmt-sw" style="background:#c04a6e" title="베리" onclick="richColor('#c04a6e')"></button>
+            <button type="button" class="fmt-sw" style="background:#e23b3b" title="빨강" onclick="richColor('#e23b3b')"></button>
             <button type="button" class="fmt-sw" style="background:#e2749a" title="핑크" onclick="richColor('#e2749a')"></button>
             <button type="button" class="fmt-sw" style="background:#e8863d" title="주황" onclick="richColor('#e8863d')"></button>
-            <button type="button" class="fmt-sw" style="background:#3cb4a0" title="초록" onclick="richColor('#3cb4a0')"></button>
-            <button type="button" class="fmt-sw" style="background:#5b8def" title="하늘" onclick="richColor('#5b8def')"></button>
-            <button type="button" class="fmt-sw" style="background:#e23b3b" title="빨강" onclick="richColor('#e23b3b')"></button>
-            <button type="button" class="fmt-sw" style="background:#2e9e3f" title="초록" onclick="richColor('#2e9e3f')"></button>
             <button type="button" class="fmt-sw" style="background:#2563eb" title="파랑" onclick="richColor('#2563eb')"></button>
+            <button type="button" class="fmt-sw" style="background:#5b8def" title="하늘" onclick="richColor('#5b8def')"></button>
+            <button type="button" class="fmt-sw" style="background:#2e9e3f" title="초록" onclick="richColor('#2e9e3f')"></button>
+            <button type="button" class="fmt-sw" style="background:#8bc34a" title="연두" onclick="richColor('#8bc34a')"></button>
             <button type="button" class="fmt-sw" style="background:#8b5cf6" title="보라" onclick="richColor('#8b5cf6')"></button>
           </span>
           <span class="fmt-div"></span>
@@ -1725,14 +1724,13 @@
           <span class="fmt-label">색상</span>
           <span class="fmt-sw-row" onmousedown="event.preventDefault()">
             <button type="button" class="fmt-sw" style="background:#3a3a3f" title="검정" onclick="richColor('#3a3a3f')"></button>
-            <button type="button" class="fmt-sw" style="background:#c04a6e" title="베리" onclick="richColor('#c04a6e')"></button>
+            <button type="button" class="fmt-sw" style="background:#e23b3b" title="빨강" onclick="richColor('#e23b3b')"></button>
             <button type="button" class="fmt-sw" style="background:#e2749a" title="핑크" onclick="richColor('#e2749a')"></button>
             <button type="button" class="fmt-sw" style="background:#e8863d" title="주황" onclick="richColor('#e8863d')"></button>
-            <button type="button" class="fmt-sw" style="background:#3cb4a0" title="초록" onclick="richColor('#3cb4a0')"></button>
-            <button type="button" class="fmt-sw" style="background:#5b8def" title="하늘" onclick="richColor('#5b8def')"></button>
-            <button type="button" class="fmt-sw" style="background:#e23b3b" title="빨강" onclick="richColor('#e23b3b')"></button>
-            <button type="button" class="fmt-sw" style="background:#2e9e3f" title="초록" onclick="richColor('#2e9e3f')"></button>
             <button type="button" class="fmt-sw" style="background:#2563eb" title="파랑" onclick="richColor('#2563eb')"></button>
+            <button type="button" class="fmt-sw" style="background:#5b8def" title="하늘" onclick="richColor('#5b8def')"></button>
+            <button type="button" class="fmt-sw" style="background:#2e9e3f" title="초록" onclick="richColor('#2e9e3f')"></button>
+            <button type="button" class="fmt-sw" style="background:#8bc34a" title="연두" onclick="richColor('#8bc34a')"></button>
             <button type="button" class="fmt-sw" style="background:#8b5cf6" title="보라" onclick="richColor('#8b5cf6')"></button>
           </span>
           <span class="fmt-div"></span>
@@ -3705,10 +3703,9 @@ function renderWeekPop(){
     html+=`<div class="rank" onclick="filterByLabel('${tagQ(t)}')"><span class="n">${i+1}</span><span class="ic">🏷️</span><span class="t">#${esc(noSpace(t))}</span><span class="h">♥ ${sum.toLocaleString()}</span></div>`; });
   panel.innerHTML=html;
 }
-/* 이 달의 인기 선생님: 조회·좋아요·댓글·저장 합산 상위 5명 */
+/* 이 달의 인기 선생님: 조회수 합산 상위 5명 (좋아요·댓글·저장 제외) */
 function teacherScore(p){
-  const v=parseInt(String(p&&p.views||'0').replace(/[^\d]/g,''),10)||0;
-  return ((p&&p.like)||0)*3 + ((p&&p.saves)||0)*3 + ((p&&p.cmt)||0)*2 + v;
+  return parseInt(String(p&&p.views||'0').replace(/[^\d]/g,''),10)||0;
 }
 function renderTopTeachers(){
   const panel=$('#topTeachersPanel'); if(!panel)return;
@@ -3728,7 +3725,7 @@ function renderTopTeachers(){
       `<span class="n">${i+1}</span>`+
       `<span class="tr-av" style="${avStyle(a)}">${avInner(a)}</span>`+
       `<span class="t">${esc(t.name)}</span>`+
-      `<span class="h">🔥 ${t.score.toLocaleString()}</span></div>`;
+      `<span class="h">👁 ${t.score.toLocaleString()}</span></div>`;
   });
   panel.innerHTML=html;
 }
