@@ -192,6 +192,8 @@
   .modal{background:#fff;border-radius:18px;width:100%;max-width:420px;max-height:82vh;
     overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
   .modal.teacher-modal{max-width:640px}   /* 프로필 팝업은 더 넓게 (스탯 한 줄 + 오른쪽 버튼 여유) */
+  .modal.folder-modal{max-width:600px}    /* 폴더 팝업: 조금 더 넓게 (글이 많아도 넉넉하게) */
+  @media(min-width:560px){ .folder-modal .teacher-posts{grid-template-columns:repeat(3,1fr)} }  /* 넓은 화면에선 3개씩 */
   .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;
     border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff}
   .modal-head b{font-size:17px}
@@ -699,7 +701,9 @@
   .cp-thumb:hover .cp-edit{opacity:1}
   .cp-thumb.drag{opacity:.55;border-color:var(--coral);box-shadow:0 6px 16px rgba(0,0,0,.18);cursor:grabbing;transform:scale(1.05)}
   .cp-thumb.over{border-color:var(--coral)}
-  .fmt-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .fmt-bar{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .fmt-bar::-webkit-scrollbar{height:0}
+  .fmt-bar>*{flex:0 0 auto}
   .fmt-btn{border:1px solid #e7dcd6;background:#fff;color:#555;border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
   .fmt-btn:hover{border-color:var(--coral);color:var(--coral-tx)}
   .fmt-btn b{font-size:14px}
@@ -709,6 +713,20 @@
   .fmt-sw-row{display:inline-flex;gap:5px;align-items:center}
   .fmt-sw{width:20px;height:20px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #d9cec7;cursor:pointer;padding:0}
   .fmt-sw:hover{transform:scale(1.15);box-shadow:0 0 0 2px var(--coral)}
+  /* 현장체험학습 정보 입력 폼 */
+  .trip-form{display:flex;flex-direction:column;gap:8px;background:#faf7f4;border:1px solid #ece3db;border-radius:12px;padding:12px}
+  .trip-row{display:flex;align-items:center;gap:10px}
+  .trip-row label{flex:0 0 96px;font-size:13px;font-weight:700;color:#7a6a60}
+  .trip-in{flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:9px;padding:9px 11px;font-family:inherit;background:#fff;font-size:13.5px}
+  @media(max-width:560px){ .trip-row{flex-direction:column;align-items:stretch;gap:4px} .trip-row label{flex:none} }
+  /* 자세히보기 정보 표 */
+  .trip-card{padding:0;overflow:hidden}
+  .trip-card-h{background:#f4ede7;color:#6f5c50;font-weight:800;font-size:14px;padding:11px 16px;border-bottom:1px solid #ece3db}
+  .trip-table{width:100%;border-collapse:collapse}
+  .trip-table th,.trip-table td{text-align:left;font-size:13.5px;padding:11px 16px;border-bottom:1px solid #f0ebe6;vertical-align:top}
+  .trip-table th{width:110px;color:#8a7a6f;font-weight:700;background:#fbf9f7;white-space:nowrap}
+  .trip-table tr:last-child th,.trip-table tr:last-child td{border-bottom:none}
+  .trip-table a{color:var(--coral-tx);text-decoration:underline;word-break:break-all}
   .fmt-btn.sz{padding:6px 10px;font-size:12px}
   /* 임시저장 목록 */
   .draft-item{display:flex;gap:12px;align-items:center;border:1px solid #eadfd8;border-radius:12px;padding:10px;margin-bottom:10px;background:#fff}
@@ -1289,7 +1307,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812g</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812k</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1387,7 +1405,7 @@
 
 <!-- ============ 저장 폴더 모달 ============ -->
 <div class="overlay" id="folderOverlay" onclick="if(event.target===this)close_('folderOverlay')">
-  <div class="modal">
+  <div class="modal folder-modal">
     <div class="modal-head"><b id="folderTitle">폴더</b><button class="x" onclick="close_('folderOverlay')">×</button></div>
     <div class="folder-actions" id="folderActions"></div>
     <div class="teacher-posts" id="folderPosts"></div>
@@ -1525,9 +1543,8 @@
             <button type="button" class="fmt-sw" style="background:#e2749a" title="핑크" onclick="richColor('#e2749a')"></button>
             <button type="button" class="fmt-sw" style="background:#e8863d" title="주황" onclick="richColor('#e8863d')"></button>
             <button type="button" class="fmt-sw" style="background:#2563eb" title="파랑" onclick="richColor('#2563eb')"></button>
-            <button type="button" class="fmt-sw" style="background:#5b8def" title="하늘" onclick="richColor('#5b8def')"></button>
+            <button type="button" class="fmt-sw" style="background:#2ec4b6" title="민트" onclick="richColor('#2ec4b6')"></button>
             <button type="button" class="fmt-sw" style="background:#2e9e3f" title="초록" onclick="richColor('#2e9e3f')"></button>
-            <button type="button" class="fmt-sw" style="background:#8bc34a" title="연두" onclick="richColor('#8bc34a')"></button>
             <button type="button" class="fmt-sw" style="background:#8b5cf6" title="보라" onclick="richColor('#8b5cf6')"></button>
           </span>
           <span class="fmt-div"></span>
@@ -1556,6 +1573,9 @@
         <button class="dd-head" id="catHead" onclick="toggleDD('cat')">카테고리 선택하기 <span class="chev">▾</span></button>
         <div class="opt-panel" id="catPanel" style="display:none"></div>
       </div>
+
+      <!-- 현장체험학습 정보 표 (해당 카테고리 선택 시에만 표시) -->
+      <div class="sec" id="tripSec" style="display:none"></div>
 
       <!-- 해시태그 -->
       <div class="sec">
@@ -1728,9 +1748,8 @@
             <button type="button" class="fmt-sw" style="background:#e2749a" title="핑크" onclick="richColor('#e2749a')"></button>
             <button type="button" class="fmt-sw" style="background:#e8863d" title="주황" onclick="richColor('#e8863d')"></button>
             <button type="button" class="fmt-sw" style="background:#2563eb" title="파랑" onclick="richColor('#2563eb')"></button>
-            <button type="button" class="fmt-sw" style="background:#5b8def" title="하늘" onclick="richColor('#5b8def')"></button>
+            <button type="button" class="fmt-sw" style="background:#2ec4b6" title="민트" onclick="richColor('#2ec4b6')"></button>
             <button type="button" class="fmt-sw" style="background:#2e9e3f" title="초록" onclick="richColor('#2e9e3f')"></button>
-            <button type="button" class="fmt-sw" style="background:#8bc34a" title="연두" onclick="richColor('#8bc34a')"></button>
             <button type="button" class="fmt-sw" style="background:#8b5cf6" title="보라" onclick="richColor('#8b5cf6')"></button>
           </span>
           <span class="fmt-div"></span>
@@ -2614,7 +2633,7 @@ function tagQ(s){return noSpace(s).replace(/'/g,"\\'");}
 function dePlay(s){return noSpace(String(s||'').toLowerCase()).replace(/놀이/g,'');}
 /* **굵게** / __밑줄__ 마크업을 안전하게 태그로 변환 (esc 이후에 적용) */
 function fmtRich(s){return s.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/__([^_\n]+)__/g,'<u>$1</u>');}
-function stripFmt(s){return String(s||'').replace(/\*\*([^*\n]+)\*\*/g,'$1').replace(/__([^_\n]+)__/g,'$1').replace(/⟦[cs]=[^⟧]*⟧/g,'').replace(/⟦\/[cs]⟧/g,'');}
+function stripFmt(s){return String(s||'').replace(/⟦trip⟧[\s\S]*?⟦\/trip⟧/g,'').replace(/\*\*([^*\n]+)\*\*/g,'$1').replace(/__([^_\n]+)__/g,'$1').replace(/⟦[cs]=[^⟧]*⟧/g,'').replace(/⟦\/[cs]⟧/g,'');}
 /* 띄어쓰기가 들어간 '알려진 태그'(카테고리·누리 항목 등)를 통째로 인식 */
 let _knownMW=null;
 function knownMultiwordTags(){
@@ -2762,7 +2781,8 @@ function renderPostPage(p){
       </div>`:''}
     </div>
     <div class="engage-box"><div class="ph-meta"><span class="pa-btn stat" title="조회"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> <b id="phViews">${p.views||'0'}</b></span><span class="ph-engage" id="phEngage"></span></div></div>
-    <div class="card post-detail-body">${linkifyTags(p.desc,p.tags)}${hashLine?`<div class="ph-hash ph-hash-in">${linkifyTags(hashLine,p.tags)}</div>`:''}</div>
+    ${tripTableHTML(p.desc)}
+    <div class="card post-detail-body">${linkifyTags(parseTrip(p.desc).body,p.tags)}${hashLine?`<div class="ph-hash ph-hash-in">${linkifyTags(hashLine,p.tags)}</div>`:''}</div>
     <div class="pd-sec">
       <div class="pf-stack">${photos}</div>
     </div>
@@ -3005,7 +3025,7 @@ function openEdit(){
   _editPost=p;
   _editImages=imagesOf(p).map(im=>({img:im.img,desc:im.desc||'',env:im.env===true,spots:(im.spots||[]).map(s=>({...s}))}));
   $('#pTitle').value=(p.title||'').replace(/^#/,'');
-  $('#pBody').innerHTML=marksToRich(p.desc||'');
+  { const _pt=parseTrip(p.desc||''); $('#pBody').innerHTML=marksToRich(_pt.body||''); _tripVals=_pt.trip?{cat:_pt.trip.cat, vals:Object.assign({}, _pt.trip.vals)}:null; }
   sel={age:p.age||'선택 안함', nuri:new Set(p.nuri||[]), cat:new Set(catLabelsToKeys(p.categories||[])), tags:[...(p.tags||[])]};
   attachments=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url}));
   postRefs=(p.refs||[]).map(r=>({...r}));
@@ -3204,7 +3224,7 @@ async function saveEdit(){
   _publishing=true; showUploading(true,'수정 내용을 저장하는 중이에요…');
   try{
   const title=$('#pTitle').value.trim()||'놀이';
-  const body=richToMarks($('#pBody'));
+  const body=richToMarks($('#pBody')) + buildTripTag();
   syncBodyTags(true);
   const catLabels=[...sel.cat].map(k=>k.split('::')[1]);          // 카테고리(띄어쓰기 유지)
   const photoTags=_editImages.flatMap(im=>extractHashtags(im.desc,true));   // 사진 설명 속 해시태그도 수집
@@ -5231,7 +5251,52 @@ function renderCatPanel(){
     g.appendChild(w);p.appendChild(g);
   });
 }
-function renderCat(){renderCatChips();renderCatPanel();}
+function renderCat(){renderCatChips();renderCatPanel();renderTripSection();}
+
+/* ===== 현장체험학습 정보 표 ===== */
+const TRIP_FORMS = {
+  '현장체험학습':      { title:'🚌 현장체험학습 정보',      fields:['주소','입장료','식당 여부','홈페이지/연락처','주차'] },
+  '찾아오는 현장체험학습':{ title:'🏫 찾아오는 체험학습 정보', fields:['업체명','연락처','소요시간','비용'] }
+};
+function tripPh(l){ return ({'주소':'도로명·지번 주소','입장료':'예: 어린이 3,000원 / 무료','식당 여부':'예: 3층에 도시락 먹을 공간 있음 / 2층에 푸드코트 있음','홈페이지/연락처':'예: www.site.com · 02-000-0000','주차':'예: 버스 주차 가능 / 주차비 1시간에 1,500원','업체명':'','연락처':'예: 010-0000-0000','소요시간':'예: 약 50분','비용':'예: 1인 8,000원'})[l]||''; }
+let _tripVals=null;   // {cat, vals:{항목:값}}
+function activeTripCat(){ for(const key of sel.cat){ const it=String(key).split('::')[1]; if(TRIP_FORMS[it]) return it; } return null; }
+function captureTripVals(){ const sec=$('#tripSec'); if(!sec||!_tripVals)return; sec.querySelectorAll('.trip-in').forEach(inp=>{ _tripVals.vals[inp.dataset.l]=inp.value; }); }
+function renderTripSection(){
+  const sec=$('#tripSec'); if(!sec)return;
+  const cat=activeTripCat();
+  if(!cat){ captureTripVals(); sec.style.display='none'; sec.innerHTML=''; return; }
+  if(_tripVals && _tripVals.cat===cat){ captureTripVals(); } else { _tripVals={cat, vals:{}}; }
+  const f=TRIP_FORMS[cat];
+  const rows=f.fields.map(l=>`<div class="trip-row"><label>${esc(l)}</label><input class="trip-in" data-l="${esc(l)}" value="${esc(_tripVals.vals[l]||'')}" placeholder="${esc(tripPh(l))}"></div>`).join('');
+  sec.innerHTML=`<div class="sec-label">${f.title} <span class="hint">채운 칸만 글 위에 표로 보여요 (빈 칸은 표시 안 됨)</span></div><div class="trip-form">${rows}</div>`;
+  sec.style.display='block';
+  sec.querySelectorAll('.trip-in').forEach(inp=>{ inp.oninput=()=>{ _tripVals.vals[inp.dataset.l]=inp.value; }; });
+}
+// 저장용: 본문 끝에 붙일 숨김 태그 (채운 값이 있을 때만)
+function buildTripTag(){
+  const cat=activeTripCat(); if(!cat||!_tripVals) return '';
+  captureTripVals();
+  const vals={}; TRIP_FORMS[cat].fields.forEach(l=>{ const v=(_tripVals.vals[l]||'').trim(); if(v)vals[l]=v; });
+  if(!Object.keys(vals).length) return '';
+  return `\n⟦trip⟧${JSON.stringify({cat,vals})}⟦/trip⟧`;
+}
+// 본문에서 정보 태그를 분리 (표 데이터 + 순수 본문)
+function parseTrip(desc){
+  const s=String(desc||''); const m=s.match(/⟦trip⟧([\s\S]*?)⟦\/trip⟧/);
+  if(!m) return {trip:null, body:s};
+  let trip=null; try{ trip=JSON.parse(m[1]); }catch(e){}
+  return {trip, body:s.replace(/\s*⟦trip⟧[\s\S]*?⟦\/trip⟧/,'').replace(/\n+$/,'')};
+}
+function tripCell(v){ return esc(v).replace(/((?:https?:\/\/|www\.)[^\s]+)/g, u=>`<a href="${u.startsWith('http')?u:'https://'+u}" target="_blank" rel="noopener">${u}</a>`); }
+function tripTableHTML(desc){
+  const {trip}=parseTrip(desc); if(!trip||!trip.vals) return '';
+  const order=(TRIP_FORMS[trip.cat]&&TRIP_FORMS[trip.cat].fields)||Object.keys(trip.vals);
+  const rows=order.filter(l=>trip.vals[l]).map(l=>`<tr><th>${esc(l)}</th><td>${tripCell(trip.vals[l])}</td></tr>`).join('');
+  if(!rows) return '';
+  const title=(TRIP_FORMS[trip.cat]&&TRIP_FORMS[trip.cat].title)||'ℹ️ 정보';
+  return `<div class="card trip-card"><div class="trip-card-h">${title}</div><table class="trip-table"><tbody>${rows}</tbody></table></div>`;
+}
 /* 드롭다운 토글 */
 function toggleDD(which){
   const head=$('#'+which+'Head'), panel=$('#'+which+'Panel');
@@ -5285,7 +5350,7 @@ function lsSet(k,v){ try{localStorage.setItem(k,JSON.stringify(v));return true;}
 function loadDrafts(){ const d=lsGet(DRAFT_KEY); return Array.isArray(d)?d:[]; }
 function saveDraft(){
   const title=($('#pTitle').value||'').trim();
-  const body=richToMarks($('#pBody'));
+  const body=richToMarks($('#pBody')) + buildTripTag();
   // 사진: 현재 화면(모자이크 반영본) + 설명 + 구매표시 저장
   const photoData=photos.map(ph=>{
     let img=''; try{ img=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,0.7):((ph.img&&ph.img.src)||''); }catch(e){ img=(ph.img&&ph.img.src)||''; }
@@ -5354,7 +5419,7 @@ async function resumeDraft(id){
   postRefs=(d.refs||[]).map(r=>({...r})); renderRefList();
   _bodyTagSet=new Set();
   $('#pTitle').value=d.title||'';
-  $('#pBody').innerHTML=marksToRich(d.body||'');
+  { const _pt=parseTrip(d.body||''); $('#pBody').innerHTML=marksToRich(_pt.body||''); _tripVals=_pt.trip?{cat:_pt.trip.cat, vals:Object.assign({}, _pt.trip.vals)}:null; }
   // 사진 복원 (모자이크가 이미 입혀진 이미지 → 재인식 없이 그대로)
   photos.length=0; $('#photoList').innerHTML='';
   const list=d.photos||[];
@@ -5701,7 +5766,7 @@ async function publishPost(){
     env:ph.env===true,               // 환경구성 사진 여부
     spots:ph.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url}))
   }));
-  const topDesc = body || `${sel.age!=='선택 안함'?'['+sel.age+'] ':''}${[...sel.nuri].join(', ')||'새로 올린 놀이예요.'}`;
+  const topDesc = (body || `${sel.age!=='선택 안함'?'['+sel.age+'] ':''}${[...sel.nuri].join(', ')||'새로 올린 놀이예요.'}`) + buildTripTag();
 
   // ── 실제 저장(Supabase) ─────────────────────────────
   if(SB && authUser){
@@ -5748,6 +5813,7 @@ function resetUpload(){
   attachments=[]; renderAttachList(); _bodyTagSet=new Set();
   postRefs=[]; renderRefList();
   _editPost=null; setWriteMode(false);
+  _tripVals=null; { const ts=$('#tripSec'); if(ts){ ts.style.display='none'; ts.innerHTML=''; } }  // 체험학습 정보 초기화
   _currentDraftId=null; _draftDirty=false;   // 폼 상태만 초기화 (임시저장 자체는 지우지 않음)
 }
 /* 업로드가 '성공'했을 때만 그 임시저장을 정리 */
