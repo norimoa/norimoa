@@ -718,6 +718,8 @@
   .trip-row{display:flex;align-items:center;gap:10px}
   .trip-row label{flex:0 0 96px;font-size:13px;font-weight:700;color:#7a6a60}
   .trip-in{flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:9px;padding:9px 11px;font-family:inherit;background:#fff;font-size:13.5px}
+  @keyframes trippop{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+  .trip-pop{animation:trippop .28s ease}
   @media(max-width:560px){ .trip-row{flex-direction:column;align-items:stretch;gap:4px} .trip-row label{flex:none} }
   /* 자세히보기 정보 표 */
   .trip-card{padding:0;overflow:hidden}
@@ -1307,7 +1309,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812k</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812l</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1568,7 +1570,7 @@
 
       <!-- 카테고리 -->
       <div class="sec">
-        <div class="sec-label">🔳 카테고리</div>
+        <div class="sec-label">🔳 카테고리 <span class="hint">'현장체험학습'·'찾아오는 현장체험학습'을 고르면 주소·연락처 등 정보 표를 채울 수 있어요 (선택)</span></div>
         <div class="chips" id="catChips"></div>
         <button class="dd-head" id="catHead" onclick="toggleDD('cat')">카테고리 선택하기 <span class="chev">▾</span></button>
         <div class="opt-panel" id="catPanel" style="display:none"></div>
@@ -5265,13 +5267,19 @@ function captureTripVals(){ const sec=$('#tripSec'); if(!sec||!_tripVals)return;
 function renderTripSection(){
   const sec=$('#tripSec'); if(!sec)return;
   const cat=activeTripCat();
+  const wasShown = sec.style.display==='block';
   if(!cat){ captureTripVals(); sec.style.display='none'; sec.innerHTML=''; return; }
   if(_tripVals && _tripVals.cat===cat){ captureTripVals(); } else { _tripVals={cat, vals:{}}; }
   const f=TRIP_FORMS[cat];
   const rows=f.fields.map(l=>`<div class="trip-row"><label>${esc(l)}</label><input class="trip-in" data-l="${esc(l)}" value="${esc(_tripVals.vals[l]||'')}" placeholder="${esc(tripPh(l))}"></div>`).join('');
-  sec.innerHTML=`<div class="sec-label">${f.title} <span class="hint">채운 칸만 글 위에 표로 보여요 (빈 칸은 표시 안 됨)</span></div><div class="trip-form">${rows}</div>`;
+  sec.innerHTML=`<div class="sec-label">${f.title} <span class="hint">선택사항 · 채운 칸만 글 위에 표로 보여요 (안 적어도 괜찮아요)</span></div><div class="trip-form">${rows}</div>`;
   sec.style.display='block';
   sec.querySelectorAll('.trip-in').forEach(inp=>{ inp.oninput=()=>{ _tripVals.vals[inp.dataset.l]=inp.value; }; });
+  // 처음 나타날 때만: 부드럽게 등장 + 그 위치로 살짝 스크롤 (갑자기 떠서 당황하지 않게)
+  if(!wasShown){
+    sec.classList.remove('trip-pop'); void sec.offsetWidth; sec.classList.add('trip-pop');
+    const ov=$('#writeOverlay'); if(ov && ov.classList.contains('on')){ try{ sec.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){} }
+  }
 }
 // 저장용: 본문 끝에 붙일 숨김 태그 (채운 값이 있을 때만)
 function buildTripTag(){
