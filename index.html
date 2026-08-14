@@ -720,6 +720,23 @@
   .trip-in{flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:9px;padding:9px 11px;font-family:inherit;background:#fff;font-size:13.5px}
   @keyframes trippop{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
   .trip-pop{animation:trippop .28s ease}
+  /* 카테고리 편집(관리자) */
+  .cat-admin-btn{display:block;width:100%;margin:0 0 12px;background:#efe7f7;color:#6b4bab;border:1px solid #ddccf0;border-radius:12px;padding:11px;font-size:13.5px;font-weight:700;cursor:pointer}
+  .ca-note{font-size:12.5px;color:var(--sub);line-height:1.5;padding:12px 20px 4px}
+  #catAdminBody{padding:8px 20px 4px}
+  .ca-group{margin-bottom:16px}
+  .ca-gl{font-size:14px;font-weight:800;color:#6f5c50;margin-bottom:8px}
+  .ca-items{display:flex;flex-direction:column;gap:6px}
+  .ca-row{display:flex;gap:8px;align-items:center}
+  .ca-in{flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:9px;padding:8px 11px;font-family:inherit;background:#fff;font-size:13.5px}
+  .ca-del{flex:0 0 auto;width:30px;height:30px;border:none;background:#f5eceb;color:#c0554e;border-radius:8px;font-size:16px;cursor:pointer}
+  .ca-del:hover{background:#f3d9d6}
+  .ca-add{display:flex;gap:8px;margin-top:8px}
+  .ca-newin{flex:1;min-width:0;border:1px dashed #d8ccc3;border-radius:9px;padding:8px 11px;font-family:inherit;background:#faf7f4;font-size:13.5px}
+  .ca-addbtn{flex:0 0 auto;border:none;background:var(--coral);color:#fff;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer}
+  .ca-foot{display:flex;gap:10px;justify-content:flex-end;padding:14px 20px 18px;position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line)}
+  .ca-cancel{border:1px solid #e0d7d0;background:#fff;color:#7a6a60;border-radius:10px;padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer}
+  .ca-save{border:none;background:var(--coral);color:#fff;border-radius:10px;padding:9px 22px;font-size:13.5px;font-weight:800;cursor:pointer}
   @media(max-width:560px){ .trip-row{flex-direction:column;align-items:stretch;gap:4px} .trip-row label{flex:none} }
   /* 자세히보기 정보 표 */
   .trip-card{padding:0;overflow:hidden}
@@ -1309,7 +1326,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812n</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812o</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1458,6 +1475,16 @@
 <div class="overlay cat-ov" id="catOverlay" onclick="if(event.target===this)close_('catOverlay')">
   <div class="cat-drawer">
     <div class="cat-content" id="catContent"></div>
+  </div>
+</div>
+
+<!-- ============ 카테고리 편집 (관리자) ============ -->
+<div class="overlay" id="catAdminOverlay" onclick="if(event.target===this)close_('catAdminOverlay')">
+  <div class="modal folder-modal">
+    <div class="modal-head"><b>✏️ 카테고리 편집</b><button class="x" onclick="close_('catAdminOverlay')">×</button></div>
+    <div class="ca-note">그룹 안에서 항목을 추가·이름수정·삭제할 수 있어요. 이름을 바꾸면 이미 그 항목으로 올라간 글은 예전 이름 그대로 남아요.</div>
+    <div id="catAdminBody"></div>
+    <div class="ca-foot"><button class="ca-cancel" onclick="close_('catAdminOverlay')">취소</button><button class="ca-save" onclick="saveCatAdmin()">저장</button></div>
   </div>
 </div>
 
@@ -2442,6 +2469,7 @@ async function loadDbPosts(){
   await loadNotifs();     // 알림 불러오기
   await loadNotices();    // 공지 불러오기
   await loadFeaturedIssues(); // 관리자 큐레이션 이슈
+  await loadCategories();  // 관리자가 편집한 카테고리 목록
   await loadCommunity();  // 커뮤니티 글
   if($('#v-comm').classList.contains('on'))renderCommunity();
   syncStats();
@@ -4038,6 +4066,7 @@ function renderCatDrawer(){
   const d=catDrawer[catSectionCur], box=$('#catContent');
   let html=`<div class="cat-draw-head"><span>카테고리</span><button onclick="close_('catOverlay')" aria-label="닫기">×</button></div>`;
   html+=`<button type="button" class="cat-about-btn" onclick="close_('catOverlay');go('about')">🎪 놀이모아 소개</button>`;
+  if(canEditCats()) html+=`<button type="button" class="cat-admin-btn" onclick="openCatAdmin()">✏️ 카테고리 편집${isAdmin()?' (관리자)':' (미리보기)'}</button>`;
   d.groups.forEach((grp,gi)=>{
     html+=`<div class="cat-group"><div class="cgl">${grp.ic} ${grp.g}</div><div class="cg-grid">`+
       grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
@@ -4050,6 +4079,57 @@ function pickCategory(label){
   close_('catOverlay');
   filterByLabel(label);
   toast(`'${label}' 관련 놀이`);
+}
+
+/* ===== 카테고리 편집 (관리자) ===== */
+const AGE_GROUP = {g:'연령별', ic:'👶', items:['0~2세','3세','4세','5세','혼합연령']};
+function syncCatDrawer(){ try{ catDrawer.kinder.groups = catData.concat([AGE_GROUP]); }catch(e){} _catParentMap=null; }
+function canEditCats(){ return isAdmin() || !SB; }   // 관리자(실서비스) 또는 데모 미리보기
+async function loadCategories(){
+  if(!SB) return;
+  try{
+    const {data}=await SB.from('site_config').select('value').eq('key','categories').maybeSingle();
+    if(data && data.value && Array.isArray(data.value.groups)){
+      catData.forEach(cd=>{ const f=data.value.groups.find(x=>x.g===cd.g); if(f && Array.isArray(f.items)) cd.items=f.items.slice(); });
+      syncCatDrawer(); if($('#catPanel'))renderCatPanel(); try{renderSideCats();}catch(e){}
+    }
+  }catch(e){}
+}
+async function saveCategories(){
+  const payload={groups:catData.map(g=>({g:g.g, ic:g.ic, items:g.items.slice()}))};
+  if(SB){
+    try{ const {error}=await SB.from('site_config').upsert({key:'categories', value:payload, updated_at:new Date().toISOString()});
+      if(error){ toast('저장 실패: '+error.message); return false; } }catch(e){ toast('저장에 실패했어요'); return false; }
+  }
+  syncCatDrawer(); if($('#catPanel'))renderCatPanel(); try{renderSideCats();}catch(e){}
+  return true;
+}
+let _catEdit=null;
+function openCatAdmin(){ if(!canEditCats()){ toast('관리자만 사용할 수 있어요'); return; } close_('catOverlay'); _catEdit=catData.map(g=>({g:g.g, ic:g.ic, items:g.items.slice()})); renderCatAdmin(); open_('catAdminOverlay'); }
+function captureCatInputs(){ const box=$('#catAdminBody'); if(!box||!_catEdit)return; box.querySelectorAll('.ca-in').forEach(inp=>{ const v=inp.value.trim(); if(v)_catEdit[+inp.dataset.g].items[+inp.dataset.i]=v; }); }
+function renderCatAdmin(){
+  const box=$('#catAdminBody'); if(!box||!_catEdit)return; box.innerHTML='';
+  _catEdit.forEach((grp,gi)=>{
+    const sec=document.createElement('div'); sec.className='ca-group';
+    const rows=grp.items.map((it,ii)=>`<div class="ca-row"><input class="ca-in" data-g="${gi}" data-i="${ii}" value="${esc(it)}"><button class="ca-del" data-g="${gi}" data-i="${ii}" title="삭제">×</button></div>`).join('');
+    sec.innerHTML=`<div class="ca-gl">${grp.ic} ${esc(grp.g)}</div><div class="ca-items">${rows}</div>
+      <div class="ca-add"><input class="ca-newin" data-g="${gi}" placeholder="새 항목 추가"><button class="ca-addbtn" data-g="${gi}">＋ 추가</button></div>`;
+    box.appendChild(sec);
+  });
+  box.querySelectorAll('.ca-in').forEach(inp=>{ inp.onchange=()=>{ const v=inp.value.trim(); if(v)_catEdit[+inp.dataset.g].items[+inp.dataset.i]=v; }; });
+  box.querySelectorAll('.ca-del').forEach(b=>{ b.onclick=()=>{ captureCatInputs(); _catEdit[+b.dataset.g].items.splice(+b.dataset.i,1); renderCatAdmin(); }; });
+  box.querySelectorAll('.ca-addbtn').forEach(b=>{ const gi=+b.dataset.g; const inp=box.querySelector('.ca-newin[data-g="'+gi+'"]');
+    const add=()=>{ const v=(inp.value||'').trim(); if(v && !_catEdit[gi].items.includes(v)){ captureCatInputs(); _catEdit[gi].items.push(v); renderCatAdmin(); } };
+    b.onclick=add; inp.onkeydown=(e)=>{ if(e.key==='Enter' && !(e.isComposing||e.keyCode===229)){ e.preventDefault(); add(); } };
+  });
+}
+async function saveCatAdmin(){
+  if(!_catEdit)return;
+  captureCatInputs();
+  _catEdit.forEach(e=>{ e.items=e.items.map(x=>String(x).trim()).filter(Boolean); });
+  catData.forEach(cd=>{ const e=_catEdit.find(x=>x.g===cd.g); if(e) cd.items=e.items.slice(); });
+  const ok=await saveCategories();
+  if(ok){ close_('catAdminOverlay'); toast('카테고리를 저장했어요'); }
 }
 
 /* ===== 커뮤니티 (게시판 + 공지) ===== */
@@ -5845,11 +5925,13 @@ renderFeed();
 renderPopTags();
 renderProfile();
 renderBrowseAuth();
+syncCatDrawer();       // catDrawer를 catData 기준으로 맞춤 (관리자 편집 반영 준비)
 renderSideCats();
 syncStats();
 (function(){const bs=$('#brSearch');if(bs){bs.value='';setTimeout(()=>{if(bs.value&&document.activeElement!==bs)bs.value='';},400);}})();
 renderBrowse(); // 기본 화면(둘러보기) 먼저 그리고
 if(SB){
+  loadCategories();   // 로그인 전에도 관리자가 편집한 카테고리를 모두에게 반영
   refreshSession().then(()=>{ if(!openSharedPost()) restoreLastView(); }); // 공유 링크로 왔으면 그 글, 아니면 마지막 페이지
   SB.auth.onAuthStateChange(()=>refreshSession());
 } else {
