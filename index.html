@@ -598,7 +598,14 @@
   .imgr-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .imgr-head b{font-size:14.5px}
   .imgr-cnt{font-size:12px;color:var(--sub)}
-  .imgr-acts{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+  .imgr-acts{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;align-items:center}
+  .imgr-sec-h{font-size:12.5px;font-weight:800;color:#8a7a6f;margin:4px 2px 8px}
+  .imgr-edit{display:flex;gap:7px;align-items:center}
+  .imgr-ic{width:52px;text-align:center;border:1px solid #e7dcd6;border-radius:9px;padding:8px 6px;font-family:inherit;background:#fafafb}
+  .imgr-lb{flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:9px;padding:8px 10px;font-family:inherit;background:#fafafb;font-size:13.5px}
+  .imgr-cnt{font-size:12px;color:var(--sub)}
+  .mini-card .mimg{position:relative}
+  .cap-edit{position:absolute;right:6px;top:6px;width:26px;height:26px;border-radius:50%;border:none;background:rgba(0,0,0,.5);color:#fff;font-size:13px;cursor:pointer;display:grid;place-items:center}
   .imgr-del{color:#c0433f;border-color:#eec6c6}
   .refpick-item.picked{border-color:var(--coral);background:#fdf7f5}
   .refpick-item .rp-check{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;background:#f3eeeb;color:var(--coral-tx)}
@@ -1335,7 +1342,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812z</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813a</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2483,6 +2490,7 @@ async function loadDbPosts(){
   await loadNotices();    // 공지 불러오기
   await loadFeaturedIssues(); // 관리자 큐레이션 이슈
   await loadCategories();  // 관리자가 편집한 카테고리 목록
+  await loadCaptions();    // 관리자가 지정한 사진 밑 캡션
   await loadCommunity();  // 커뮤니티 글
   if($('#v-comm').classList.contains('on'))renderCommunity();
   syncStats();
@@ -3861,7 +3869,7 @@ function renderIssues(){
   const box=$('#issueChips');if(!box)return;
   // 관리자 큐레이션 이슈(직접 만든 것)를 앞에, 그 뒤에 자동 추천 이슈
   const admin=(window._adminIssues||[]).map(a=>({icon:a.icon||'📌',label:a.label||'이슈',postIds:a.post_ids||[],admin:true,id:a.id}));
-  _issues=admin.concat(pickTodayIssues());
+  _issues=admin.concat(pickTodayIssues().filter(dz=>!admin.some(a=>a.label===dz.label)));   // 같은 이름의 관리자 이슈가 있으면 자동 이슈는 숨김
   if(!_issues.length){box.innerHTML='';$('#brRecommend').innerHTML='';return;}
   if(curIssue>=_issues.length)curIssue=0;
   // 관리자 버튼 표시
@@ -3924,18 +3932,49 @@ function openIssueMgr(){ if(!isAdmin())return; renderIssueMgr(); open_('issueMgr
 function renderIssueMgr(){
   const box=$('#issueMgrList'); if(!box)return; box.innerHTML='';
   const list=window._adminIssues||[];
-  if(!list.length){ box.innerHTML='<div class="empty" style="padding:12px 4px">아직 만든 이슈가 없어요. 위에서 추가해보세요.</div>'; return; }
+  const h1=document.createElement('div'); h1.className='imgr-sec-h'; h1.textContent='내가 만든 이슈 (이름·아이콘 수정, 글 고르기)'; box.appendChild(h1);
+  if(!list.length){ const e=document.createElement('div'); e.className='empty'; e.style.cssText='padding:8px 4px'; e.textContent='아직 만든 이슈가 없어요. 위에서 추가하거나, 아래 기본 이슈를 가져와 편집하세요.'; box.appendChild(e); }
   list.forEach(a=>{
     const el=document.createElement('div'); el.className='imgr-item';
-    el.innerHTML=`<div class="imgr-head"><b>${a.icon||'📌'} ${esc(a.label||'')}</b><span class="imgr-cnt">글 ${(a.post_ids||[]).length}개</span></div>
+    el.innerHTML=`<div class="imgr-edit">
+        <input class="imgr-ic" value="${esc(a.icon||'📌')}" maxlength="4">
+        <input class="imgr-lb" value="${esc(a.label||'')}">
+        <button class="fa-btn" data-act="save">저장</button>
+      </div>
       <div class="imgr-acts">
+        <span class="imgr-cnt">글 ${(a.post_ids||[]).length}개</span>
         <button class="fa-btn" data-act="pick">＋ 글 고르기</button>
-        <button class="fa-btn imgr-del" data-act="del">이슈 삭제</button>
+        <button class="fa-btn imgr-del" data-act="del">삭제</button>
       </div>`;
+    el.querySelector('[data-act=save]').onclick=()=>renameFeaturedIssue(a.id, el.querySelector('.imgr-ic').value, el.querySelector('.imgr-lb').value);
     el.querySelector('[data-act=pick]').onclick=()=>openIssuePick(a.id);
     el.querySelector('[data-act=del]').onclick=()=>deleteFeaturedIssue(a.id);
     box.appendChild(el);
   });
+  // 기본(자동) 이슈 — 가져와 편집
+  const defs=pickTodayIssues().filter(dz=>!list.some(a=>a.label===dz.label));
+  if(defs.length){
+    const h2=document.createElement('div'); h2.className='imgr-sec-h'; h2.style.marginTop='18px'; h2.textContent='기본(자동) 이슈 — 가져와서 편집하기'; box.appendChild(h2);
+    defs.forEach(dz=>{
+      const el=document.createElement('div'); el.className='imgr-item';
+      el.innerHTML=`<div class="imgr-head"><b>${dz.icon} ${esc(dz.label)}</b><span class="imgr-cnt">자동</span></div>
+        <div class="imgr-acts"><button class="fa-btn" data-act="imp">이 이슈를 내 이슈로 가져와 편집</button></div>`;
+      el.querySelector('[data-act=imp]').onclick=()=>importDefaultIssue(dz.icon, dz.label);
+      box.appendChild(el);
+    });
+  }
+}
+async function renameFeaturedIssue(id, icon, label){
+  if(!isAdmin())return; icon=(icon||'📌').trim()||'📌'; label=(label||'').trim(); if(!label){toast('이슈 이름을 입력하세요');return;}
+  try{const {error}=await SB.from('featured_issues').update({icon,label}).eq('id',id); if(error)throw error;
+    await loadFeaturedIssues(); renderIssueMgr(); renderIssues(); toast('이슈를 수정했어요');
+  }catch(e){toast('수정 실패: '+(e.message||e));}
+}
+async function importDefaultIssue(icon,label){
+  if(!isAdmin())return;
+  try{const {error}=await SB.from('featured_issues').insert({icon,label,post_ids:[],sort:(window._adminIssues||[]).length}); if(error)throw error;
+    await loadFeaturedIssues(); renderIssueMgr(); renderIssues(); toast(`'${label}' 이슈를 가져왔어요 · 이제 글을 골라 넣으세요`);
+  }catch(e){toast('가져오기 실패: '+(e.message||e));}
 }
 async function addFeaturedIssue(){
   if(!isAdmin())return;
@@ -3992,10 +4031,26 @@ function miniCard(c){
   el.onclick=()=>filterByLabel(c.title.replace(/^#/,''));
   return el;
 }
+/* 카드 사진 밑 캡션: 관리자가 지정한 값이 있으면 그걸, 없으면 자동(#첫태그/제목) */
+let _caps={};
+async function loadCaptions(){ if(!SB)return; try{const {data}=await SB.from('site_config').select('value').eq('key','captions').maybeSingle(); if(data&&data.value&&data.value.map)_caps=data.value.map; }catch(e){} }
+function autoCap(p){ return (p.tags&&p.tags[0])?'#'+p.tags[0]:String(p.title||'놀이').replace(/^#/,''); }
+function capText(p){ if(p&&p.id&&_caps[p.id]!=null&&_caps[p.id]!=='')return _caps[p.id]; return autoCap(p); }
+async function editCaption(p){
+  if(!isAdmin()||!p||!p.id){ return; }
+  const cur=(_caps[p.id]!=null&&_caps[p.id]!=='')?_caps[p.id]:autoCap(p);
+  const v=prompt('이 사진 밑에 보일 제목/해시태그를 입력하세요', cur);
+  if(v==null)return;
+  _caps[p.id]=v.trim();
+  try{const {error}=await SB.from('site_config').upsert({key:'captions', value:{map:_caps}, updated_at:new Date().toISOString()},{onConflict:'key'}); if(error)throw error;
+    renderBrowse(); toast('사진 밑 제목을 저장했어요');
+  }catch(e){toast('저장 실패: '+(e.message||e));}
+}
 function miniCardPost(p){
   const el=document.createElement('div');el.className='mini-card';
-  el.innerHTML=`<div class="mimg"><img src="${p.img}"></div><div class="mtitle">${(p.tags&&p.tags[0])?'#'+p.tags[0]:p.title}</div><div class="mlike">♡ ${(p.like||0).toLocaleString()}</div>`;
+  el.innerHTML=`<div class="mimg"><img src="${p.img}">${(isAdmin()&&p.id)?'<button class="cap-edit" title="사진 밑 제목 수정">✎</button>':''}</div><div class="mtitle">${esc(capText(p))}</div><div class="mlike">♡ ${(p.like||0).toLocaleString()}</div>`;
   el.onclick=()=>openPost(p);
+  if(isAdmin()&&p.id){ const ce=el.querySelector('.cap-edit'); if(ce)ce.onclick=(e)=>{e.stopPropagation();editCaption(p);}; }
   return el;
 }
 function authorOf(p){return p.author?p.author:t(p.tid);}
@@ -6082,6 +6137,7 @@ syncStats();
 renderBrowse(); // 기본 화면(둘러보기) 먼저 그리고
 if(SB){
   loadCategories();   // 로그인 전에도 관리자가 편집한 카테고리를 모두에게 반영
+  loadCaptions();     // 사진 밑 캡션도 모두에게 반영
   refreshSession().then(()=>{ if(!openSharedPost()) restoreLastView(); }); // 공유 링크로 왔으면 그 글, 아니면 마지막 페이지
   SB.auth.onAuthStateChange(()=>refreshSession());
 } else {
