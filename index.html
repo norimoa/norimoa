@@ -613,6 +613,22 @@
   .comm-att-file{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);background:#faf7f4;border:1px solid #ece3db;border-radius:10px;padding:10px 12px;margin-bottom:8px}
   .comm-att-file .an{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:600}
   .comm-att-file .dl{font-size:12px;color:var(--coral-tx);font-weight:700;white-space:nowrap}
+  /* 커뮤니티 카테고리 */
+  .comm-catbar{display:flex;flex-direction:column;gap:6px;margin:2px 0 14px}
+  .ccb-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .ccb-g{font-size:11.5px;font-weight:800;color:#8a7a6f;margin-right:2px}
+  .comm-cat-chip{border:1px solid #e7dcd6;background:#fff;color:#6b5c52;border-radius:16px;padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer}
+  .comm-cat-chip.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+  .comm-cat-manage{border:1px dashed #ddccf0;background:#efe7f7;color:#6b4bab;border-radius:16px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-left:auto}
+  .comm-wcats-label{font-size:12.5px;font-weight:700;color:#7a6a60;margin:12px 2px 6px}
+  .comm-wcats{display:flex;flex-direction:column;gap:6px}
+  .comm-wcat{border:1px solid #e7dcd6;background:#fafafb;color:#6b5c52;border-radius:14px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .comm-wcat.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+  .comm-cat-badge{display:inline-block;background:#f4ede7;color:#7a6a60;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px}
+  .cca-group{border:1px solid #eadfd8;border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff}
+  .cca-ghead{display:flex;gap:7px;align-items:center;margin-bottom:8px}
+  .cca-gname{flex:1;min-width:0;border:1px solid #e2dcd6;border-radius:9px;padding:8px 10px;font-family:inherit;background:#faf7f4;font-weight:700;font-size:13.5px}
+  .cca-gdel{flex:0 0 auto;border:none;background:#f5eceb;color:#c0554e;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer}
   .imgr-del{color:#c0433f;border-color:#eec6c6}
   .refpick-item.picked{border-color:var(--coral);background:#fdf7f5}
   .refpick-item .rp-check{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;background:#f3eeeb;color:var(--coral-tx)}
@@ -1188,9 +1204,10 @@
     <!-- 커뮤니티 -->
     <section class="view" id="v-comm">
       <div class="main-head">
-        <div><h1>커뮤니티</h1><p>각종 정보를 공유해요</p></div>
+        <div><h1>행정 자료실</h1><p>행정업무에 필요한 양식과 자료를 모았어요</p></div>
         <button class="btn-fill" onclick="openCommWrite()">✏️ 글쓰기</button>
       </div>
+      <div id="commCatBar" class="comm-catbar"></div>
       <div id="commNotices"></div>
       <div id="commFeed"></div>
     </section>
@@ -1349,7 +1366,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813b</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813d</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1361,7 +1378,7 @@
   <button data-v="upload" onclick="openUpload()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>업로드</button>
   <button data-v="comm" onclick="go('comm')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3 2.5-5 6-5s6 2 6 5M15 20c0-2 .8-3.4 2-4"/></svg>커뮤니티</button>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3 2.5-5 6-5s6 2 6 5M15 20c0-2 .8-3.4 2-4"/></svg>행정 자료실</button>
   <button data-v="my" onclick="go('my')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>마이페이지</button>
 </nav>
@@ -1514,10 +1531,12 @@
 <!-- ============ 커뮤니티 글쓰기 ============ -->
 <div class="overlay" id="commWriteOverlay" onclick="if(event.target===this)close_('commWriteOverlay')">
   <div class="modal" style="max-width:600px;max-height:90vh;display:flex;flex-direction:column">
-    <div class="modal-head"><b id="commWriteHead">커뮤니티 글쓰기</b><button class="x" onclick="close_('commWriteOverlay')">×</button></div>
+    <div class="modal-head"><b id="commWriteHead">자료 올리기</b><button class="x" onclick="close_('commWriteOverlay')">×</button></div>
     <div class="auth-body" style="overflow:auto">
       <input id="commTitle" class="comm-input" placeholder="제목" name="nolimoa-comm-title" autocomplete="off" maxlength="80">
-      <textarea id="commBody" class="comm-textarea" style="min-height:220px" placeholder="내용을 입력하세요 (링크·#해시태그도 됩니다)"></textarea>
+      <div class="comm-wcats-label">카테고리 <span style="color:var(--sub);font-weight:400">(선택)</span></div>
+      <div id="commWriteCats" class="comm-wcats"></div>
+      <textarea id="commBody" class="comm-textarea" style="min-height:200px" placeholder="내용을 입력하세요 (링크·#해시태그도 됩니다)"></textarea>
       <input type="file" id="commAttachInput" multiple hidden>
       <div style="margin-top:10px"><button type="button" class="fa-btn" onclick="document.getElementById('commAttachInput').click()">📎 파일 첨부 <span style="color:var(--sub);font-weight:400">· 이미지·PDF·한글(hwp)·워드 등</span></button></div>
       <div id="commAttachList" style="margin-top:8px"></div>
@@ -1534,6 +1553,17 @@
   <div class="modal">
     <div class="modal-head"><b id="commPostHead">게시글</b><button class="x" onclick="close_('commPostOverlay')">×</button></div>
     <div class="auth-body" id="commPostBody"></div>
+  </div>
+</div>
+
+<!-- ============ (관리자) 커뮤니티 카테고리 관리 ============ -->
+<div class="overlay" id="commCatAdminOverlay" onclick="if(event.target===this)close_('commCatAdminOverlay')">
+  <div class="modal folder-modal">
+    <div class="modal-head"><b>🗂 행정 자료실 카테고리 관리</b><button class="x" onclick="close_('commCatAdminOverlay')">×</button></div>
+    <div class="ca-note">큰 카테고리(대분류) 안에 하위 카테고리(소분류)를 만들 수 있어요. 저장하면 모든 사용자에게 반영돼요.</div>
+    <div id="commCatAdminBody"></div>
+    <div style="padding:4px 20px 10px"><button class="fa-btn" id="commCatAddGroup">＋ 큰 카테고리 추가</button></div>
+    <div class="ca-foot"><button class="ca-cancel" onclick="close_('commCatAdminOverlay')">취소</button><button class="ca-save" onclick="saveCommCatAdmin()">저장</button></div>
   </div>
 </div>
 
@@ -2501,6 +2531,7 @@ async function loadDbPosts(){
   await loadFeaturedIssues(); // 관리자 큐레이션 이슈
   await loadCategories();  // 관리자가 편집한 카테고리 목록
   await loadCaptions();    // 관리자가 지정한 사진 밑 캡션
+  await loadCommCats();    // 커뮤니티 카테고리
   await loadCommunity();  // 커뮤니티 글
   if($('#v-comm').classList.contains('on'))renderCommunity();
   syncStats();
@@ -2792,7 +2823,7 @@ function openPost(p){
   $('#v-post').classList.add('on');window.scrollTo(0,0);
   if(!fromDetail) backGuardPush();   // 뒤로가기로 목록으로 돌아올 수 있게
 }
-function viewLabel(v){ return ({browse:'둘러보기',sub:'팔로잉',my:'마이페이지',comm:'커뮤니티',env:'환경구성',about:'놀이모아 소개',privacy:'개인정보처리방침'})[v]||'둘러보기'; }
+function viewLabel(v){ return ({browse:'둘러보기',sub:'팔로잉',my:'마이페이지',comm:'행정 자료실',env:'환경구성',about:'놀이모아 소개',privacy:'개인정보처리방침'})[v]||'둘러보기'; }
 function postBack(fromPop){
   if(!fromPop) backGuardConsume();
   const to=_postBack, y=_scrollPos[to]||0;
@@ -4272,7 +4303,7 @@ async function loadCommunity(){
   try{
     const {data}=await SB.from('community_posts').select('*').order('created_at',{ascending:false});
     window._commPosts=(data||[]).map(r=>({id:r.id, db:true, user_id:r.user_id, notice:!!r.is_notice,
-      title:r.title||'', body:r.body||'', date:fmtDate(r.created_at), attachments:r.attachments||[],
+      title:r.title||'', body:r.body||'', date:fmtDate(r.created_at), attachments:r.attachments||[], category:r.category||'',
       author:{name:r.author_name||'선생님', icon:r.author_icon||'🧑', photo:r.author_avatar||'', color:'#86736b', init:(r.author_name||'선')[0]}}));
   }catch(e){ window._commPosts=[]; }
 }
@@ -4314,18 +4345,87 @@ function commCard(p){
       <div class="who"><b>${esc(a.name||'선생님')}</b><small>${p.date||''}</small></div>
       ${p.notice?'<span class="comm-badge">📢 공지</span>':''}
     </div>
+    ${p.category?`<span class="comm-cat-badge">${esc(p.category)}</span>`:''}
     <h3>${esc(p.title||'(제목 없음)')}</h3>
     <div class="comm-body">${linkifyTags(p.body||'')}</div>`;
   return el;
 }
+/* ===== 커뮤니티 카테고리 (대분류 > 소분류, 관리자 관리) ===== */
+const COMM_CATS_DEFAULT=[
+  {g:'양식·서식', items:['놀이 계획안','관찰기록','평가서']},
+  {g:'행정 문서', items:['공문','지출·품의','각종 대장']},
+  {g:'가정 통신', items:['가정통신문','행사 안내','참고 정보']}
+];
+let _commCats=null, _commFilter='', _commWriteCat='';
+function commCatGroups(){ return (_commCats&&_commCats.length)?_commCats:COMM_CATS_DEFAULT.map(g=>({g:g.g,items:g.items.slice()})); }
+function commCatParent(item){ for(const g of commCatGroups()){ if((g.items||[]).includes(item))return g.g; } return ''; }
+async function loadCommCats(){ if(!SB)return; try{const {data}=await SB.from('site_config').select('value').eq('key','commCats').maybeSingle(); if(data&&data.value&&Array.isArray(data.value.groups))_commCats=data.value.groups; }catch(e){} }
+function renderCommCatBar(){
+  const bar=$('#commCatBar'); if(!bar)return; bar.innerHTML='';
+  const top=document.createElement('div'); top.className='ccb-row';
+  const allb=document.createElement('button'); allb.className='comm-cat-chip'+(_commFilter===''?' on':''); allb.textContent='전체'; allb.onclick=()=>{_commFilter='';renderCommunity();}; top.appendChild(allb);
+  if(isAdmin()){ const mg=document.createElement('button'); mg.className='comm-cat-manage'; mg.textContent='🗂 카테고리 관리'; mg.onclick=openCommCatAdmin; top.appendChild(mg); }
+  bar.appendChild(top);
+  commCatGroups().forEach(g=>{
+    const row=document.createElement('div'); row.className='ccb-row';
+    const lb=document.createElement('span'); lb.className='ccb-g'; lb.textContent=g.g; row.appendChild(lb);
+    (g.items||[]).forEach(it=>{ const b=document.createElement('button'); b.className='comm-cat-chip'+(_commFilter===it?' on':''); b.textContent=it; b.onclick=()=>{_commFilter=it;renderCommunity();}; row.appendChild(b); });
+    bar.appendChild(row);
+  });
+}
+function renderCommWriteCats(){
+  const box=$('#commWriteCats'); if(!box)return; box.innerHTML='';
+  commCatGroups().forEach(g=>{
+    const row=document.createElement('div'); row.className='ccb-row';
+    const lb=document.createElement('span'); lb.className='ccb-g'; lb.textContent=g.g; row.appendChild(lb);
+    (g.items||[]).forEach(it=>{ const b=document.createElement('button'); b.type='button'; b.className='comm-wcat'+(_commWriteCat===it?' on':''); b.textContent=it;
+      b.onclick=()=>{ _commWriteCat=(_commWriteCat===it?'':it); renderCommWriteCats(); }; row.appendChild(b); });
+    box.appendChild(row);
+  });
+}
+let _commCatEdit=null;
+function openCommCatAdmin(){ if(!isAdmin()){toast('관리자만 사용할 수 있어요');return;} close_('catOverlay'); _commCatEdit=commCatGroups().map(g=>({g:g.g,items:g.items.slice()})); renderCommCatAdmin(); const ab=$('#commCatAddGroup'); if(ab)ab.onclick=()=>{ captureCommCatInputs(); _commCatEdit.push({g:'새 카테고리',items:[]}); renderCommCatAdmin(); }; open_('commCatAdminOverlay'); }
+function captureCommCatInputs(){ const box=$('#commCatAdminBody'); if(!box||!_commCatEdit)return;
+  box.querySelectorAll('.cca-gname').forEach(inp=>{ const gi=+inp.dataset.g; if(_commCatEdit[gi]){const v=inp.value.trim(); if(v)_commCatEdit[gi].g=v;} });
+  box.querySelectorAll('.ca-in').forEach(inp=>{ const gi=+inp.dataset.g, ii=+inp.dataset.i; const v=inp.value.trim(); if(v&&_commCatEdit[gi]&&_commCatEdit[gi].items[ii]!==undefined)_commCatEdit[gi].items[ii]=v; });
+}
+function renderCommCatAdmin(){
+  const box=$('#commCatAdminBody'); if(!box||!_commCatEdit)return; box.innerHTML='';
+  _commCatEdit.forEach((g,gi)=>{
+    const sec=document.createElement('div'); sec.className='cca-group';
+    const rows=(g.items||[]).map((it,ii)=>`<div class="ca-row"><input class="ca-in" data-g="${gi}" data-i="${ii}" value="${esc(it)}"><button class="ca-del" data-g="${gi}" data-i="${ii}">×</button></div>`).join('');
+    sec.innerHTML=`<div class="cca-ghead"><input class="cca-gname" data-g="${gi}" value="${esc(g.g)}"><button class="cca-gdel" data-g="${gi}">삭제</button></div>
+      <div class="ca-items">${rows}</div>
+      <div class="ca-add"><input class="ca-newin" data-g="${gi}" placeholder="하위 카테고리 추가"><button class="ca-addbtn" data-g="${gi}">＋ 추가</button></div>`;
+    box.appendChild(sec);
+  });
+  box.querySelectorAll('.ca-in').forEach(inp=>{ inp.onchange=()=>{ const v=inp.value.trim(); if(v)_commCatEdit[+inp.dataset.g].items[+inp.dataset.i]=v; }; });
+  box.querySelectorAll('.cca-gname').forEach(inp=>{ inp.onchange=()=>{ const v=inp.value.trim(); if(v)_commCatEdit[+inp.dataset.g].g=v; }; });
+  box.querySelectorAll('.ca-del').forEach(b=>{ b.onclick=()=>{ captureCommCatInputs(); _commCatEdit[+b.dataset.g].items.splice(+b.dataset.i,1); renderCommCatAdmin(); }; });
+  box.querySelectorAll('.cca-gdel').forEach(b=>{ b.onclick=()=>{ captureCommCatInputs(); _commCatEdit.splice(+b.dataset.g,1); renderCommCatAdmin(); }; });
+  box.querySelectorAll('.ca-addbtn').forEach(b=>{ const gi=+b.dataset.g; const inp=box.querySelector('.ca-newin[data-g="'+gi+'"]');
+    const add=()=>{ const v=(inp.value||'').trim(); if(v&&!_commCatEdit[gi].items.includes(v)){ captureCommCatInputs(); _commCatEdit[gi].items.push(v); renderCommCatAdmin(); } };
+    b.onclick=add; inp.onkeydown=(e)=>{ if(e.key==='Enter'&&!(e.isComposing||e.keyCode===229)){e.preventDefault();add();} };
+  });
+}
+async function saveCommCatAdmin(){
+  if(!_commCatEdit)return; captureCommCatInputs();
+  const groups=_commCatEdit.map(g=>({g:String(g.g).trim(), items:(g.items||[]).map(x=>String(x).trim()).filter(Boolean)})).filter(g=>g.g);
+  if(SB){ try{const {error}=await SB.from('site_config').upsert({key:'commCats', value:{groups}, updated_at:new Date().toISOString()},{onConflict:'key'}); if(error){toast('저장 실패: '+error.message);return;}}catch(e){toast('저장에 실패했어요');return;} }
+  _commCats=groups; close_('commCatAdminOverlay'); renderCommunity(); toast('카테고리를 저장했어요');
+}
 function renderCommunity(){
+  renderCommCatBar();
   const all=commList();
   const notices=all.filter(p=>p.notice);
-  const posts=all.filter(p=>!p.notice);
+  let posts=all.filter(p=>!p.notice);
+  if(_commFilter) posts=posts.filter(p=>(p.category||'')===_commFilter);
   const nb=$('#commNotices'); if(nb){nb.innerHTML=''; notices.forEach(p=>nb.appendChild(commCard(p)));}
   const fb=$('#commFeed'); if(!fb)return; fb.innerHTML='';
   if(!posts.length){
-    fb.innerHTML='<div class="placeholder"><div class="big">💬</div>아직 글이 없어요.<br>첫 글을 남겨보세요!</div>';
+    fb.innerHTML=_commFilter
+      ? '<div class="placeholder"><div class="big">📂</div>이 카테고리에 아직 자료가 없어요.</div>'
+      : '<div class="placeholder"><div class="big">🗂</div>아직 올라온 자료가 없어요.</div>';
     return;
   }
   posts.forEach(p=>fb.appendChild(commCard(p)));
@@ -4333,9 +4433,10 @@ function renderCommunity(){
 function openCommWrite(){
   if(isGuest()){ toast('회원가입하면 글을 쓸 수 있어요'); openAuth('signup'); return; }
   _commEditId=null;
-  const h=$('#commWriteHead'); if(h)h.textContent='커뮤니티 글쓰기';
+  const h=$('#commWriteHead'); if(h)h.textContent='자료 올리기';
   $('#commTitle').value=''; $('#commBody').value='';
   _commAtts=[]; renderCommAttachList();
+  _commWriteCat=''; renderCommWriteCats();
   const nr=$('#commNoticeRow'); if(nr)nr.style.display=isAdmin()?'flex':'none';
   const nc=$('#commNotice'); if(nc)nc.checked=false;
   open_('commWriteOverlay');
@@ -4345,9 +4446,10 @@ function openCommEdit(id){
   if(!commCanEdit(p)){ toast('내 글만 수정할 수 있어요'); return; }
   _commEditId=id;
   close_('commPostOverlay');
-  const h=$('#commWriteHead'); if(h)h.textContent='커뮤니티 글 수정';
+  const h=$('#commWriteHead'); if(h)h.textContent='자료 수정';
   $('#commTitle').value=p.title||''; $('#commBody').value=p.body||'';
   _commAtts=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url})); renderCommAttachList();
+  _commWriteCat=p.category||''; renderCommWriteCats();
   const nr=$('#commNoticeRow'); if(nr)nr.style.display=isAdmin()?'flex':'none';
   const nc=$('#commNotice'); if(nc)nc.checked=!!p.notice;
   open_('commWriteOverlay');
@@ -4360,10 +4462,10 @@ async function submitCommPost(){
   if(_commEditId){
     const p=commList().find(x=>String(x.id)===String(_commEditId));
     if(p){
-      if(!p.db){ p.title=title; p.body=body; p.notice=notice; p.attachments=_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})); close_('commWriteOverlay'); _commEditId=null; renderCommunity(); toast('수정했어요'); return; }
+      if(!p.db){ p.title=title; p.body=body; p.notice=notice; p.category=_commWriteCat; p.attachments=_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})); close_('commWriteOverlay'); _commEditId=null; renderCommunity(); toast('수정했어요'); return; }
       try{
         const atts=await uploadCommAttachments();
-        const {data,error}=await SB.from('community_posts').update({title, body, is_notice:!!notice, attachments:atts}).eq('id',p.id).select();
+        const {data,error}=await SB.from('community_posts').update({title, body, is_notice:!!notice, category:_commWriteCat, attachments:atts}).eq('id',p.id).select();
         if(error)throw error;
         if(!data||!data.length){ toast('수정이 반영되지 않았어요. Supabase에서 최신 SQL(수정 권한)을 실행했는지 확인해주세요.'); return; }
         close_('commWriteOverlay'); _commEditId=null; await loadCommunity(); renderCommunity(); toast('수정했어요'); return;
@@ -4372,13 +4474,13 @@ async function submitCommPost(){
     _commEditId=null; // 대상이 없으면 새 글로 진행
   }
   if(!SB){
-    communityDemo.unshift({id:'c'+Date.now(), tid:'me', notice, title, body, date:'방금', attachments:_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})), author:myAuthorObj()});
+    communityDemo.unshift({id:'c'+Date.now(), tid:'me', notice, title, body, category:_commWriteCat, date:'방금', attachments:_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})), author:myAuthorObj()});
     close_('commWriteOverlay'); renderCommunity(); toast('등록했어요 (데모)'); return;
   }
   if(!authUser){ toast('로그인이 필요해요'); openAuth('login'); return; }
   try{
     const atts=await uploadCommAttachments();
-    const row={ user_id:authUser.id, title, body, is_notice:!!notice, attachments:atts,
+    const row={ user_id:authUser.id, title, body, is_notice:!!notice, category:_commWriteCat, attachments:atts,
       author_name:profile.nick, author_icon:profile.icon, author_avatar:profile.photo };
     const {error}=await SB.from('community_posts').insert(row); if(error)throw error;
     close_('commWriteOverlay'); await loadCommunity(); renderCommunity();
@@ -4395,6 +4497,7 @@ function openCommPost(id){
       <div class="who"><b>${esc(a.name||'선생님')}</b><small>${p.date||''}</small></div>
       ${p.notice?'<span class="comm-badge">📢 공지</span>':''}
     </div>
+    ${p.category?`<span class="comm-cat-badge" style="margin:8px 0 0">${esc(p.category)}</span>`:''}
     <h3 style="color:var(--coral-tx);font-size:18px;margin:8px 0 12px">${esc(p.title||'')}</h3>
     <div style="font-size:14px;line-height:1.75;white-space:pre-wrap;word-break:break-word">${linkifyTags(p.body||'')}</div>
     ${commAttachHTML(p.attachments)}
@@ -4739,7 +4842,7 @@ function openRefTarget(refId){
 /* ---------------- nav ---------------- */
 function go(v){
   // 커뮤니티는 로그인/회원가입 후에만 볼 수 있음
-  if(v==='comm' && isGuest()){ toast('회원가입하면 커뮤니티를 볼 수 있어요'); openAuth('signup'); return; }
+  if(v==='comm' && isGuest()){ toast('회원가입하면 행정 자료실을 볼 수 있어요'); openAuth('signup'); return; }
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   $('#v-'+v).classList.add('on');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
@@ -6187,6 +6290,7 @@ renderBrowse(); // 기본 화면(둘러보기) 먼저 그리고
 if(SB){
   loadCategories();   // 로그인 전에도 관리자가 편집한 카테고리를 모두에게 반영
   loadCaptions();     // 사진 밑 캡션도 모두에게 반영
+  loadCommCats();     // 커뮤니티 카테고리도 모두에게 반영
   refreshSession().then(()=>{ if(!openSharedPost()) restoreLastView(); }); // 공유 링크로 왔으면 그 글, 아니면 마지막 페이지
   SB.auth.onAuthStateChange(()=>refreshSession());
 } else {
