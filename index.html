@@ -1335,7 +1335,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812u</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812z</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1739,7 +1739,7 @@
         <button class="btn g" onclick="peClear()">모자이크 지우기</button>
         <label class="switch"><input type="checkbox" id="peMz" checked onchange="peToggleMz()"> 모자이크</label>
       </div>
-      <div style="font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5">✏️ 빈 곳을 <b>드래그</b>하면 가릴 부분을 추가하고, 모자이크 사각형을 <b>누르면</b> 켜고 끌 수 있어요.</div>
+      <div style="font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5">✏️ 빈 곳을 <b>드래그</b>하면 가릴 부분을 추가하고, 지우고 싶은 모자이크를 <b>누르면</b> 하나씩 지워져요.</div>
     </div>
     <div class="up-foot"><button onclick="applyPartEdit()">✓ 적용</button></div>
   </div>
@@ -1764,7 +1764,7 @@
         <button class="btn g" onclick="ieClear()">모자이크 지우기</button>
         <label class="switch"><input type="checkbox" id="ieMz" checked onchange="ieToggleMz()"> 모자이크</label>
       </div>
-      <div style="font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5">✏️ 빈 곳을 <b>드래그</b>하면 가릴 부분을 추가하고, 모자이크를 <b>누르면</b> 켜고 끌 수 있어요. 회전·자르기로 사진도 다듬을 수 있어요.</div>
+      <div style="font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5">✏️ 빈 곳을 <b>드래그</b>하면 가릴 부분을 추가하고, 지우고 싶은 모자이크를 <b>누르면</b> 하나씩 지워져요. 회전·자르기로 사진도 다듬을 수 있어요.</div>
     </div>
     <div class="up-foot"><button onclick="ieApply()">✓ 적용</button></div>
   </div>
@@ -4710,7 +4710,8 @@ document.addEventListener('paste', e=>{
   for(const it of items){ if(it.kind==='file' && it.type && it.type.startsWith('image/')){ const f=it.getAsFile(); if(f)files.push(f); } }
   if(!files.length)return; // 이미지가 아니면(그냥 글자 붙여넣기 등) 방해하지 않음
   const isOn=id=>{ const el=document.getElementById(id); return el&&el.classList.contains('on'); };
-  if(isOn('editOverlay')){ e.preventDefault(); addEditPhotos(files); toast('붙여넣은 사진을 추가했어요'); }
+  if(isOn('writeOverlay') && _editPost){ e.preventDefault(); addEditPhotos(files); toast('붙여넣은 사진을 추가했어요'); }   // 수정 창
+  else if(isOn('editOverlay')){ e.preventDefault(); addEditPhotos(files); toast('붙여넣은 사진을 추가했어요'); }
   else if(isOn('uploadOverlay')){ e.preventDefault(); addFiles(files); toast('붙여넣은 사진을 추가했어요'); }
 });
 $('#pxRange').addEventListener('input',e=>{pxStrength=+e.target.value;photos.forEach(renderCanvasP);});
@@ -4775,7 +4776,7 @@ function buildPhotoCard(ph, skipDetect){
   ph.cv.width=ph.img.width*sc;ph.cv.height=ph.img.height*sc;
   card.querySelector('.photo-desc').addEventListener('input',e=>{ph.desc=e.target.value;markDirty();});
   card.querySelector('.redetect').onclick=()=>runDetectP(ph);
-  card.querySelector('.clearface').onclick=()=>{ph.boxes=[];renderCanvasP(ph);ph.status.textContent='모자이크를 지웠어요.';};
+  card.querySelector('.clearface').onclick=()=>{ if(!ph.boxes.length){ph.status.textContent='지울 모자이크가 없어요.';return;} ph.delMode=!ph.delMode; if(!ph.delMode)ph.cv.style.cursor=''; renderCanvasP(ph); ph.status.textContent=ph.delMode?'지울 모자이크의 ✕를 누르세요 (끝나면 버튼을 다시 눌러요)':'삭제를 마쳤어요.'; };
   const mzChk=card.querySelector('.mzon'); mzChk.checked=ph.mosaicOn!==false;
   mzChk.onchange=e=>{ph.mosaicOn=e.target.checked;renderCanvasP(ph);};
   const envChk=card.querySelector('.envon'); if(envChk){ envChk.checked=ph.env===true; envChk.onchange=e=>{ph.env=e.target.checked;markDirty();}; }
@@ -4792,12 +4793,16 @@ function buildPhotoCard(ph, skipDetect){
   ph.cv.style.touchAction='none'; // 터치로 캔버스를 드래그해도 화면이 스크롤되지 않게
   ph.cv.addEventListener('pointerdown',e=>{const p=posP(ph,e);
     if(ph.cropMode){ph.cropRect={x0:p.x,y0:p.y,x1:p.x,y1:p.y};ph.cropping=true;return;}
+    if(ph.delMode){ const idx=ph.boxes.findIndex(b=>hitBadge(ph,b,p));
+      if(idx>=0){ph.boxes.splice(idx,1); if(!ph.boxes.length){ph.delMode=false;ph.cv.style.cursor='';} renderCanvasP(ph); if(ph.status)ph.status.textContent=ph.boxes.length?`✕를 눌러 모자이크를 지워요 · ${ph.boxes.length}개 남음`:'모자이크를 모두 지웠어요';}
+      return; }   // 삭제 모드: ✕만 반응, 새로 추가 안 함
     const hit=ph.boxes.find(b=>boxHit(b,p));
-    // 모바일에서 원형 모자이크를 다시 누르면 '키우기'하려고 토글하지 않고 통과
-    if(hit && !(e.pointerType==='touch' && hit.shape==='circle')){hit.on=!hit.on;renderCanvasP(ph);return;}
+    // 모바일에서 원형 모자이크를 다시 누르면 '키우기' (그 외 기존 모자이크 위 탭은 무시)
+    if(hit && !(e.pointerType==='touch' && hit.shape==='circle')){return;}
     ph.drag={x:p.x,y:p.y,cur:p,type:e.pointerType,moved:false,grow:(hit&&hit.shape==='circle')?hit:null};
     try{ph.cv.setPointerCapture(e.pointerId);}catch(_){}});
   ph.cv.addEventListener('pointermove',e=>{
+    if(ph.delMode){ const pp=posP(ph,e); ph.cv.style.cursor=ph.boxes.some(b=>hitBadge(ph,b,pp))?'pointer':'default'; }
     if(ph.cropMode){if(!ph.cropping)return;const p=posP(ph,e);ph.cropRect.x1=p.x;ph.cropRect.y1=p.y;drawCropOverlay(ph);return;}
     if(!ph.drag)return;ph.drag.cur=posP(ph,e);
     if(Math.abs(ph.drag.cur.x-ph.drag.x)>6||Math.abs(ph.drag.cur.y-ph.drag.y)>6)ph.drag.moved=true;
@@ -4919,8 +4924,12 @@ async function runDetectP(ph){
   }catch(e){found=[];}
   ph.boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
   renderCanvasP(ph);
-  ph.status.textContent=ph.boxes.length?`✅ 얼굴 ${ph.boxes.length}개 모자이크 · 얼굴을 눌러 켜고 끌 수 있어요`:'얼굴을 못 찾았어요. 가릴 곳을 눌러(또는 드래그해) 직접 가려주세요.';
+  ph.status.textContent=ph.boxes.length?`✅ 얼굴 ${ph.boxes.length}개 모자이크 · 빈 곳을 눌러(드래그해) 더 가릴 수 있어요`:'얼굴을 못 찾았어요. 가릴 곳을 눌러(또는 드래그해) 직접 가려주세요.';
 }
+// 삭제 모드에서 각 모자이크 오른쪽 위에 뜨는 ✕ 배지의 위치·크기
+function delBadge(ph,b){ const cv=ph.cv, r=Math.max(8, cv.width*0.024);
+  return {cx:Math.min(cv.width-r, Math.max(r, b.x+b.w)), cy:Math.min(cv.height-r, Math.max(r, b.y)), r}; }
+function hitBadge(ph,b,p){ const g=delBadge(ph,b); return Math.hypot(p.x-g.cx,p.y-g.cy)<=g.r+5; }
 function renderCanvasP(ph){
   const c=ph.ctx,cv=ph.cv;c.clearRect(0,0,cv.width,cv.height);c.drawImage(ph.img,0,0,cv.width,cv.height);
   if(ph.mosaicOn)ph.boxes.filter(b=>b.on).forEach(b=>mosaicP(ph,b));
@@ -4928,6 +4937,11 @@ function renderCanvasP(ph){
     c.lineWidth=2;c.setLineDash(b.on?[]:[5,4]);
     if(b.shape==='circle'){c.beginPath();c.arc(b.x+b.w/2,b.y+b.h/2,b.w/2,0,Math.PI*2);c.stroke();}
     else c.strokeRect(b.x,b.y,b.w,b.h);});
+  c.setLineDash([]);
+  if(ph.delMode) ph.boxes.forEach(b=>{ const g=delBadge(ph,b);
+    c.beginPath();c.arc(g.cx,g.cy,g.r,0,Math.PI*2);c.fillStyle='rgba(90,90,98,.92)';c.fill();
+    c.strokeStyle='#fff';c.lineWidth=Math.max(2,g.r*0.2);c.lineCap='round';
+    const d=g.r*0.42; c.beginPath();c.moveTo(g.cx-d,g.cy-d);c.lineTo(g.cx+d,g.cy+d);c.moveTo(g.cx+d,g.cy-d);c.lineTo(g.cx-d,g.cy+d);c.stroke(); });
   c.setLineDash([]);
 }
 function mosaicP(ph,b){const cv=ph.cv,c=ph.ctx,px=pxStrength;
@@ -5127,9 +5141,12 @@ function initPeCanvas(){
   _pe.cv=cv; _pe.ctx=cv.getContext('2d');
   cv.addEventListener('pointerdown',e=>{const p=posP(_pe,e);
     const hit=_pe.boxes.find(b=>p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h);
-    if(hit){hit.on=!hit.on;renderCanvasP(_pe);return;}
+    if(_pe.delMode){ const idx=_pe.boxes.findIndex(b=>hitBadge(_pe,b,p));
+      if(idx>=0){_pe.boxes.splice(idx,1); if(!_pe.boxes.length){_pe.delMode=false;cv.style.cursor='';} renderCanvasP(_pe); const st=$('#peStatus');if(st)st.textContent=_pe.boxes.length?`✕를 눌러 모자이크를 지워요 · ${_pe.boxes.length}개 남음`:'모자이크를 모두 지웠어요';}
+      return; }
+    if(hit){return;}
     _pe.drag={x:p.x,y:p.y,cur:p};});
-  cv.addEventListener('pointermove',e=>{ if(!_pe.drag)return; _pe.drag.cur=posP(_pe,e);
+  cv.addEventListener('pointermove',e=>{ if(_pe.delMode){const pp=posP(_pe,e);cv.style.cursor=_pe.boxes.some(b=>hitBadge(_pe,b,pp))?'pointer':'default';} if(!_pe.drag)return; _pe.drag.cur=posP(_pe,e);
     renderCanvasP(_pe); const c=_pe.ctx; c.strokeStyle='#c04a6e';c.lineWidth=2;c.setLineDash([5,4]);
     c.strokeRect(_pe.drag.x,_pe.drag.y,_pe.drag.cur.x-_pe.drag.x,_pe.drag.cur.y-_pe.drag.y);c.setLineDash([]);});
   cv.addEventListener('pointerup',()=>{ if(!_pe.drag)return; const d=_pe.drag;
@@ -5141,10 +5158,10 @@ function openPartEdit(ph,idx){
   _pePh=ph; _pePart=part; initPeCanvas();
   const sc=Math.min(1,520/part.img.width);
   _pe.img=part.img; _pe.cv.width=Math.round(part.img.width*sc); _pe.cv.height=Math.round(part.img.height*sc);
-  _pe.boxes=(part.boxes||[]).map(b=>({...b})); _pe.mosaicOn=part.mosaicOn!==false; _pe.drag=null;
+  _pe.boxes=(part.boxes||[]).map(b=>({...b})); _pe.mosaicOn=part.mosaicOn!==false; _pe.drag=null; _pe.delMode=false;
   const mz=$('#peMz'); if(mz)mz.checked=_pe.mosaicOn;
   const tt=$('#peTitle'); if(tt)tt.textContent=`🖼️ ${idx+1}번째 사진 모자이크 수정`;
-  const st=$('#peStatus'); if(st)st.textContent=_pe.boxes.length?'얼굴을 눌러 켜고 끌 수 있어요 · 빈 곳 드래그로 추가':'빈 곳을 드래그해 가릴 부분을 추가하세요';
+  const st=$('#peStatus'); if(st)st.textContent=_pe.boxes.length?'빈 곳을 눌러(드래그해) 더 가릴 수 있어요 · 빈 곳 드래그로 추가':'빈 곳을 드래그해 가릴 부분을 추가하세요';
   renderCanvasP(_pe);
   open_('partEditOverlay');
 }
@@ -5162,9 +5179,9 @@ async function peRedetect(){
   }catch(e){found=[];}
   _pe.boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
   renderCanvasP(_pe);
-  if(st)st.textContent=_pe.boxes.length?`✅ 얼굴 ${_pe.boxes.length}개 모자이크 · 얼굴을 눌러 켜고 끌 수 있어요`:'얼굴을 못 찾았어요. 빈 곳을 드래그해 직접 가려주세요.';
+  if(st)st.textContent=_pe.boxes.length?`✅ 얼굴 ${_pe.boxes.length}개 모자이크 · 빈 곳을 눌러(드래그해) 더 가릴 수 있어요`:'얼굴을 못 찾았어요. 빈 곳을 드래그해 직접 가려주세요.';
 }
-function peClear(){ _pe.boxes=[]; renderCanvasP(_pe); const st=$('#peStatus'); if(st)st.textContent='모자이크를 지웠어요. 필요하면 빈 곳을 드래그해 추가하세요.'; }
+function peClear(){ if(!_pe.boxes.length){const st=$('#peStatus');if(st)st.textContent='지울 모자이크가 없어요.';return;} _pe.delMode=!_pe.delMode; if(!_pe.delMode&&_pe.cv)_pe.cv.style.cursor=''; renderCanvasP(_pe); const st=$('#peStatus'); if(st)st.textContent=_pe.delMode?'지울 모자이크의 ✕를 누르세요 (끝나면 버튼을 다시 눌러요)':'삭제를 마쳤어요.'; }
 function peToggleMz(){ const mz=$('#peMz'); _pe.mosaicOn=mz?mz.checked:true; renderCanvasP(_pe); }
 function applyPartEdit(){
   if(!_pePart||!_pePh){closePartEdit();return;}
@@ -5180,11 +5197,15 @@ function initIeCanvas(){
   _ie.cv=cv; _ie.ctx=cv.getContext('2d');
   cv.addEventListener('pointerdown',e=>{const p=posP(_ie,e);
     if(_ie.cropMode){_ie.cropRect={x0:p.x,y0:p.y,x1:p.x,y1:p.y};_ie.cropping=true;return;}
+    if(_ie.delMode){ const idx=_ie.boxes.findIndex(b=>hitBadge(_ie,b,p));
+      if(idx>=0){_ie.boxes.splice(idx,1); if(!_ie.boxes.length){_ie.delMode=false;cv.style.cursor='';} renderCanvasP(_ie); const st=$('#ieStatus');if(st)st.textContent=_ie.boxes.length?`✕를 눌러 모자이크를 지워요 · ${_ie.boxes.length}개 남음`:'모자이크를 모두 지웠어요';}
+      return; }
     const hit=_ie.boxes.find(b=>boxHit(b,p));
-    if(hit && !(e.pointerType==='touch' && hit.shape==='circle')){hit.on=!hit.on;renderCanvasP(_ie);return;}
+    if(hit && !(e.pointerType==='touch' && hit.shape==='circle')){return;}
     _ie.drag={x:p.x,y:p.y,cur:p,type:e.pointerType,moved:false,grow:(hit&&hit.shape==='circle')?hit:null};
     try{cv.setPointerCapture(e.pointerId);}catch(_){}});
   cv.addEventListener('pointermove',e=>{
+    if(_ie.delMode){const pp=posP(_ie,e);cv.style.cursor=_ie.boxes.some(b=>hitBadge(_ie,b,pp))?'pointer':'default';}
     if(_ie.cropMode){if(!_ie.cropping)return;const p=posP(_ie,e);_ie.cropRect.x1=p.x;_ie.cropRect.y1=p.y;drawIeCrop();return;}
     if(!_ie.drag)return;_ie.drag.cur=posP(_ie,e);
     if(Math.abs(_ie.drag.cur.x-_ie.drag.x)>6||Math.abs(_ie.drag.cur.y-_ie.drag.y)>6)_ie.drag.moved=true;
@@ -5214,11 +5235,11 @@ function openImgEdit(src, opts){
     if(useCors && /^https?:/i.test(src)) im.crossOrigin='anonymous';   // 저장된(원격) 사진도 캔버스에 그려 저장할 수 있게
     im.onload=()=>{
       _ie.img=im; ieFit(im);
-      _ie.boxes=(opts.boxes||[]).map(b=>({...b})); _ie.mosaicOn=opts.mosaicOn!==false;
+      _ie.boxes=(opts.boxes||[]).map(b=>({...b})); _ie.mosaicOn=opts.mosaicOn!==false; _ie.delMode=false;
       _ie.drag=null; _ie.cropMode=false; _ie.cropRect=null; _ie.cropping=false; _ie.onApply=opts.onApply||null;
       const mz=$('#ieMz'); if(mz)mz.checked=_ie.mosaicOn;
       const cb=$('#ieCropBar'); if(cb)cb.style.display='none';
-      const st=$('#ieStatus'); if(st)st.textContent=_ie.boxes.length?'얼굴을 눌러 켜고 끌 수 있어요 · 빈 곳 드래그로 추가':'빈 곳을 드래그해 가릴 부분을 추가하거나, 회전·자르기로 다듬어 보세요.';
+      const st=$('#ieStatus'); if(st)st.textContent=_ie.boxes.length?'빈 곳을 눌러(드래그해) 더 가릴 수 있어요 · 빈 곳 드래그로 추가':'빈 곳을 드래그해 가릴 부분을 추가하거나, 회전·자르기로 다듬어 보세요.';
       renderCanvasP(_ie);
       open_('imgEditOverlay');
     };
@@ -5241,16 +5262,16 @@ async function ieRedetect(){
   }catch(e){found=[];}
   _ie.boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
   renderCanvasP(_ie);
-  if(st)st.textContent=_ie.boxes.length?`✅ 얼굴 ${_ie.boxes.length}개 모자이크 · 얼굴을 눌러 켜고 끌 수 있어요`:'얼굴을 못 찾았어요. 빈 곳을 드래그해 직접 가려주세요.';
+  if(st)st.textContent=_ie.boxes.length?`✅ 얼굴 ${_ie.boxes.length}개 모자이크 · 빈 곳을 눌러(드래그해) 더 가릴 수 있어요`:'얼굴을 못 찾았어요. 빈 곳을 드래그해 직접 가려주세요.';
 }
-function ieClear(){ _ie.boxes=[]; renderCanvasP(_ie); const st=$('#ieStatus'); if(st)st.textContent='모자이크를 지웠어요.'; }
+function ieClear(){ if(!_ie.boxes.length){const st=$('#ieStatus');if(st)st.textContent='지울 모자이크가 없어요.';return;} _ie.delMode=!_ie.delMode; if(!_ie.delMode&&_ie.cv)_ie.cv.style.cursor=''; renderCanvasP(_ie); const st=$('#ieStatus'); if(st)st.textContent=_ie.delMode?'지울 모자이크의 ✕를 누르세요 (끝나면 버튼을 다시 눌러요)':'삭제를 마쳤어요.'; }
 function ieToggleMz(){ const mz=$('#ieMz'); _ie.mosaicOn=mz?mz.checked:true; renderCanvasP(_ie); }
 function ieRotate(){
   const w=_ie.img.width,h=_ie.img.height;
   const c=document.createElement('canvas');c.width=h;c.height=w;
   const cx=c.getContext('2d');cx.translate(h/2,w/2);cx.rotate(Math.PI/2);cx.drawImage(_ie.img,-w/2,-h/2);
   const im=new Image();
-  im.onload=()=>{ _ie.img=im; _ie.boxes=[]; ieFit(im); renderCanvasP(_ie); const st=$('#ieStatus'); if(st)st.textContent='사진을 회전했어요.'; };
+  im.onload=()=>{ _ie.img=im; _ie.boxes=[]; _ie.delMode=false; ieFit(im); renderCanvasP(_ie); const st=$('#ieStatus'); if(st)st.textContent='사진을 회전했어요.'; };
   im.src=c.toDataURL('image/jpeg',0.92);
 }
 function ieCropStart(){ _ie.cropMode=true;_ie.cropRect=null;_ie.cropping=false; const cb=$('#ieCropBar'); if(cb)cb.style.display='flex'; renderCanvasP(_ie); const st=$('#ieStatus'); if(st)st.textContent='✂️ 잘라낼 부분을 사진에서 드래그하세요'; }
@@ -5270,7 +5291,7 @@ function ieCropApply(){
   const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));
   c.getContext('2d').drawImage(_ie.img,x,y,w,h,0,0,c.width,c.height);
   const im=new Image();
-  im.onload=()=>{ _ie.img=im; _ie.boxes=[]; _ie.cropMode=false; _ie.cropRect=null; ieFit(im);
+  im.onload=()=>{ _ie.img=im; _ie.boxes=[]; _ie.delMode=false; _ie.cropMode=false; _ie.cropRect=null; ieFit(im);
     const cb=$('#ieCropBar'); if(cb)cb.style.display='none'; renderCanvasP(_ie); toast('사진을 잘랐어요'); };
   im.src=c.toDataURL('image/jpeg',0.92);
 }
