@@ -606,6 +606,13 @@
   .imgr-cnt{font-size:12px;color:var(--sub)}
   .mini-card .mimg{position:relative}
   .cap-edit{position:absolute;right:6px;top:6px;width:26px;height:26px;border-radius:50%;border:none;background:rgba(0,0,0,.5);color:#fff;font-size:13px;cursor:pointer;display:grid;place-items:center}
+  .comm-atts{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+  .comm-atts-h{font-size:12.5px;font-weight:700;color:var(--sub);margin-bottom:8px}
+  .comm-att-img{margin-bottom:8px}
+  .comm-att-img img{width:100%;border-radius:12px;display:block}
+  .comm-att-file{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);background:#faf7f4;border:1px solid #ece3db;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  .comm-att-file .an{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:600}
+  .comm-att-file .dl{font-size:12px;color:var(--coral-tx);font-weight:700;white-space:nowrap}
   .imgr-del{color:#c0433f;border-color:#eec6c6}
   .refpick-item.picked{border-color:var(--coral);background:#fdf7f5}
   .refpick-item .rp-check{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;background:#f3eeeb;color:var(--coral-tx)}
@@ -1342,7 +1349,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813a</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813b</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1506,11 +1513,14 @@
 
 <!-- ============ 커뮤니티 글쓰기 ============ -->
 <div class="overlay" id="commWriteOverlay" onclick="if(event.target===this)close_('commWriteOverlay')">
-  <div class="modal">
+  <div class="modal" style="max-width:600px;max-height:90vh;display:flex;flex-direction:column">
     <div class="modal-head"><b id="commWriteHead">커뮤니티 글쓰기</b><button class="x" onclick="close_('commWriteOverlay')">×</button></div>
-    <div class="auth-body">
+    <div class="auth-body" style="overflow:auto">
       <input id="commTitle" class="comm-input" placeholder="제목" name="nolimoa-comm-title" autocomplete="off" maxlength="80">
-      <textarea id="commBody" class="comm-textarea" placeholder="내용을 입력하세요 (링크·#해시태그도 됩니다)"></textarea>
+      <textarea id="commBody" class="comm-textarea" style="min-height:220px" placeholder="내용을 입력하세요 (링크·#해시태그도 됩니다)"></textarea>
+      <input type="file" id="commAttachInput" multiple hidden>
+      <div style="margin-top:10px"><button type="button" class="fa-btn" onclick="document.getElementById('commAttachInput').click()">📎 파일 첨부 <span style="color:var(--sub);font-weight:400">· 이미지·PDF·한글(hwp)·워드 등</span></button></div>
+      <div id="commAttachList" style="margin-top:8px"></div>
       <label id="commNoticeRow" class="comm-notice-row" style="display:none">
         <input type="checkbox" id="commNotice"> <span>📢 공지로 등록 (관리자)</span>
       </label>
@@ -4262,10 +4272,35 @@ async function loadCommunity(){
   try{
     const {data}=await SB.from('community_posts').select('*').order('created_at',{ascending:false});
     window._commPosts=(data||[]).map(r=>({id:r.id, db:true, user_id:r.user_id, notice:!!r.is_notice,
-      title:r.title||'', body:r.body||'', date:fmtDate(r.created_at),
+      title:r.title||'', body:r.body||'', date:fmtDate(r.created_at), attachments:r.attachments||[],
       author:{name:r.author_name||'선생님', icon:r.author_icon||'🧑', photo:r.author_avatar||'', color:'#86736b', init:(r.author_name||'선')[0]}}));
   }catch(e){ window._commPosts=[]; }
 }
+/* ===== 커뮤니티 파일 첨부 ===== */
+let _commAtts=[];
+(function(){ const ci=document.getElementById('commAttachInput'); if(ci)ci.addEventListener('change',e=>{ addCommAttachments(e.target.files); e.target.value=''; }); })();
+function addCommAttachments(list){ [...list].forEach(f=>_commAtts.push({name:f.name,size:f.size,file:f,url:URL.createObjectURL(f)})); renderCommAttachList(); }
+function renderCommAttachList(){
+  const box=$('#commAttachList'); if(!box)return; box.innerHTML='';
+  _commAtts.forEach((a,i)=>{ const el=document.createElement('div'); el.className='attach-item';
+    el.innerHTML=`<span>${isImgAtt(a)?'🖼️':'📄'}</span><span class="an">${esc(a.name)}</span><span class="asz">${a.size?fmtSize(a.size):''}</span><button class="ax" title="삭제">✕</button>`;
+    el.querySelector('.ax').onclick=()=>{ _commAtts.splice(i,1); renderCommAttachList(); };
+    box.appendChild(el); });
+}
+async function uploadCommAttachments(){
+  const out=[];
+  for(const a of _commAtts){
+    if(a.url && !a.file){ out.push({name:a.name,size:a.size,url:a.url}); continue; }
+    if(SB && authUser && a.file){
+      const path=`${authUser.id}/comm/${Date.now()}_${(a.name||'file').replace(/[^\w.\-]/g,'_')}`;
+      const up=await SB.storage.from(STORAGE_BUCKET).upload(path,a.file,{contentType:a.file.type||'application/octet-stream'});
+      if(up.error)throw up.error;
+      out.push({name:a.name,size:a.size,url:SB.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl});
+    } else { out.push({name:a.name,size:a.size,url:a.url}); }
+  }
+  return out;
+}
+function isImgAtt(a){ return /\.(png|jpe?g|gif|webp|bmp|heic)$/i.test((a&&(a.name||a.url))||'') || /^image\//.test((a&&a.type)||''); }
 function commCanDel(p){ return p.db ? (isAdmin()||!!(authUser&&p.user_id===authUser.id)) : (p.tid==='me'); }
 function commCanEdit(p){ return p.db ? !!(authUser&&p.user_id===authUser.id) : (p.tid==='me'); } // 내 글만 수정
 let _commEditId=null;
@@ -4300,6 +4335,7 @@ function openCommWrite(){
   _commEditId=null;
   const h=$('#commWriteHead'); if(h)h.textContent='커뮤니티 글쓰기';
   $('#commTitle').value=''; $('#commBody').value='';
+  _commAtts=[]; renderCommAttachList();
   const nr=$('#commNoticeRow'); if(nr)nr.style.display=isAdmin()?'flex':'none';
   const nc=$('#commNotice'); if(nc)nc.checked=false;
   open_('commWriteOverlay');
@@ -4311,6 +4347,7 @@ function openCommEdit(id){
   close_('commPostOverlay');
   const h=$('#commWriteHead'); if(h)h.textContent='커뮤니티 글 수정';
   $('#commTitle').value=p.title||''; $('#commBody').value=p.body||'';
+  _commAtts=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url})); renderCommAttachList();
   const nr=$('#commNoticeRow'); if(nr)nr.style.display=isAdmin()?'flex':'none';
   const nc=$('#commNotice'); if(nc)nc.checked=!!p.notice;
   open_('commWriteOverlay');
@@ -4323,9 +4360,10 @@ async function submitCommPost(){
   if(_commEditId){
     const p=commList().find(x=>String(x.id)===String(_commEditId));
     if(p){
-      if(!p.db){ p.title=title; p.body=body; p.notice=notice; close_('commWriteOverlay'); _commEditId=null; renderCommunity(); toast('수정했어요'); return; }
+      if(!p.db){ p.title=title; p.body=body; p.notice=notice; p.attachments=_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})); close_('commWriteOverlay'); _commEditId=null; renderCommunity(); toast('수정했어요'); return; }
       try{
-        const {data,error}=await SB.from('community_posts').update({title, body, is_notice:!!notice}).eq('id',p.id).select();
+        const atts=await uploadCommAttachments();
+        const {data,error}=await SB.from('community_posts').update({title, body, is_notice:!!notice, attachments:atts}).eq('id',p.id).select();
         if(error)throw error;
         if(!data||!data.length){ toast('수정이 반영되지 않았어요. Supabase에서 최신 SQL(수정 권한)을 실행했는지 확인해주세요.'); return; }
         close_('commWriteOverlay'); _commEditId=null; await loadCommunity(); renderCommunity(); toast('수정했어요'); return;
@@ -4334,12 +4372,13 @@ async function submitCommPost(){
     _commEditId=null; // 대상이 없으면 새 글로 진행
   }
   if(!SB){
-    communityDemo.unshift({id:'c'+Date.now(), tid:'me', notice, title, body, date:'방금', author:myAuthorObj()});
+    communityDemo.unshift({id:'c'+Date.now(), tid:'me', notice, title, body, date:'방금', attachments:_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})), author:myAuthorObj()});
     close_('commWriteOverlay'); renderCommunity(); toast('등록했어요 (데모)'); return;
   }
   if(!authUser){ toast('로그인이 필요해요'); openAuth('login'); return; }
   try{
-    const row={ user_id:authUser.id, title, body, is_notice:!!notice,
+    const atts=await uploadCommAttachments();
+    const row={ user_id:authUser.id, title, body, is_notice:!!notice, attachments:atts,
       author_name:profile.nick, author_icon:profile.icon, author_avatar:profile.photo };
     const {error}=await SB.from('community_posts').insert(row); if(error)throw error;
     close_('commWriteOverlay'); await loadCommunity(); renderCommunity();
@@ -4358,11 +4397,21 @@ function openCommPost(id){
     </div>
     <h3 style="color:var(--coral-tx);font-size:18px;margin:8px 0 12px">${esc(p.title||'')}</h3>
     <div style="font-size:14px;line-height:1.75;white-space:pre-wrap;word-break:break-word">${linkifyTags(p.body||'')}</div>
+    ${commAttachHTML(p.attachments)}
     ${(commCanEdit(p)||commCanDel(p))?`<div style="margin-top:18px;display:flex;gap:8px;justify-content:flex-end">
       ${commCanEdit(p)?`<button class="btn-line" onclick="openCommEdit('${p.id}')">✏️ 수정</button>`:''}
       ${commCanDel(p)?`<button class="btn-line" onclick="deleteCommPost('${p.id}')">🗑 삭제</button>`:''}
     </div>`:''}`;
   open_('commPostOverlay');
+}
+/* 커뮤니티 첨부 미리보기: 이미지는 바로 보이고, 그 외 파일은 다운로드 칩으로 */
+function commAttachHTML(atts){
+  atts=atts||[]; if(!atts.length)return '';
+  const items=atts.map(a=>{
+    if(isImgAtt(a)) return `<div class="comm-att-img"><img src="${a.url}" alt="${esc(a.name||'')}" loading="lazy"></div>`;
+    return `<a class="comm-att-file" href="${a.url}" target="_blank" rel="noopener" download><span>📄</span><span class="an">${esc(a.name||'첨부파일')}</span><span class="dl">내려받기 ↓</span></a>`;
+  }).join('');
+  return `<div class="comm-atts"><div class="comm-atts-h">📎 첨부파일 ${atts.length}개</div>${items}</div>`;
 }
 async function deleteCommPost(id){
   const p=commList().find(x=>String(x.id)===String(id)); if(!p)return;
