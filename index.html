@@ -1335,7 +1335,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812t</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0812u</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -3451,6 +3451,7 @@ function openAiFolder(ctx, theme, arr){
   _aiFolder={ctx, theme, arr:arr.slice()};
   $('#folderTitle').innerHTML=`🗂️ ${esc(theme)} <span class="fsub">· ${arr.length}개 · ✨AI 자동 분류</span>`;
   $('#folderActions').innerHTML=`<button class="fa-btn p" onclick="materializeAiFolder()">✎ 폴더 편집 (이름 변경·놀이 관리)</button>
+    ${ctx==='saved'?`<button class="fa-btn del" onclick="deleteAiFolder()">🗑 삭제</button>`:''}
     <span class="fa-hint">편집하면 내 폴더가 돼요</span>`;
   const g=$('#folderPosts');g.innerHTML='';
   if(!arr.length)g.innerHTML='<div class="empty">비어 있어요</div>';
@@ -3503,10 +3504,36 @@ function submitFolder(){
   else{const id='f'+(_folderSeq++);col.custom().push({id,name,posts:[]});close_('newFolderOverlay');renderMyFolders();openCustomFolder(_newCtx,id);}
   saveUserData();
 }
+// 여러 놀이를 '저장한 놀이'에서 한꺼번에 빼기 (저장 수 집계 테이블도 정리)
+async function unsaveMany(list){
+  if(!list||!list.length)return;
+  list.forEach(p=>{ const i=savedPosts.indexOf(p); if(i>=0)savedPosts.splice(i,1); p.saves=Math.max(0,(p.saves||0)-1); });
+  saveUserData();
+  if(SB && authUser){ for(const p of list){ if(p&&p.db){ try{ await SB.from('post_saves').delete().eq('post_id',p.id).eq('user_id',authUser.id); }catch(e){} } } }
+}
 function deleteFolder(ctx,id){
-  COL[ctx].setCustom(COL[ctx].custom().filter(x=>x.id!==id));
-  close_('folderOverlay');renderMyFolders();saveUserData();
-  toast('폴더를 삭제했어요 (놀이는 그대로 있어요)');
+  const f=COL[ctx].custom().find(x=>x.id===id);
+  if(ctx==='saved'){
+    if(!confirm("이 폴더를 삭제하고, 담긴 놀이도 '저장한 놀이'에서 뺄까요?\n(놀이 자체가 사라지는 건 아니에요)")) return;
+    COL[ctx].setCustom(COL[ctx].custom().filter(x=>x.id!==id));
+    if(f) unsaveMany(f.posts.slice());
+  } else {
+    COL[ctx].setCustom(COL[ctx].custom().filter(x=>x.id!==id));
+    saveUserData();
+  }
+  close_('folderOverlay');renderMyFolders();
+  toast('폴더를 삭제했어요');
+}
+// 자동 분류 폴더 삭제(저장한 놀이): 묶인 놀이들을 저장 목록에서 빼기
+function deleteAiFolder(){
+  if(!_aiFolder)return;
+  const {ctx, arr}=_aiFolder;
+  if(ctx!=='saved'){ toast('이 폴더는 삭제할 수 없어요'); return; }
+  if(!confirm("이 폴더에 묶인 놀이를 '저장한 놀이'에서 뺄까요?\n(놀이 자체가 사라지는 건 아니에요)")) return;
+  const posts=(arr||[]).slice(); _aiFolder=null;
+  unsaveMany(posts);
+  close_('folderOverlay');renderMyFolders();
+  toast('폴더를 삭제했어요');
 }
 function openPicker(){renderPicker();open_('pickerOverlay');}
 function renderPicker(){
