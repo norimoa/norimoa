@@ -1374,7 +1374,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813h</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813j</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2101,6 +2101,14 @@ window.addEventListener('popstate', function(){
 let _overlayOpenTs=0, _overlayOpenId='';
 function open_(id){ const e=document.getElementById(id); if(!e)return; const was=e.classList.contains('on'); e.classList.add('on'); _overlayOpenTs=Date.now(); _overlayOpenId=id; if(!was)backGuardPush(); }
 function close_(id){ const e=document.getElementById(id); if(!e)return; const was=e.classList.contains('on'); e.classList.remove('on'); if(was)backGuardConsume(); }
+/* 한 오버레이에서 다른 오버레이로 전환: history.back()+pushState를 연달아 부르면 뒤로가기 가드가 어긋나
+   저장 시 페이지가 통째로 닫히는 문제가 생김. 그래서 기존 창의 가드를 그대로 물려받아 새 창을 연다(추가 push 없음). */
+function swapOverlay(fromId, toId){
+  const f=document.getElementById(fromId), t=document.getElementById(toId);
+  const guardHeld = !!(f && f.classList.contains('on'));   // from이 이미 push한 가드가 있으면 재사용
+  if(f) f.classList.remove('on');
+  if(t){ const was=t.classList.contains('on'); t.classList.add('on'); _overlayOpenTs=Date.now(); _overlayOpenId=toId; if(!was && !guardHeld) backGuardPush(); }
+}
 /* 입력칸 안에서 드래그(글자 선택)하다 마우스를 창 밖(배경)에서 떼도 창이 닫히지 않게:
    드래그 시작 위치가 배경(overlay)이 아니면, 그 배경 클릭으로 인한 닫기를 막는다 */
 (function(){
@@ -2830,6 +2838,8 @@ function openPost(p){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   $('#v-post').classList.add('on');window.scrollTo(0,0);
   if(!fromDetail) backGuardPush();   // 뒤로가기로 목록으로 돌아올 수 있게
+  // 주소창에 이 글의 링크 표시 (실제 저장된 글만) — replaceState라 뒤로가기 가드에는 영향 없음
+  try{ history.replaceState(history.state||null, '', location.pathname + ((p.db&&p.id)?('#play='+p.id):'')); }catch(e){}
 }
 function viewLabel(v){ return ({browse:'둘러보기',sub:'팔로잉',my:'마이페이지',comm:'행정 자료실',env:'환경구성',about:'놀이모아 소개',privacy:'개인정보처리방침'})[v]||'둘러보기'; }
 function postBack(fromPop){
@@ -4293,7 +4303,7 @@ async function saveCategories(){
   return true;
 }
 let _catEdit=null;
-function openCatAdmin(){ if(!canEditCats()){ toast('관리자만 사용할 수 있어요'); return; } close_('catOverlay'); _catEdit=catData.map(g=>({g:g.g, ic:g.ic, items:g.items.slice()})); renderCatAdmin(); open_('catAdminOverlay'); }
+function openCatAdmin(){ if(!canEditCats()){ toast('관리자만 사용할 수 있어요'); return; } _catEdit=catData.map(g=>({g:g.g, ic:g.ic, items:g.items.slice()})); renderCatAdmin(); swapOverlay('catOverlay','catAdminOverlay'); }
 function captureCatInputs(){ const box=$('#catAdminBody'); if(!box||!_catEdit)return; box.querySelectorAll('.ca-in').forEach(inp=>{ const v=inp.value.trim(); if(v)_catEdit[+inp.dataset.g].items[+inp.dataset.i]=v; }); }
 let _caDrag=null; // {kind:'group'|'item', g, i}
 function renderCatAdmin(){
@@ -4346,6 +4356,7 @@ function setupCatDnD(box){
   });
 }
 async function saveCatAdmin(){
+ try{
   if(!_catEdit)return;
   captureCatInputs();
   _catEdit.forEach(e=>{ e.items=e.items.map(x=>String(x).trim()).filter(Boolean); });
@@ -4353,8 +4364,9 @@ async function saveCatAdmin(){
   const rebuilt=_catEdit.map(e=>{ const old=catData.find(c=>c.g===e.g); return {g:e.g, ic:e.ic||(old&&old.ic)||'📁', items:e.items.slice()}; });
   catData.length=0; rebuilt.forEach(d=>catData.push(d));
   const ok=await saveCategories();
-  syncCatDrawer(); if($('#catPanel'))renderCatPanel(); try{renderSideCats();}catch(e){}
+  try{ syncCatDrawer(); }catch(e){} if($('#catPanel')){try{renderCatPanel();}catch(e){}} try{renderSideCats();}catch(e){}
   if(ok){ close_('catAdminOverlay'); toast('카테고리를 저장했어요'); }
+ }catch(e){ try{toast('저장 중 오류가 났어요: '+(e&&e.message||e));}catch(_){} try{console.error('saveCatAdmin',e);}catch(_){} }
 }
 
 /* ===== 커뮤니티 (게시판 + 공지) ===== */
@@ -4448,7 +4460,7 @@ function renderCommWriteCats(){
   });
 }
 let _commCatEdit=null;
-function openCommCatAdmin(){ if(!isAdmin()){toast('관리자만 사용할 수 있어요');return;} close_('catOverlay'); _commCatEdit=commCatGroups().map(g=>({g:g.g,items:g.items.slice()})); renderCommCatAdmin(); const ab=$('#commCatAddGroup'); if(ab)ab.onclick=()=>{ captureCommCatInputs(); _commCatEdit.push({g:'새 카테고리',items:[]}); renderCommCatAdmin(); }; open_('commCatAdminOverlay'); }
+function openCommCatAdmin(){ if(!isAdmin()){toast('관리자만 사용할 수 있어요');return;} _commCatEdit=commCatGroups().map(g=>({g:g.g,items:g.items.slice()})); renderCommCatAdmin(); const ab=$('#commCatAddGroup'); if(ab)ab.onclick=()=>{ captureCommCatInputs(); _commCatEdit.push({g:'새 카테고리',items:[]}); renderCommCatAdmin(); }; swapOverlay('catOverlay','commCatAdminOverlay'); }
 function captureCommCatInputs(){ const box=$('#commCatAdminBody'); if(!box||!_commCatEdit)return;
   box.querySelectorAll('.cca-gname').forEach(inp=>{ const gi=+inp.dataset.g; if(_commCatEdit[gi]){const v=inp.value.trim(); if(v)_commCatEdit[gi].g=v;} });
   box.querySelectorAll('.ca-in').forEach(inp=>{ const gi=+inp.dataset.g, ii=+inp.dataset.i; const v=inp.value.trim(); if(v&&_commCatEdit[gi]&&_commCatEdit[gi].items[ii]!==undefined)_commCatEdit[gi].items[ii]=v; });
@@ -4509,14 +4521,13 @@ function openCommEdit(id){
   const p=commList().find(x=>String(x.id)===String(id)); if(!p)return;
   if(!commCanEdit(p)){ toast('내 글만 수정할 수 있어요'); return; }
   _commEditId=id;
-  close_('commPostOverlay');
   const h=$('#commWriteHead'); if(h)h.textContent='자료 수정';
   $('#commTitle').value=p.title||''; $('#commBody').value=p.body||'';
   _commAtts=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url})); renderCommAttachList();
   _commWriteCat=p.category||''; renderCommWriteCats();
   const nr=$('#commNoticeRow'); if(nr)nr.style.display=isAdmin()?'flex':'none';
   const nc=$('#commNotice'); if(nc)nc.checked=!!p.notice;
-  open_('commWriteOverlay');
+  swapOverlay('commPostOverlay','commWriteOverlay');
 }
 // DB에 아직 최신 SQL이 반영되지 않아 특정 컬럼(category/attachments)이 없어도
 // 글 등록이 실패하지 않도록, 없는 컬럼은 빼고 다시 시도한다.
@@ -4929,6 +4940,8 @@ function go(v){
   if(v==='comm' && isGuest()){ toast('회원가입하면 행정 자료실을 볼 수 있어요'); openAuth('signup'); return; }
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   $('#v-'+v).classList.add('on');
+  // 목록·다른 화면으로 가면 주소창의 글 링크(#play=)를 지워 norimoa.com으로 되돌림
+  try{ if(location.hash) history.replaceState(history.state||null, '', location.pathname); }catch(e){}
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   document.body.classList.toggle('nav-browse', v==='browse'); // 카테고리·알림 버튼은 둘러보기에서만
   window.scrollTo(0,0);
