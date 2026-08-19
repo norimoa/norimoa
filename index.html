@@ -754,10 +754,18 @@
   .cat-admin-btn{display:block;width:100%;margin:0 0 12px;background:#efe7f7;color:#6b4bab;border:1px solid #ddccf0;border-radius:12px;padding:11px;font-size:13.5px;font-weight:700;cursor:pointer}
   .ca-note{font-size:12.5px;color:var(--sub);line-height:1.5;padding:12px 20px 4px}
   #catAdminBody{padding:8px 20px 4px}
-  .ca-group{margin-bottom:16px}
-  .ca-gl{font-size:14px;font-weight:800;color:#6f5c50;margin-bottom:8px}
+  .ca-group{margin-bottom:16px;border:1px solid transparent;border-radius:12px;padding:6px 8px;transition:border-color .12s,background .12s}
+  .ca-group.dragover{border-color:var(--coral);background:#fff6f8}
+  .ca-group.dragging{opacity:.5}
+  .ca-gl{font-size:14px;font-weight:800;color:#6f5c50;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .ca-drag{flex:0 0 auto;cursor:grab;color:#c3b7ad;font-size:15px;line-height:1;padding:2px 4px;border-radius:6px;user-select:none;touch-action:none}
+  .ca-drag:hover{color:var(--coral);background:#f6ece7}
+  .ca-drag:active{cursor:grabbing}
   .ca-items{display:flex;flex-direction:column;gap:6px}
-  .ca-row{display:flex;gap:8px;align-items:center}
+  .ca-row{display:flex;gap:8px;align-items:center;border:1px solid transparent;border-radius:9px}
+  .ca-row.dragover{border-color:var(--coral);background:#fff6f8}
+  .ca-row.dragging{opacity:.5}
+  .ca-idrag{font-size:13px;padding:2px 2px}
   .ca-in{flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:9px;padding:8px 11px;font-family:inherit;background:#fff;font-size:13.5px}
   .ca-del{flex:0 0 auto;width:30px;height:30px;border:none;background:#f5eceb;color:#c0554e;border-radius:8px;font-size:16px;cursor:pointer}
   .ca-del:hover{background:#f3d9d6}
@@ -1366,7 +1374,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813g</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813h</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1522,7 +1530,7 @@
 <div class="overlay" id="catAdminOverlay" onclick="if(event.target===this)close_('catAdminOverlay')">
   <div class="modal folder-modal">
     <div class="modal-head"><b>✏️ 카테고리 편집</b><button class="x" onclick="close_('catAdminOverlay')">×</button></div>
-    <div class="ca-note">그룹 안에서 항목을 추가·이름수정·삭제할 수 있어요. 이름을 바꾸면 이미 그 항목으로 올라간 글은 예전 이름 그대로 남아요.</div>
+    <div class="ca-note">⠿ 손잡이를 <b>드래그</b>하면 순서를 바꿀 수 있어요. 큰 카테고리를 옮기면 안의 항목들도 함께 이동해요. 항목은 추가·이름수정·삭제도 돼요. (이름을 바꿔도 이미 올라간 글은 예전 이름 그대로 남아요.)</div>
     <div id="catAdminBody"></div>
     <div class="ca-foot"><button class="ca-cancel" onclick="close_('catAdminOverlay')">취소</button><button class="ca-save" onclick="saveCatAdmin()">저장</button></div>
   </div>
@@ -4260,7 +4268,17 @@ async function loadCategories(){
     if(data && data.value && Array.isArray(data.value.groups)){
       // 예전에 저장된 이름을 새 이름으로 자동 변경 (생태→생태교육 등)
       const CAT_RENAME={'생태':'생태교육','AI·디지털':'AI·디지털 교육','코딩':'코딩교육'};
-      catData.forEach(cd=>{ const f=data.value.groups.find(x=>x.g===cd.g); if(f && Array.isArray(f.items)) cd.items=f.items.map(it=>CAT_RENAME[it]||it); });
+      const saved=data.value.groups;
+      const byName={}; catData.forEach(c=>{ byName[c.g]=c; });
+      const rebuilt=[];
+      // 저장된 순서대로 다시 구성 (내용물 + 순서 모두 반영)
+      saved.forEach(s=>{ const base=byName[s.g];
+        if(base){ if(Array.isArray(s.items)) base.items=s.items.map(it=>CAT_RENAME[it]||it); rebuilt.push(base); delete byName[s.g]; }
+        else { rebuilt.push({g:s.g, ic:s.ic||'📁', items:(s.items||[]).map(it=>CAT_RENAME[it]||it)}); }
+      });
+      // 저장본에 없던 그룹(새로 추가된 기본 그룹 등)은 뒤에 유지
+      catData.forEach(c=>{ if(byName[c.g]) rebuilt.push(c); });
+      catData.length=0; rebuilt.forEach(d=>catData.push(d));
       syncCatDrawer(); if($('#catPanel'))renderCatPanel(); try{renderSideCats();}catch(e){}
     }
   }catch(e){}
@@ -4277,12 +4295,13 @@ async function saveCategories(){
 let _catEdit=null;
 function openCatAdmin(){ if(!canEditCats()){ toast('관리자만 사용할 수 있어요'); return; } close_('catOverlay'); _catEdit=catData.map(g=>({g:g.g, ic:g.ic, items:g.items.slice()})); renderCatAdmin(); open_('catAdminOverlay'); }
 function captureCatInputs(){ const box=$('#catAdminBody'); if(!box||!_catEdit)return; box.querySelectorAll('.ca-in').forEach(inp=>{ const v=inp.value.trim(); if(v)_catEdit[+inp.dataset.g].items[+inp.dataset.i]=v; }); }
+let _caDrag=null; // {kind:'group'|'item', g, i}
 function renderCatAdmin(){
   const box=$('#catAdminBody'); if(!box||!_catEdit)return; box.innerHTML='';
   _catEdit.forEach((grp,gi)=>{
-    const sec=document.createElement('div'); sec.className='ca-group';
-    const rows=grp.items.map((it,ii)=>`<div class="ca-row"><input class="ca-in" data-g="${gi}" data-i="${ii}" value="${esc(it)}"><button class="ca-del" data-g="${gi}" data-i="${ii}" title="삭제">×</button></div>`).join('');
-    sec.innerHTML=`<div class="ca-gl">${grp.ic} ${esc(grp.g)}</div><div class="ca-items">${rows}</div>
+    const sec=document.createElement('div'); sec.className='ca-group'; sec.dataset.g=gi;
+    const rows=grp.items.map((it,ii)=>`<div class="ca-row" data-g="${gi}" data-i="${ii}"><span class="ca-drag ca-idrag" draggable="true" data-g="${gi}" data-i="${ii}" title="드래그해서 순서 변경">⠿</span><input class="ca-in" data-g="${gi}" data-i="${ii}" value="${esc(it)}"><button class="ca-del" data-g="${gi}" data-i="${ii}" title="삭제">×</button></div>`).join('');
+    sec.innerHTML=`<div class="ca-gl"><span class="ca-drag ca-gdrag" draggable="true" data-g="${gi}" title="드래그해서 카테고리 순서 변경">⠿</span> ${grp.ic} ${esc(grp.g)}</div><div class="ca-items">${rows}</div>
       <div class="ca-add"><input class="ca-newin" data-g="${gi}" placeholder="새 항목 추가"><button class="ca-addbtn" data-g="${gi}">＋ 추가</button></div>`;
     box.appendChild(sec);
   });
@@ -4292,13 +4311,49 @@ function renderCatAdmin(){
     const add=()=>{ const v=(inp.value||'').trim(); if(v && !_catEdit[gi].items.includes(v)){ captureCatInputs(); _catEdit[gi].items.push(v); renderCatAdmin(); } };
     b.onclick=add; inp.onkeydown=(e)=>{ if(e.key==='Enter' && !(e.isComposing||e.keyCode===229)){ e.preventDefault(); add(); } };
   });
+  setupCatDnD(box);
+}
+/* 카테고리 편집: 드래그로 큰 카테고리(내용물째)·항목 순서 변경 */
+function setupCatDnD(box){
+  const clearHi=()=>box.querySelectorAll('.dragover').forEach(e=>e.classList.remove('dragover'));
+  // 큰 카테고리(그룹) 이동
+  box.querySelectorAll('.ca-gdrag').forEach(h=>{
+    const sec=h.closest('.ca-group');
+    h.addEventListener('dragstart',e=>{ _caDrag={kind:'group',g:+h.dataset.g}; sec.classList.add('dragging'); try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','g');}catch(_){} });
+    h.addEventListener('dragend',()=>{ sec.classList.remove('dragging'); clearHi(); _caDrag=null; });
+  });
+  box.querySelectorAll('.ca-group').forEach(sec=>{
+    sec.addEventListener('dragover',e=>{ if(_caDrag&&_caDrag.kind==='group'){ e.preventDefault(); clearHi(); sec.classList.add('dragover'); } });
+    sec.addEventListener('drop',e=>{ if(!_caDrag||_caDrag.kind!=='group')return; e.preventDefault();
+      const to=+sec.dataset.g, from=_caDrag.g; clearHi(); _caDrag=null;
+      if(from===to||isNaN(to))return; captureCatInputs();
+      const moved=_catEdit.splice(from,1)[0]; _catEdit.splice(to,0,moved); renderCatAdmin();
+    });
+  });
+  // 항목 이동 (같은 큰 카테고리 안에서)
+  box.querySelectorAll('.ca-idrag').forEach(h=>{
+    const row=h.closest('.ca-row');
+    h.addEventListener('dragstart',e=>{ _caDrag={kind:'item',g:+h.dataset.g,i:+h.dataset.i}; row.classList.add('dragging'); try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','i');}catch(_){} e.stopPropagation(); });
+    h.addEventListener('dragend',()=>{ row.classList.remove('dragging'); clearHi(); _caDrag=null; });
+  });
+  box.querySelectorAll('.ca-row').forEach(row=>{
+    row.addEventListener('dragover',e=>{ if(_caDrag&&_caDrag.kind==='item'&&+row.dataset.g===_caDrag.g){ e.preventDefault(); e.stopPropagation(); clearHi(); row.classList.add('dragover'); } });
+    row.addEventListener('drop',e=>{ if(!_caDrag||_caDrag.kind!=='item')return; if(+row.dataset.g!==_caDrag.g)return; e.preventDefault(); e.stopPropagation();
+      const g=_caDrag.g, from=_caDrag.i, to=+row.dataset.i; clearHi(); _caDrag=null;
+      if(from===to||isNaN(to))return; captureCatInputs();
+      const arr=_catEdit[g].items; const moved=arr.splice(from,1)[0]; arr.splice(to,0,moved); renderCatAdmin();
+    });
+  });
 }
 async function saveCatAdmin(){
   if(!_catEdit)return;
   captureCatInputs();
   _catEdit.forEach(e=>{ e.items=e.items.map(x=>String(x).trim()).filter(Boolean); });
-  catData.forEach(cd=>{ const e=_catEdit.find(x=>x.g===cd.g); if(e) cd.items=e.items.slice(); });
+  // 순서까지 반영: catData를 _catEdit 순서/내용으로 다시 구성 (아이콘은 기존 값 유지)
+  const rebuilt=_catEdit.map(e=>{ const old=catData.find(c=>c.g===e.g); return {g:e.g, ic:e.ic||(old&&old.ic)||'📁', items:e.items.slice()}; });
+  catData.length=0; rebuilt.forEach(d=>catData.push(d));
   const ok=await saveCategories();
+  syncCatDrawer(); if($('#catPanel'))renderCatPanel(); try{renderSideCats();}catch(e){}
   if(ok){ close_('catAdminOverlay'); toast('카테고리를 저장했어요'); }
 }
 
