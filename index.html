@@ -1366,7 +1366,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813d</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813e</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4454,7 +4454,25 @@ function openCommEdit(id){
   const nc=$('#commNotice'); if(nc)nc.checked=!!p.notice;
   open_('commWriteOverlay');
 }
+// DB에 아직 최신 SQL이 반영되지 않아 특정 컬럼(category/attachments)이 없어도
+// 글 등록이 실패하지 않도록, 없는 컬럼은 빼고 다시 시도한다.
+function _isMissingColErr(err){ const m=((err&&err.message)||'')+''; return /schema cache|could not find|column .* does not exist|does not exist/i.test(m); }
+async function commWriteDB(base, id){
+  const doIt=(r)=> id
+    ? SB.from('community_posts').update(r).eq('id',id).select()
+    : SB.from('community_posts').insert(r).select();
+  let row={...base};
+  let res=await doIt(row);
+  // 없는 컬럼을 하나씩 떼어내며 최대 2번까지 재시도 (category → attachments 순)
+  for(const col of ['category','attachments']){
+    if(res.error && _isMissingColErr(res.error) && (col in row)){
+      delete row[col]; res=await doIt(row);
+    }
+  }
+  return res;
+}
 async function submitCommPost(){
+ try{
   const title=$('#commTitle').value.trim(), body=$('#commBody').value.trim();
   if(!title && !body){ toast('제목이나 내용을 입력하세요'); return; }
   const notice=isAdmin() && $('#commNotice') && $('#commNotice').checked;
@@ -4465,7 +4483,7 @@ async function submitCommPost(){
       if(!p.db){ p.title=title; p.body=body; p.notice=notice; p.category=_commWriteCat; p.attachments=_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})); close_('commWriteOverlay'); _commEditId=null; renderCommunity(); toast('수정했어요'); return; }
       try{
         const atts=await uploadCommAttachments();
-        const {data,error}=await SB.from('community_posts').update({title, body, is_notice:!!notice, category:_commWriteCat, attachments:atts}).eq('id',p.id).select();
+        const {data,error}=await commWriteDB({title, body, is_notice:!!notice, category:_commWriteCat, attachments:atts}, p.id);
         if(error)throw error;
         if(!data||!data.length){ toast('수정이 반영되지 않았어요. Supabase에서 최신 SQL(수정 권한)을 실행했는지 확인해주세요.'); return; }
         close_('commWriteOverlay'); _commEditId=null; await loadCommunity(); renderCommunity(); toast('수정했어요'); return;
@@ -4482,10 +4500,12 @@ async function submitCommPost(){
     const atts=await uploadCommAttachments();
     const row={ user_id:authUser.id, title, body, is_notice:!!notice, category:_commWriteCat, attachments:atts,
       author_name:profile.nick, author_icon:profile.icon, author_avatar:profile.photo };
-    const {error}=await SB.from('community_posts').insert(row); if(error)throw error;
+    const {error}=await commWriteDB(row, null); if(error)throw error;
     close_('commWriteOverlay'); await loadCommunity(); renderCommunity();
     toast(notice?'공지를 등록했어요':'글을 등록했어요');
   }catch(e){ toast('등록 실패: '+(e.message||e)); }
+ }catch(e){ try{toast('오류가 났어요: '+(e&&e.message||e));}catch(_){}
+   try{console.error('submitCommPost',e);}catch(_){} }
 }
 function openCommPost(id){
   const p=commList().find(x=>String(x.id)===String(id)); if(!p)return;
