@@ -50,11 +50,11 @@
   button{font-family:inherit;cursor:pointer}
   img{display:block;max-width:100%}
   .app{max-width:1520px;margin:0 auto;padding:22px 18px 120px;
-    display:grid;grid-template-columns:270px 1fr 300px;gap:22px;align-items:start}
+    display:grid;grid-template-columns:292px 1fr 300px;gap:22px;align-items:start}
   .app>main{min-width:0}  /* 그리드 본문 열이 내용 때문에 화면보다 넓어지지 않도록 */
 
   /* ---------- sidebar ---------- */
-  .side{position:sticky;top:22px;max-height:calc(100vh - 40px);overflow-y:auto;overscroll-behavior:contain}
+  .side{position:sticky;top:22px;max-height:calc(100vh - 40px);overflow-y:auto;overscroll-behavior:contain;padding-right:10px}
   .side::-webkit-scrollbar{width:8px}
   .side::-webkit-scrollbar-thumb{background:#e3d8d1;border-radius:8px}
   .side::-webkit-scrollbar-track{background:transparent}
@@ -1366,7 +1366,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813e</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813g</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -3921,9 +3921,11 @@ function renderIssues(){
   const iss=_issues[curIssue];
   const d=new Date();
   const tag=$('#issueAiTag'); if(tag)tag.style.display=iss.admin?'none':'';
-  $('#issueNote').textContent=iss.admin
-    ? `📌 관리자가 고른 '${iss.label}' 놀이예요`
-    : `✨ 오늘(${d.getMonth()+1}월 ${d.getDate()}일) 기준, '${iss.label}'에 맞춰 골랐어요`;
+  const noteEl=$('#issueNote');
+  if(noteEl){
+    if(iss.admin){ noteEl.textContent=''; noteEl.style.display='none'; }   // '관리자가 고른~' 문구는 표시하지 않음
+    else { noteEl.style.display=''; noteEl.textContent=`✨ 오늘(${d.getMonth()+1}월 ${d.getDate()}일) 기준, '${iss.label}'에 맞춰 골랐어요`; }
+  }
   // 관리자 이슈는 '직접 고른 글', 자동 이슈는 '태그 매칭'
   let matches;
   if(iss.admin){
@@ -3936,7 +3938,10 @@ function renderIssues(){
   if(matches.length){
     matches.slice(0,6).forEach(p=>rec.appendChild(miniCardPost(p)));   // 최대 6장(2줄)까지 준비
   }else{
-    rec.innerHTML=`<div class="empty" style="grid-column:1/-1">${iss.admin?`'${esc(iss.label)}'에 넣은 글이 아직 없어요. 이슈 관리에서 글을 골라주세요.`:`아직 '${iss.label}'에 맞는 놀이가 없어요. 관련 놀이를 올려보세요!`}</div>`;
+    const emptyMsg = iss.admin
+      ? (isAdmin() ? `'${esc(iss.label)}'에 넣은 글이 아직 없어요. 이슈 관리에서 글을 골라주세요.` : `곧 놀이가 채워질 예정이에요 🙂`)
+      : `아직 '${esc(iss.label)}'에 맞는 놀이가 없어요. 관련 놀이를 올려보세요!`;
+    rec.innerHTML=`<div class="empty" style="grid-column:1/-1">${emptyMsg}</div>`;
   }
   setupMoreRow('brRecommend','recMore');   // 한 줄만 보이고, 더 있으면 '더보기'
 }
@@ -4116,7 +4121,9 @@ function matchesFilter(p,label){
   const forms=synForms(label); // 공백·'놀이' 무시 + 동의어
   const hit=v=>{const d=dePlay(v); return forms.some(L=>L&&d.includes(L));};
   const inArr=a=>(a||[]).some(hit);
-  return inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||hit(p.title||'');
+  // 연령별 필터: 글에 저장된 age 값과 정확히 일치하면 통과 (0~2세, 3세 … 혼합연령)
+  const ageHit = !!(p.age && p.age!=='선택 안함' && p.age===label);
+  return ageHit||inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||hit(p.title||'');
 }
 function filterByLabel(label){
   ['detailOverlay','teacherOverlay','catOverlay','socialOverlay'].forEach(id=>close_(id));
@@ -4213,7 +4220,7 @@ const catDrawer={
   kinder:{title:'🏫 유치원/어린이집', groups:[
     {g:'놀이 주제', ic:'🌱', items:['봄','여름','가을','겨울','나와 가족','우리 동네','건강과 안전','동식물','교통기관','환경과 자연','우리나라','세계 여러 나라','우주','물','공룡','곤충','명절','기념일']},
     {g:'놀이 유형', ic:'🎨', items:['미술','신체','역할','쌓기','언어','수·조작','동화','동극','과학·탐구','음악','바깥놀이','신체표현','새노래','이야기나누기','요리','게임','전통놀이']},
-    {g:'특색교육', ic:'📚', items:['생태','AI·디지털','코딩','인성교육','다문화교육','환경교육','경제교육','안전교육','성교육']},
+    {g:'특색교육', ic:'📚', items:['생태교육','AI·디지털 교육','코딩교육','인성교육','다문화교육','환경교육','경제교육','안전교육','성교육']},
     {g:'상황별', ic:'⭐', items:['유초이음','학기초','졸업','주의집중','학부모참여수업','준비물 없는 놀이','혼자놀이','비/눈 오는 날','현장체험학습','찾아오는 현장체험학습']},
     {g:'연령별', ic:'👶', items:['0~2세','3세','4세','5세','혼합연령']},
   ]},
@@ -4251,7 +4258,9 @@ async function loadCategories(){
   try{
     const {data}=await SB.from('site_config').select('value').eq('key','categories').maybeSingle();
     if(data && data.value && Array.isArray(data.value.groups)){
-      catData.forEach(cd=>{ const f=data.value.groups.find(x=>x.g===cd.g); if(f && Array.isArray(f.items)) cd.items=f.items.slice(); });
+      // 예전에 저장된 이름을 새 이름으로 자동 변경 (생태→생태교육 등)
+      const CAT_RENAME={'생태':'생태교육','AI·디지털':'AI·디지털 교육','코딩':'코딩교육'};
+      catData.forEach(cd=>{ const f=data.value.groups.find(x=>x.g===cd.g); if(f && Array.isArray(f.items)) cd.items=f.items.map(it=>CAT_RENAME[it]||it); });
       syncCatDrawer(); if($('#catPanel'))renderCatPanel(); try{renderSideCats();}catch(e){}
     }
   }catch(e){}
@@ -5592,10 +5601,10 @@ const nuriData=[
 const catData=[
   {g:'놀이 주제', ic:'🌱', items:['봄','여름','가을','겨울','나와 가족','우리 동네','건강과 안전','동식물','교통기관','환경과 자연','우리나라','세계 여러 나라','우주','물','공룡','곤충','명절','기념일']},
   {g:'놀이 유형', ic:'🎨', items:['미술','신체','역할','쌓기','언어','수·조작','동화','동극','과학·탐구','음악','바깥놀이','신체표현','새노래','이야기나누기','요리','게임','전통놀이']},
-  {g:'특색교육', ic:'📚', items:['생태','AI·디지털','코딩','인성교육','다문화교육','환경교육','경제교육','안전교육','성교육']},
+  {g:'특색교육', ic:'📚', items:['생태교육','AI·디지털 교육','코딩교육','인성교육','다문화교육','환경교육','경제교육','안전교육','성교육']},
   {g:'상황별',   ic:'⭐', items:['유초이음','학기초','졸업','주의집중','학부모참여수업','준비물 없는 놀이','혼자놀이','비/눈 오는 날','현장체험학습','찾아오는 현장체험학습']},
 ];
-const ages=['선택 안함','0~2세','3세','4세','5세'];
+const ages=['선택 안함','0~2세','3세','4세','5세','혼합연령'];
 let sel;
 function resetSel(){sel={age:'선택 안함',nuri:new Set(),cat:new Set(),tags:[]};}
 resetSel();
