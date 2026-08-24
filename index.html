@@ -296,6 +296,19 @@
   .flow-node-row button{flex:0 0 auto;border:none;background:#f0e7e1;color:#8a7166;border-radius:7px;width:26px;height:26px;font-size:12px;cursor:pointer}
   .flow-node-row button:disabled{opacity:.4;cursor:default}
   .flow-node-row .fnr-del{background:#f5eceb;color:#c0554e}
+  .flow-node-row .fnr-in{flex:1;min-width:0;font-size:13px;border:1px solid #e6ddd6;border-radius:8px;padding:6px 8px;font-family:inherit}
+  .flow-node-row .fnr-link{width:auto;padding:0 9px;height:28px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .flow-node-row .fnr-link.on{background:#e6efe6;color:#3f7a4a}
+  .flow-node-row.self{background:#f3ede8;border-color:#e0d3c8}
+  .flow-node-row .fnr-no.self{background:#86736b}
+  .flow-node-row .fnr-title.self{color:#86736b;font-weight:800}
+  .flow-node-row .fnr-selfbadge{flex:0 0 auto;font-size:10.5px;font-weight:700;color:#86736b;background:#efe6df;border-radius:6px;padding:3px 7px}
+  .fd-dot.fd-self{fill:#86736b}
+  .fd-center.fd-self{fill:#86736b}
+  .fd-label.fd-self{fill:#86736b;font-weight:800}
+  .fd-ring{fill:none;stroke:#fff;stroke-width:2.5}
+  .fd-ring.fd-self{stroke:#86736b;stroke-width:4}
+  .flow-chip.fd-self{background:#efe6df;border-color:#86736b;color:#5a4a42}
   .flow-empty{font-size:12.5px;color:var(--sub);padding:8px 2px}
   .flow-preview-wrap{margin-top:10px;border:1px dashed #e2d7cf;border-radius:12px;padding:8px 10px;background:#fffdfb}
   .flow-preview-label{font-size:11px;color:var(--sub);margin-bottom:4px}
@@ -1416,7 +1429,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813t</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813w</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2959,7 +2972,7 @@ function renderPostPage(p){
     </div>
     <div class="engage-box"><div class="ph-meta"><span class="pa-btn stat" title="조회"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> <b id="phViews">${p.views||'0'}</b></span><span class="ph-engage" id="phEngage"></span></div></div>
     ${tripTableHTML(p.desc)}
-    ${flowCardHTML(p.desc)}
+    ${postFlowCardHTML(p)}
     <div class="card post-detail-body">${linkifyTags(parseTrip(p.desc).body,p.tags)}${hashLine?`<div class="ph-hash ph-hash-in">${linkifyTags(hashLine,p.tags)}</div>`:''}</div>
     <div class="pd-sec">
       <div class="pf-stack">${photos}</div>
@@ -3215,6 +3228,7 @@ function openEdit(){
   _bodyTagSet=new Set();
   renderAge();renderNuri();renderCat();renderTags();renderAttachList();renderRefList();
   renderFlowTypes();renderFlowEditor();
+  renderWritePhotoStrip();   // 수정 모드: '올린 사진' 한 줄 미리보기(지난 업로드 잔상) 숨김
   renderEditImages();
   _uploadVideo = p.video ? {url:p.video, existing:true} : null; renderVideoBox();   // 기존 영상 표시
   setWriteMode(true);
@@ -3582,9 +3596,7 @@ function tpostEl(p, removeFn){
 }
 function showPlays(title, arr){   // 읽기 전용 (프로필에서 열람)
   $('#folderTitle').innerHTML=title;$('#folderActions').innerHTML='';
-  const g=$('#folderPosts');g.innerHTML='';
-  if(!arr.length)g.innerHTML='<div class="empty">비어 있어요</div>';
-  arr.forEach(p=>g.appendChild(tpostEl(p)));
+  fillFolderFlowOrList(arr, g=>{ if(!arr.length){g.innerHTML='<div class="empty">비어 있어요</div>';return;} arr.forEach(p=>g.appendChild(tpostEl(p))); });
   open_('folderOverlay');
 }
 /* AI 자동 폴더: 보기 + '폴더 편집'으로 내 폴더로 전환(이름 변경·관리 가능) */
@@ -3618,17 +3630,18 @@ function openCustomFolder(ctx, id){   // 편집 가능 (드래그 순서변경 �
     <button class="fa-btn" onclick="openNewFolder('${ctx}','${id}')">✎ 이름 변경</button>
     <button class="fa-btn del" onclick="deleteFolder('${ctx}','${id}')">🗑 삭제</button>
     ${f.posts.length>1?'<span class="fa-hint">↕ 드래그로 순서 변경</span>':''}`;
-  const g=$('#folderPosts');g.innerHTML='';
-  if(!f.posts.length)g.innerHTML='<div class="empty">아직 비어 있어요. ＋ 놀이 담기로 넣어보세요.</div>';
-  f.posts.forEach((p,idx)=>{
-    const el=tpostEl(p,()=>{f.posts=f.posts.filter(x=>x!==p);openCustomFolder(ctx,id);renderMyFolders();saveUserData();});
-    el.draggable=true;
-    el.addEventListener('dragstart',e=>{_dragFrom=idx;e.dataTransfer.effectAllowed='move';el.classList.add('dragging');});
-    el.addEventListener('dragend',()=>el.classList.remove('dragging'));
-    el.addEventListener('dragover',e=>e.preventDefault());
-    el.addEventListener('drop',e=>{e.preventDefault();if(_dragFrom==null||_dragFrom===idx)return;
-      const it=f.posts.splice(_dragFrom,1)[0];f.posts.splice(idx,0,it);_dragFrom=null;openCustomFolder(ctx,id);renderMyFolders();saveUserData();});
-    g.appendChild(el);
+  fillFolderFlowOrList(f.posts, g=>{
+    if(!f.posts.length){g.innerHTML='<div class="empty">아직 비어 있어요. ＋ 놀이 담기로 넣어보세요.</div>';return;}
+    f.posts.forEach((p,idx)=>{
+      const el=tpostEl(p,()=>{f.posts=f.posts.filter(x=>x!==p);openCustomFolder(ctx,id);renderMyFolders();saveUserData();});
+      el.draggable=true;
+      el.addEventListener('dragstart',e=>{_dragFrom=idx;e.dataTransfer.effectAllowed='move';el.classList.add('dragging');});
+      el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+      el.addEventListener('dragover',e=>e.preventDefault());
+      el.addEventListener('drop',e=>{e.preventDefault();if(_dragFrom==null||_dragFrom===idx)return;
+        const it=f.posts.splice(_dragFrom,1)[0];f.posts.splice(idx,0,it);_dragFrom=null;openCustomFolder(ctx,id);renderMyFolders();saveUserData();});
+      g.appendChild(el);
+    });
   });
   open_('folderOverlay');
 }
@@ -4944,7 +4957,8 @@ function renderPopTags(){
 
 /* ================= 참고 · 출처 ================= */
 let postRefs=[];  // 작성 중인 글의 참고/출처 목록
-const REF_RELS=['이 놀이와 연결돼요','참고했어요','출처'];
+const REF_RELS=['참고했어요','출처'];   // '이 놀이와 연결돼요'는 놀이흐름 기능으로 대체 (제거)
+const LEGACY_REL='이 놀이와 연결돼요';
 function relOptions(sel){return REF_RELS.map(r=>`<option ${r===sel?'selected':''}>${r}</option>`).join('');}
 function toggleRefLinkForm(){const f=$('#refLinkForm');if(f)f.style.display=f.style.display==='none'?'flex':'none'; if(f&&f.style.display==='none')clearRefLinkWarn();}
 function addRefLink(){
@@ -4971,11 +4985,14 @@ function refLinkPending(){
   return true;
 }
 function clearRefLinkWarn(){ const w=$('#refLinkWarn'); if(w)w.style.display='none'; const ab=$('#refAddBtn'); if(ab)ab.classList.remove('pulse-btn'); }
-let _refPickCb=null;
-function openRefPicker(cb){ _refPickCb=(typeof cb==='function')?cb:null; const s=$('#refSearch'); if(s)s.value=''; renderRefPick(); open_('refPickOverlay'); }
+let _refPickCb=null, _refPickOwnOnly=false;
+function openRefPicker(cb, ownOnly){ _refPickCb=(typeof cb==='function')?cb:null; _refPickOwnOnly=!!ownOnly; const s=$('#refSearch'); if(s)s.value=''; renderRefPick(); open_('refPickOverlay'); }
+function isMinePost(p){ return p ? (p.db ? !!(SB&&authUser&&p.user_id===authUser.id) : p.tid==='me') : false; }
 function refPickCandidates(){
   // 실제 글 우선 + 데모, 지금 수정 중인 글은 제외
-  return allPosts().filter(p=>!(_editPost && p===_editPost));
+  let list=allPosts().filter(p=>!(_editPost && p===_editPost));
+  if(_refPickOwnOnly) list=list.filter(isMinePost);   // 놀이 흐름: 내가 올린 글만
+  return list;
 }
 function renderRefPick(){
   const box=$('#refPickList'); if(!box)return; box.innerHTML='';
@@ -4983,7 +5000,7 @@ function renderRefPick(){
   let list=refPickCandidates();
   if(q)list=list.filter(p=>{const a=authorOf(p);return ((p.title||'')+(p.desc||'')+(p.tags||[]).join(' ')+((a&&a.name)||'')).toLowerCase().includes(q);});
   list=list.slice(0,40);
-  if(!list.length){box.innerHTML='<div class="empty" style="padding:14px 4px">검색 결과가 없어요.</div>';return;}
+  if(!list.length){box.innerHTML='<div class="empty" style="padding:14px 4px">'+(_refPickOwnOnly&&!q?'아직 내가 올린 놀이글이 없어요.<br>놀이를 먼저 올리면 흐름에 추가할 수 있어요.':'검색 결과가 없어요.')+'</div>';return;}
   list.forEach(p=>{
     const a=authorOf(p), thumb=(imagesOf(p)[0]||{}).img||p.img||'';
     const el=document.createElement('div'); el.className='refpick-item';
@@ -5009,6 +5026,7 @@ function setRefRel(i,val){ if(postRefs[i])postRefs[i].rel=val; }
 function renderRefList(){
   const box=$('#refList'); if(!box)return; box.innerHTML='';
   postRefs.forEach((r,i)=>{
+    if(!REF_RELS.includes(r.rel)) r.rel=REF_RELS[0];   // 옛 '이 놀이와 연결돼요' → 기본값으로 정리
     const el=document.createElement('div'); el.className='ref-item';
     const icon = r.type==='post'
       ? (r.thumb?`<img class="ric" src="${r.thumb}" alt="">`:'<div class="ric">🎨</div>')
@@ -5023,26 +5041,13 @@ function renderRefList(){
     box.appendChild(el);
   });
 }
-/* 내가 이 글을 '이 놀이와 연결돼요'로 언급한 다른 (내) 글들 → 반대쪽에도 자동 표시 */
-function backRefs(p){
-  if(!p)return [];
-  const myId=postRefId(p);
-  return allPosts().filter(q=>q!==p && sameAuthor(q,p)
-    && (q.refs||[]).some(r=>r.type==='post' && r.refId===myId));
-}
-/* 상세 페이지: 참고·출처 카드 렌더 (내가 건 연결 + 나를 향한 연결 모두) */
+/* 상세 페이지: 참고·출처 카드 렌더 (내가 건 연결만 · 양방향 자동표시는 놀이흐름으로 대체) */
 function refsHTML(p){
   const refs=p.refs||[];
-  const backs=backRefs(p).filter(q=>!refs.some(r=>r.type==='post'&&r.refId===postRefId(q)));
-  if(!refs.length && !backs.length)return '';
-  const backCards=backs.map(q=>{
-    const a=authorOf(q), thumb=(imagesOf(q)[0]||{}).img||q.img||'';
-    const icon=thumb?`<img class="ric" src="${thumb}" alt="">`:'<div class="ric">🎨</div>';
-    return `<div class="ref-link" onclick="openRefTarget('${esc(postRefId(q))}')">${icon}
-      <div class="rbody"><span class="rrel">이 놀이와 연결돼요</span><div class="rtt">${esc((q.title||'놀이').replace(/^#/,''))}</div><div class="rsub">${esc((a&&a.name)||'')} · 놀이모아 글 보기 ›</div></div></div>`;
-  }).join('');
+  if(!refs.length)return '';
   const cards=refs.map(r=>{
-    const rel=r.rel?`<span class="rrel">${esc(r.rel)}</span>`:'';
+    const relText=(r.rel && r.rel!==LEGACY_REL)?r.rel:'';   // 옛 '이 놀이와 연결돼요' 라벨은 숨김
+    const rel=relText?`<span class="rrel">${esc(relText)}</span>`:'';
     if(r.type==='post'){
       const icon=r.thumb?`<img class="ric" src="${r.thumb}" alt="">`:'<div class="ric">🎨</div>';
       return `<div class="ref-link" onclick="openRefTarget('${esc(r.refId||'')}')">${icon}
@@ -5051,7 +5056,7 @@ function refsHTML(p){
     return `<a class="ref-link" href="${esc(r.url)}" target="_blank" rel="noopener noreferrer"><div class="ric">🔗</div>
       <div class="rbody">${rel}<div class="rtt">${esc(r.label||r.url)}</div><div class="rsub">${esc(r.url)} ›</div></div></a>`;
   }).join('');
-  return `<div class="pd-sec"><h4>🔗 참고 · 출처</h4><div class="ref-cards">${cards}${backCards}</div></div>`;
+  return `<div class="pd-sec"><h4>🔗 참고 · 출처</h4><div class="ref-cards">${cards}</div></div>`;
 }
 /* 상세 페이지: 사진에 태그된 상품(구매 물품)들을 한곳에 자동 정리 */
 function productsHTML(p){
@@ -5073,7 +5078,7 @@ function productsHTML(p){
 function openRefTarget(refId){
   if(!refId)return;
   const target=allPosts().find(p=>postRefId(p)===refId);
-  if(target){ close_('detailOverlay'); openPost(target); window.scrollTo(0,0); }
+  if(target){ close_('detailOverlay'); try{close_('folderOverlay');}catch(e){} openPost(target); window.scrollTo(0,0); }
   else{ toast('원본 글을 찾을 수 없어요 (삭제되었을 수 있어요)'); }
 }
 
@@ -5932,43 +5937,72 @@ function _escJs(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'
 function renderFlowTypes(){
   const box=$('#flowTypes'); if(!box)return; box.innerHTML='';
   const mk=(key,label)=>{ const b=document.createElement('button'); b.type='button'; b.className='flow-type-chip'+(_flow.type===key?' on':''); b.textContent=label;
-    b.onclick=()=>{ _flow.type=(key===''?'':key); if(_flow.type&&!_flow.nodes)_flow.nodes=[]; renderFlowTypes(); renderFlowEditor(); markDirty&&markDirty(); }; return b; };
+    b.onclick=()=>{ _flow.type=(key===''?'':key); if(!_flow.nodes)_flow.nodes=[]; if(_flow.type) ensureSelfNode(); renderFlowTypes(); renderFlowEditor(); markDirty&&markDirty(); }; return b; };
   box.appendChild(mk('','없음'));
   FLOW_TYPES.forEach(t=>box.appendChild(mk(t.key,t.label)));
 }
+/* 지금 쓰고 있는 글(=본문)을 나타내는 '이 글' 점을 흐름에 기본으로 하나 넣어줌 */
+function ensureSelfNode(){ if(!_flow.type)return; _flow.nodes=_flow.nodes||[]; if(!_flow.nodes.some(n=>n.self)){ _flow.nodes.unshift({title:(($('#pTitle')||{}).value||'').trim(), refId:'', db:false, postId:null, self:true}); } }
+/* '이 글' 점의 제목은 실제 글 제목과 항상 같게 맞춰줌 */
+function syncSelfTitles(){ const t=(($('#pTitle')||{}).value||'').trim(); (_flow.nodes||[]).forEach(n=>{ if(n.self) n.title=t; }); }
+function refreshFlowPreview(){ const pv=$('#flowPreview'); if(pv)pv.innerHTML=flowDiagramFromData(_flow.type,_flow.nodes,false)||'<div class="flow-empty">점을 1개 이상 추가하면 도식이 보여요.</div>'; }
+function addFlowNode(){ _flow.nodes=_flow.nodes||[]; _flow.nodes.push({title:'', refId:'', db:false, postId:null, self:false}); renderFlowEditor(); markDirty&&markDirty(); }
+/* 글 제목을 고치면 '이 글' 점 제목·미리보기도 실시간으로 따라오게 */
+function hookFlowTitleSync(){ const pt=$('#pTitle'); if(pt && !pt._flowHook){ pt._flowHook=1; pt.addEventListener('input',()=>{ if(_flow&&_flow.type){ syncSelfTitles(); const s=document.querySelector('#flowEditor .fnr-title.self'); if(s)s.textContent=(pt.value||'').trim()||'(이 글 · 제목을 적어주세요)'; refreshFlowPreview(); } }); } }
 function renderFlowEditor(){
   const box=$('#flowEditor'); if(!box)return;
   if(!_flow.type){ box.style.display='none'; box.innerHTML=''; return; }
   box.style.display='block';
-  const rows=(_flow.nodes||[]).map((n,i)=>`<div class="flow-node-row">
+  syncSelfTitles();
+  const rows=(_flow.nodes||[]).map((n,i)=>{
+    if(n.self){
+      return `<div class="flow-node-row self">
+        <span class="fnr-no self">✎</span>
+        <span class="fnr-title self">${esc(n.title||'(이 글 · 제목을 적어주세요)')}</span>
+        <span class="fnr-selfbadge">이 글</span>
+        <button type="button" class="fnr-up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
+        <button type="button" class="fnr-down" data-i="${i}" ${i===(_flow.nodes.length-1)?'disabled':''}>▼</button>
+        <button type="button" class="fnr-del" data-i="${i}" title="흐름에서 빼기">✕</button>
+      </div>`;
+    }
+    const linked=!!n.refId;
+    return `<div class="flow-node-row">
       <span class="fnr-no">${i+1}</span>
-      <span class="fnr-title">${esc(n.title||'(제목 없음)')}</span>
+      <input class="fnr-in" data-i="${i}" value="${esc(n.title||'')}" placeholder="점 이름 (예: 물감 탐색)">
+      <button type="button" class="fnr-link${linked?' on':''}" data-i="${i}" title="${linked?'연결된 놀이글 바꾸기':'이 점에 내 놀이글 연결'}">${linked?'🔗 연결됨':'🔗 연결'}</button>
       <button type="button" class="fnr-up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
       <button type="button" class="fnr-down" data-i="${i}" ${i===(_flow.nodes.length-1)?'disabled':''}>▼</button>
       <button type="button" class="fnr-del" data-i="${i}">✕</button>
-    </div>`).join('');
-  const hint = _flow.type==='radial' ? '첫 번째 글이 <b>가운데</b>, 나머지가 주변에 배치돼요.' : '고른 순서대로 이어져요.';
-  box.innerHTML=`<div class="flow-ed-hint">${hint}</div>
-    <div class="flow-node-list">${rows||'<div class="flow-empty">아직 고른 놀이가 없어요. 아래에서 추가해요.</div>'}</div>
-    <button type="button" class="fa-btn" id="flowAddBtn">＋ 놀이 글 추가</button>
+    </div>`;
+  }).join('');
+  const hint = _flow.type==='radial' ? '첫 번째 점이 <b>가운데</b>, 나머지가 주변에 배치돼요.' : '점을 추가한 순서대로 이어져요.';
+  box.innerHTML=`<div class="flow-ed-hint">${hint}<br>점 이름을 자유롭게 적고, <b>🔗 연결</b>을 누르면 그 점에 <b>내 놀이글</b>을 이을 수 있어요. (놀이글은 나중에 올려도 돼요)</div>
+    <div class="flow-node-list">${rows||'<div class="flow-empty">아직 점이 없어요. 아래에서 추가해요.</div>'}</div>
+    <button type="button" class="fa-btn" id="flowAddBtn">＋ 점 추가</button>
     <div class="flow-preview-wrap"><div class="flow-preview-label">미리보기</div><div id="flowPreview" class="flow-preview"></div></div>`;
+  box.querySelectorAll('.fnr-in').forEach(inp=>{ inp.oninput=()=>{ const nd=_flow.nodes[+inp.dataset.i]; if(nd)nd.title=inp.value; refreshFlowPreview(); markDirty&&markDirty(); }; });
+  box.querySelectorAll('.fnr-link').forEach(b=>b.onclick=()=>openFlowLink(+b.dataset.i));
   box.querySelectorAll('.fnr-del').forEach(b=>b.onclick=()=>{ _flow.nodes.splice(+b.dataset.i,1); renderFlowEditor(); markDirty&&markDirty(); });
   box.querySelectorAll('.fnr-up').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; if(i>0){ const a=_flow.nodes; [a[i-1],a[i]]=[a[i],a[i-1]]; renderFlowEditor(); markDirty&&markDirty(); } });
   box.querySelectorAll('.fnr-down').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; const a=_flow.nodes; if(i<a.length-1){ [a[i+1],a[i]]=[a[i],a[i+1]]; renderFlowEditor(); markDirty&&markDirty(); } });
-  const ab=$('#flowAddBtn'); if(ab)ab.onclick=openFlowPicker;
-  const pv=$('#flowPreview'); if(pv)pv.innerHTML=flowDiagramFromData(_flow.type,_flow.nodes,false)||'<div class="flow-empty">놀이 글을 2개 이상 추가하면 도식이 보여요.</div>';
+  const ab=$('#flowAddBtn'); if(ab)ab.onclick=addFlowNode;
+  hookFlowTitleSync();
+  refreshFlowPreview();
 }
-function openFlowPicker(){
+/* 점 하나에 '내 놀이글' 연결 (나중에 올린 글도 연결 가능) */
+function openFlowLink(i){
   openRefPicker(function(p){
-    const id=postRefId(p);
-    if((_flow.nodes||[]).some(n=>n.refId===id)){ toast('이미 추가된 놀이예요'); return; }
-    _flow.nodes.push({ refId:id, db:!!p.db, postId:p.db?p.id:null, title:(p.title||'놀이').replace(/^#/,'') });
+    if(!isMinePost(p)){ toast('내가 올린 놀이글만 연결할 수 있어요'); return; }
+    const node=_flow.nodes[i]; if(!node)return;
+    node.refId=postRefId(p); node.db=!!p.db; node.postId=p.db?p.id:null;
+    if(!String(node.title||'').trim()) node.title=(p.title||'놀이').replace(/^#/,'');
     renderFlowEditor(); markDirty&&markDirty();
-  });
+  }, true);   // true = 내가 올린 글만 목록에 표시
 }
 function buildFlowTag(){
-  if(!_flow.type || !(_flow.nodes||[]).length) return '';
-  const nodes=_flow.nodes.map(n=>({refId:n.refId,db:!!n.db,postId:n.postId||null,title:n.title||''})).filter(n=>n.refId);
+  if(!_flow.type) return '';
+  syncSelfTitles();
+  const nodes=(_flow.nodes||[]).map(n=>({title:String(n.title||'').trim(), refId:n.refId||'', db:!!n.db, postId:n.postId||null, self:!!n.self})).filter(n=>n.title||n.refId);
   if(!nodes.length) return '';
   return `\n⟦flow⟧${JSON.stringify({type:_flow.type,nodes})}⟦/flow⟧`;
 }
@@ -5981,37 +6015,94 @@ function parseFlow(desc){
 /* 저장된 desc → 도식 HTML (글 상세에서 본문 위에 표시) */
 function flowDiagramHTML(desc){ const {flow}=parseFlow(desc); return flowDiagramFromData(flow.type,flow.nodes,true); }
 function flowCardHTML(desc){ const d=flowDiagramHTML(desc); return d?`<div class="flow-card"><div class="flow-card-h">🔀 놀이 흐름</div>${d}</div>`:''; }
-function flowDiagramFromData(type,nodes,interactive){
+/* 글 상세: 이 글의 흐름 — 이 글이 직접 만든 흐름이 있으면 그걸, 없으면 이 글을 연결한 다른 글의 흐름을 찾아서 표시.
+   보고 있는 글에 해당하는 점이 굵게(갈색) 강조되고, 나머지 점은 대표사진+클릭 이동. */
+function postFlowCardHTML(post){
+  if(!post) return '';
+  let host=post, flow=parseFlow(post.desc||'').flow;
+  if(!(flow&&flow.type&&(flow.nodes||[]).length)){
+    const meRef=postRefId(post);
+    const owner=allPosts().find(p=>{ const f=parseFlow(p.desc||'').flow; return f&&f.type&&(f.nodes||[]).some(n=>n.refId===meRef); });
+    if(owner){ host=owner; flow=parseFlow(owner.desc||'').flow; } else { return ''; }
+  }
+  const dia=flowDiagramFromData(flow.type, flow.nodes, true, {big:true, host, curRefId:postRefId(post)});
+  return dia?`<div class="flow-card"><div class="flow-card-h">🔀 놀이 흐름 <span class="hint" style="font-weight:500">· 사진을 누르면 그 놀이로 이동해요</span></div>${dia}</div>`:'';
+}
+let _fdSeq=0;
+function flowDiagramFromData(type,nodes,interactive,opts){
   nodes=(nodes||[]).filter(n=>n&&n.title!==undefined);
   if(!type||nodes.length<1) return '';
-  const clickAttr=n=> interactive ? ` style="cursor:pointer" onclick="openRefTarget('${_escJs(n.refId)}')"` : '';
+  opts=opts||{};
+  const big=!!opts.big, R=big?18:7;
+  const host=opts.host||null, curRefId=opts.curRefId||'';
+  const photoOf=opts.photoOf || (host ? (n=>folderPhotoOf(n,host)) : null);
+  const uid='fd'+(++_fdSeq);
+  // 점이 가리키는 글(=이동 대상). '이 글'(self) 점은 host 글을 가리킴
+  const navRef=n=> n.self ? (host?postRefId(host):'') : (n.refId||'');
+  // 지금 보고 있는 글에 해당하는 점 = 강조(굵게·갈색)·클릭 불가. (보는 글 정보 없으면 저장된 self 사용)
+  const isCur=n=> curRefId ? (!!navRef(n) && navRef(n)===curRefId) : !!n.self;
+  const clickAttr=n=>{ const r=navRef(n); return (interactive && r && !isCur(n)) ? ` style="cursor:pointer" onclick="openRefTarget('${_escJs(r)}')"` : ''; };
+  const labCls=n=> 'fd-label'+(isCur(n)?' fd-self':'');
+  // 점 하나 그리기: 사진이 있으면 원형 사진, 없으면 기본 점
+  const mark=(nd,x,y,r,idx)=>{ const sc=isCur(nd)?' fd-self':''; const url=photoOf?photoOf(nd):'';
+    if(url){ const cid=uid+'_'+idx;
+      return `<clipPath id="${cid}"><circle cx="${x}" cy="${y}" r="${r}"/></clipPath>`
+        +`<image href="${esc(url)}" x="${x-r}" y="${y-r}" width="${r*2}" height="${r*2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${cid})"/>`
+        +`<circle cx="${x}" cy="${y}" r="${r}" class="fd-ring${sc}"/>`; }
+    return `<circle cx="${x}" cy="${y}" r="${Math.min(r,9)}" class="fd-dot${sc}"/>`; };
   if(type==='arrow'){
-    const chips=nodes.map(n=>`<button type="button" class="flow-chip"${interactive?` onclick="openRefTarget('${_escJs(n.refId)}')"`:' disabled'}>${esc(_flowTrunc(n.title,16))}</button>`).join('<span class="flow-arw">→</span>');
+    const chips=nodes.map(n=>{ const r=navRef(n); const cl=(interactive&&r&&!isCur(n)); return `<button type="button" class="flow-chip${isCur(n)?' fd-self':''}"${cl?` onclick="openRefTarget('${_escJs(r)}')"`:' disabled'}>${esc(_flowTrunc(n.title,16))}</button>`; }).join('<span class="flow-arw">→</span>');
     return `<div class="flow-diagram flow-arrow-wrap">${chips}</div>`;
   }
   if(type==='curve'){
-    const n=nodes.length, W=Math.max(300, (n-1)*140+80), H=160, mx=48, top=H/2;
+    const n=nodes.length, step=big?150:140, W=Math.max(300,(n-1)*step+(big?110:80)), H=big?210:160, mx=big?54:48, top=H/2, amp=big?34:26;
     const xs=n===1?[W/2]:nodes.map((_,i)=>mx+i*(W-2*mx)/(n-1));
-    const ys=nodes.map((_,i)=>top+ (n===1?0: 26*Math.sin(i*1.15+0.4)));
+    const ys=nodes.map((_,i)=>top+ (n===1?0: amp*Math.sin(i*1.15+0.4)));
     let path='';
     for(let i=0;i<n-1;i++){ const dx=(xs[i+1]-xs[i])/2; path+=(i===0?`M${xs[i]},${ys[i]} `:'')+`C${xs[i]+dx},${ys[i]} ${xs[i+1]-dx},${ys[i+1]} ${xs[i+1]},${ys[i+1]} `; }
-    const dots=nodes.map((nd,i)=>{ const above=i%2===0; const ly=above?ys[i]-18:ys[i]+30;
-      return `<g${clickAttr(nd)}><circle cx="${xs[i]}" cy="${ys[i]}" r="7" class="fd-dot"/><text x="${xs[i]}" y="${ly}" class="fd-label" text-anchor="middle">${esc(_flowTrunc(nd.title,10))}</text></g>`; }).join('');
+    const dots=nodes.map((nd,i)=>{ const above=i%2===0; const ly=above?ys[i]-(big?26:18):ys[i]+(big?34:30);
+      return `<g${clickAttr(nd)}>${mark(nd,xs[i],ys[i],R,i)}<text x="${xs[i]}" y="${ly}" class="${labCls(nd)}" text-anchor="middle">${esc(_flowTrunc(nd.title,10))}</text></g>`; }).join('');
     return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="fd-svg" preserveAspectRatio="xMidYMid meet"><path d="${path}" class="fd-path"/>${dots}</svg></div>`;
   }
   if(type==='radial'){
-    const W=340,H=280,cx=W/2,cy=H/2, R=98;
+    const W=big?420:340,H=big?340:280,cx=W/2,cy=H/2, RR=big?130:98, cR=big?40:30;
     const center=nodes[0], spokes=nodes.slice(1);
     let lines='',pts='';
-    spokes.forEach((nd,i)=>{ const ang=(-90 + i*360/Math.max(1,spokes.length))*Math.PI/180; const x=cx+R*Math.cos(ang), y=cy+R*Math.sin(ang);
+    spokes.forEach((nd,i)=>{ const ang=(-90 + i*360/Math.max(1,spokes.length))*Math.PI/180; const x=cx+RR*Math.cos(ang), y=cy+RR*Math.sin(ang);
       lines+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" class="fd-spoke"/>`;
-      const ly=y+ (Math.sin(ang)>=0?26:-16);
-      pts+=`<g${clickAttr(nd)}><circle cx="${x}" cy="${y}" r="7" class="fd-dot"/><text x="${x}" y="${ly}" class="fd-label" text-anchor="middle">${esc(_flowTrunc(nd.title,8))}</text></g>`;
+      const ly=y+ (Math.sin(ang)>=0?(big?36:26):(big?-24:-16));
+      pts+=`<g${clickAttr(nd)}>${mark(nd,x,y,R,i+1)}<text x="${x}" y="${ly}" class="${labCls(nd)}" text-anchor="middle">${esc(_flowTrunc(nd.title,8))}</text></g>`;
     });
-    const centerG=`<g${clickAttr(center)}><circle cx="${cx}" cy="${cy}" r="30" class="fd-center"/><text x="${cx}" y="${cy+4}" class="fd-clabel" text-anchor="middle">${esc(_flowTrunc(center.title,6))}</text></g>`;
+    const curl=photoOf?photoOf(center):'';
+    let centerMark;
+    if(curl){ centerMark=`<clipPath id="${uid}_c"><circle cx="${cx}" cy="${cy}" r="${cR}"/></clipPath>`
+      +`<image href="${esc(curl)}" x="${cx-cR}" y="${cy-cR}" width="${cR*2}" height="${cR*2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${uid}_c)"/>`
+      +`<circle cx="${cx}" cy="${cy}" r="${cR}" class="fd-ring${isCur(center)?' fd-self':''}"/>`
+      +`<text x="${cx}" y="${cy+cR+16}" class="${labCls(center)}" text-anchor="middle">${esc(_flowTrunc(center.title,8))}</text>`; }
+    else { centerMark=`<circle cx="${cx}" cy="${cy}" r="${cR}" class="fd-center${isCur(center)?' fd-self':''}"/><text x="${cx}" y="${cy+4}" class="fd-clabel" text-anchor="middle">${esc(_flowTrunc(center.title,6))}</text>`; }
+    const centerG=`<g${clickAttr(center)}>${centerMark}</g>`;
     return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="fd-svg" preserveAspectRatio="xMidYMid meet">${lines}${pts}${centerG}</svg></div>`;
   }
   return '';
+}
+/* ===== 폴더 안에 놀이흐름이 있으면 도식으로 보여주기 (점 옆에 대표사진) ===== */
+function folderFlow(posts){ for(const p of (posts||[])){ const f=parseFlow(p.desc||'').flow; if(f&&f.type&&(f.nodes||[]).length) return {flow:f, host:p}; } return null; }
+function coverOf(p){ try{ const im=imagesOf(p); return (im[0]&&im[0].img)||p.img||''; }catch(e){ return (p&&p.img)||''; } }
+function folderNodePost(n, host){ if(n.self) return host; if(n.refId) return allPosts().find(x=>postRefId(x)===n.refId)||null; return null; }
+function folderPhotoOf(n, host){ const p=folderNodePost(n,host); return p?coverOf(p):''; }
+function fillFolderFlowOrList(posts, listFiller){
+  const g=$('#folderPosts'); if(!g)return; g.innerHTML='';
+  const ff=folderFlow(posts);
+  if(ff){
+    const card=document.createElement('div');
+    const dia=flowDiagramFromData(ff.flow.type, ff.flow.nodes, true, {big:true, host:ff.host});
+    card.innerHTML=`<div class="flow-card"><div class="flow-card-h">🔀 놀이 흐름 <span class="hint" style="font-weight:500">· 사진을 누르면 그 놀이로 이동해요</span></div>${dia}</div>
+      <button type="button" class="fa-btn" id="ffToggle" style="margin-top:8px">📋 글 목록으로 보기</button>`;
+    g.appendChild(card);
+    const tg=$('#ffToggle'); if(tg)tg.onclick=()=>{ g.innerHTML=''; listFiller(g);
+      const back=document.createElement('button'); back.type='button'; back.className='fa-btn'; back.style.marginTop='8px'; back.textContent='🔀 흐름 도식으로 보기';
+      back.onclick=()=>fillFolderFlowOrList(posts,listFiller); g.appendChild(back); };
+  } else { listFiller(g); }
 }
 /* 드롭다운 토글 */
 function toggleDD(which){
