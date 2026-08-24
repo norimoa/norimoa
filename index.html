@@ -284,6 +284,38 @@
   .sec-ico{width:16px;height:16px;flex:0 0 auto;color:#8a7f77}
   @media(max-width:560px){ .sec-label{font-size:13px} .sec-label .hint{width:100%;margin-left:23px} }
   /* 사진 설명 진하게·밑줄 툴바 */
+  /* 놀이 흐름 도식 */
+  .flow-types{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+  .flow-type-chip{border:1px solid #e7dcd6;background:#fff;color:#6a5f57;border-radius:14px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer}
+  .flow-type-chip.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+  .flow-ed-hint{font-size:12px;color:var(--sub);margin:2px 0 8px}
+  .flow-node-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+  .flow-node-row{display:flex;align-items:center;gap:7px;background:#faf7f4;border:1px solid #eee3dc;border-radius:10px;padding:7px 9px}
+  .flow-node-row .fnr-no{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:var(--coral);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center}
+  .flow-node-row .fnr-title{flex:1;min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .flow-node-row button{flex:0 0 auto;border:none;background:#f0e7e1;color:#8a7166;border-radius:7px;width:26px;height:26px;font-size:12px;cursor:pointer}
+  .flow-node-row button:disabled{opacity:.4;cursor:default}
+  .flow-node-row .fnr-del{background:#f5eceb;color:#c0554e}
+  .flow-empty{font-size:12.5px;color:var(--sub);padding:8px 2px}
+  .flow-preview-wrap{margin-top:10px;border:1px dashed #e2d7cf;border-radius:12px;padding:8px 10px;background:#fffdfb}
+  .flow-preview-label{font-size:11px;color:var(--sub);margin-bottom:4px}
+  .flow-diagram{width:100%;overflow-x:auto}
+  .fd-svg{width:100%;height:auto;max-height:300px;display:block}
+  .fd-path{fill:none;stroke:#e0a9b8;stroke-width:2.5}
+  .fd-spoke{stroke:#e0c3b0;stroke-width:2}
+  .fd-dot{fill:var(--coral);stroke:#fff;stroke-width:2}
+  .fd-center{fill:var(--coral);stroke:#fff;stroke-width:3}
+  .fd-label{fill:#5a4a42;font-size:12.5px;font-weight:600;font-family:inherit}
+  .fd-clabel{fill:#fff;font-size:12px;font-weight:700;font-family:inherit}
+  .fd-svg g[onclick]:hover .fd-dot{fill:var(--coral-tx)}
+  .fd-svg g[onclick]:hover .fd-label{fill:var(--coral-tx);text-decoration:underline}
+  .flow-arrow-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:4px 0}
+  .flow-chip{border:1px solid #eec6c9;background:var(--pink-bg);color:var(--coral-tx);border-radius:14px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .flow-chip:disabled{cursor:default;opacity:.9}
+  .flow-chip:not(:disabled):hover{background:var(--coral);color:#fff;border-color:var(--coral)}
+  .flow-arw{color:#c9a9a0;font-weight:700}
+  .flow-card{background:#fff;border:1px solid #efe7e2;border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;margin:0 0 14px}
+  .flow-card-h{font-size:13px;font-weight:800;color:var(--coral-tx);margin-bottom:6px;display:flex;align-items:center;gap:5px}
   .cap-fmt{display:flex;gap:6px;margin-top:10px;margin-bottom:-2px}
   .cap-fmt .fmt-btn{padding:5px 10px;font-size:11.5px}
   .photo-desc.rich{width:100%;margin-top:8px;min-height:58px}
@@ -1384,7 +1416,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813q</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813t</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1633,6 +1665,13 @@
       </div>
 
       <!-- 영상 기능은 잠시 꺼둠 (나중에 요청 시 이 섹션만 되살리면 됨) -->
+
+      <!-- 놀이 흐름 도식 (선택) -->
+      <div class="sec">
+        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.7 7.2 10.6 16"/><path d="M17.3 7.2 13.4 16"/></svg><span class="sl-t">놀이 흐름</span> <span class="hint">놀이의 흐름을 도식으로 보여줘요 · 각 점은 놀이글로 연결돼요 · 선택</span></div>
+        <div class="flow-types" id="flowTypes"></div>
+        <div id="flowEditor" style="display:none"></div>
+      </div>
 
       <!-- 전체 글 (자유 서술) -->
       <div class="sec">
@@ -2766,7 +2805,7 @@ function tagQ(s){return noSpace(s).replace(/'/g,"\\'");}
 function dePlay(s){return noSpace(String(s||'').toLowerCase()).replace(/놀이/g,'');}
 /* **굵게** / __밑줄__ 마크업을 안전하게 태그로 변환 (esc 이후에 적용) */
 function fmtRich(s){return s.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/__([^_\n]+)__/g,'<u>$1</u>');}
-function stripFmt(s){return String(s||'').replace(/⟦trip⟧[\s\S]*?⟦\/trip⟧/g,'').replace(/\*\*([^*\n]+)\*\*/g,'$1').replace(/__([^_\n]+)__/g,'$1').replace(/⟦[cs]=[^⟧]*⟧/g,'').replace(/⟦\/[cs]⟧/g,'');}
+function stripFmt(s){return String(s||'').replace(/⟦trip⟧[\s\S]*?⟦\/trip⟧/g,'').replace(/⟦flow⟧[\s\S]*?⟦\/flow⟧/g,'').replace(/\*\*([^*\n]+)\*\*/g,'$1').replace(/__([^_\n]+)__/g,'$1').replace(/⟦[cs]=[^⟧]*⟧/g,'').replace(/⟦\/[cs]⟧/g,'');}
 /* 띄어쓰기가 들어간 '알려진 태그'(카테고리·누리 항목 등)를 통째로 인식 */
 let _knownMW=null;
 function knownMultiwordTags(){
@@ -2920,6 +2959,7 @@ function renderPostPage(p){
     </div>
     <div class="engage-box"><div class="ph-meta"><span class="pa-btn stat" title="조회"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> <b id="phViews">${p.views||'0'}</b></span><span class="ph-engage" id="phEngage"></span></div></div>
     ${tripTableHTML(p.desc)}
+    ${flowCardHTML(p.desc)}
     <div class="card post-detail-body">${linkifyTags(parseTrip(p.desc).body,p.tags)}${hashLine?`<div class="ph-hash ph-hash-in">${linkifyTags(hashLine,p.tags)}</div>`:''}</div>
     <div class="pd-sec">
       <div class="pf-stack">${photos}</div>
@@ -3065,6 +3105,7 @@ function editStateSignature(){
       tags:(sel.tags||[]),
       att:(attachments||[]).map(a=>a.url||''),
       refs:(postRefs||[]),
+      flow:_flow,
       imgs:(_editImages||[]).map(im=>({i:im.img,d:im.desc||'',s:im.spots||[]}))
     });
   }catch(e){ return null; }
@@ -3104,6 +3145,8 @@ function catLabelsToKeys(labels){
   const keys=[];
   (labels||[]).forEach(lab=>{let found=null;
     catData.forEach((g,gi)=>{if(found)return;if(g.items.includes(lab))found=gi+'::'+lab;});
+    // 예전 이름으로 저장된 글을 수정할 때: 이름이 바뀐 현재 항목으로 이어줌
+    if(!found){ const cl=canonCat(lab); catData.forEach((g,gi)=>{ if(found)return; g.items.forEach(it=>{ if(!found && canonCat(it)===cl) found=gi+'::'+it; }); }); }
     keys.push(found||('c::'+lab));});
   return keys;
 }
@@ -3168,8 +3211,10 @@ function openEdit(){
   sel={age:p.age||'선택 안함', nuri:new Set(p.nuri||[]), cat:new Set(catLabelsToKeys(p.categories||[])), tags:[...(p.tags||[])]};
   attachments=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url}));
   postRefs=(p.refs||[]).map(r=>({...r}));
+  _flow=parseFlow(p.desc||'').flow||{type:'',nodes:[]};
   _bodyTagSet=new Set();
   renderAge();renderNuri();renderCat();renderTags();renderAttachList();renderRefList();
+  renderFlowTypes();renderFlowEditor();
   renderEditImages();
   _uploadVideo = p.video ? {url:p.video, existing:true} : null; renderVideoBox();   // 기존 영상 표시
   setWriteMode(true);
@@ -3368,7 +3413,7 @@ async function saveEdit(){
   _publishing=true; showUploading(true,'수정 내용을 저장하는 중이에요…');
   try{
   const title=$('#pTitle').value.trim()||'놀이';
-  const body=richToMarks($('#pBody')) + buildTripTag();
+  const body=richToMarks($('#pBody')) + buildTripTag() + buildFlowTag();
   syncBodyTags(true);
   const catLabels=[...sel.cat].map(k=>k.split('::')[1]);          // 카테고리(띄어쓰기 유지)
   const photoTags=_editImages.flatMap(im=>extractHashtags(im.desc,true));   // 사진 설명 속 해시태그도 수집
@@ -4164,6 +4209,19 @@ function catParent(item){
   return _catParentMap[item]||'';
 }
 /* 라벨(카테고리/태그)로 관련 놀이 필터 — 태그·제목·카테고리·누리 모두 확인 (동의어 포함) */
+/* 카테고리 이름 변경 대응: 바뀐 이름 ↔ 원래(대표) 이름을 이어줘서,
+   이름을 바꿔도 그 안의 글과 전용 작성표(현장체험학습 등), 강조 테두리가 그대로 유지되게 함.
+   (키=현재/예전 이름 → 값=대표 이름) */
+let _catAlias = {
+  '찾아오는체험학습':'찾아오는 현장체험학습',
+  '찾아오는 체험학습':'찾아오는 현장체험학습'
+};
+function canonCat(name){
+  let n=String(name==null?'':name).trim(), seen=0;
+  while(_catAlias[n] && _catAlias[n]!==n && seen++<8) n=_catAlias[n];
+  return n;
+}
+function sameCat(a,b){ return canonCat(a)===canonCat(b); }
 function matchesFilter(p,label){
   if(!label)return true;
   const forms=synForms(label); // 공백·'놀이' 무시 + 동의어
@@ -4171,7 +4229,9 @@ function matchesFilter(p,label){
   const inArr=a=>(a||[]).some(hit);
   // 연령별 필터: 글에 저장된 age 값과 정확히 일치하면 통과 (0~2세, 3세 … 혼합연령)
   const ageHit = !!(p.age && p.age!=='선택 안함' && p.age===label);
-  return ageHit||inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||hit(p.title||'');
+  // 이름이 바뀐 카테고리: 예전 이름으로 저장된 글도 현재 이름으로 찾아지게 함
+  const catAliasHit = (p.categories||[]).some(c=>sameCat(c,label));
+  return ageHit||catAliasHit||inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||hit(p.title||'');
 }
 function filterByLabel(label){
   ['detailOverlay','teacherOverlay','catOverlay','socialOverlay'].forEach(id=>close_(id));
@@ -4277,7 +4337,7 @@ let catSectionCur='kinder';
 function openCat(){catSectionCur='kinder';renderCatDrawer();open_('catOverlay');}
 function catSection(s){catSectionCur=s;renderCatDrawer();}
 const HILITE_CATS=new Set(['현장체험학습','찾아오는 현장체험학습']); // 갈색 테두리로 강조할 항목
-function hiCat(it){return HILITE_CATS.has(it)?' hi-cat':'';}
+function hiCat(it){return HILITE_CATS.has(canonCat(it))?' hi-cat':'';}
 function renderCatDrawer(){
   const d=catDrawer[catSectionCur], box=$('#catContent');
   let html=`<div class="cat-draw-head"><span>카테고리</span><button onclick="close_('catOverlay')" aria-label="닫기">×</button></div>`;
@@ -4321,6 +4381,10 @@ async function loadCategories(){
       catData.length=0; rebuilt.forEach(d=>catData.push(d));
       syncCatDrawer(); if($('#catPanel'))renderCatPanel(); try{renderSideCats();}catch(e){}
     }
+    // 카테고리 이름변경(별칭) 불러오기 — 바뀐 이름 → 원래 이름
+    try{ const {data:al}=await SB.from('site_config').select('value').eq('key','catAlias').maybeSingle();
+      if(al && al.value && typeof al.value==='object'){ Object.assign(_catAlias, al.value); }
+    }catch(e){}
   }catch(e){}
 }
 async function saveCategories(){
@@ -4332,8 +4396,8 @@ async function saveCategories(){
   syncCatDrawer(); if($('#catPanel'))renderCatPanel(); try{renderSideCats();}catch(e){}
   return true;
 }
-let _catEdit=null;
-function openCatAdmin(){ if(!canEditCats()){ toast('관리자만 사용할 수 있어요'); return; } _catEdit=catData.map(g=>({g:g.g, ic:g.ic, items:g.items.slice()})); renderCatAdmin(); swapOverlay('catOverlay','catAdminOverlay'); }
+let _catEdit=null, _catEditOrig=null;
+function openCatAdmin(){ if(!canEditCats()){ toast('관리자만 사용할 수 있어요'); return; } _catEdit=catData.map(g=>({g:g.g, ic:g.ic, items:g.items.slice()})); _catEditOrig=catData.map(g=>({g:g.g, items:g.items.slice()})); renderCatAdmin(); swapOverlay('catOverlay','catAdminOverlay'); }
 function captureCatInputs(){ const box=$('#catAdminBody'); if(!box||!_catEdit)return; box.querySelectorAll('.ca-in').forEach(inp=>{ const v=inp.value.trim(); if(v)_catEdit[+inp.dataset.g].items[+inp.dataset.i]=v; }); }
 let _caDrag=null; // {kind:'group'|'item', g, i}
 function renderCatAdmin(){
@@ -4390,10 +4454,18 @@ async function saveCatAdmin(){
   if(!_catEdit)return;
   captureCatInputs();
   _catEdit.forEach(e=>{ e.items=e.items.map(x=>String(x).trim()).filter(Boolean); });
+  // 이름이 바뀐 항목을 자동 감지 → 별칭으로 기록 (예전 이름으로 저장된 글·전용 작성표 유지)
+  let _aliasChanged=false;
+  try{ if(_catEditOrig){ _catEdit.forEach(ng=>{ const og=_catEditOrig.find(o=>o.g===ng.g); if(!og)return;
+        const removed=(og.items||[]).filter(x=>!ng.items.includes(x));
+        const added=ng.items.filter(x=>!(og.items||[]).includes(x));
+        if(removed.length===1 && added.length===1){ _catAlias[added[0]]=canonCat(removed[0]); _aliasChanged=true; }
+      }); } }catch(e){}
   // 순서까지 반영: catData를 _catEdit 순서/내용으로 다시 구성 (아이콘은 기존 값 유지)
   const rebuilt=_catEdit.map(e=>{ const old=catData.find(c=>c.g===e.g); return {g:e.g, ic:e.ic||(old&&old.ic)||'📁', items:e.items.slice()}; });
   catData.length=0; rebuilt.forEach(d=>catData.push(d));
   const ok=await saveCategories();
+  if(_aliasChanged && SB){ try{ await SB.from('site_config').upsert({key:'catAlias', value:_catAlias, updated_at:new Date().toISOString()}); }catch(e){} }
   try{ syncCatDrawer(); }catch(e){} if($('#catPanel')){try{renderCatPanel();}catch(e){}} try{renderSideCats();}catch(e){}
   if(ok){ close_('catAdminOverlay'); toast('카테고리를 저장했어요'); }
  }catch(e){ try{toast('저장 중 오류가 났어요: '+(e&&e.message||e));}catch(_){} try{console.error('saveCatAdmin',e);}catch(_){} }
@@ -4899,7 +4971,8 @@ function refLinkPending(){
   return true;
 }
 function clearRefLinkWarn(){ const w=$('#refLinkWarn'); if(w)w.style.display='none'; const ab=$('#refAddBtn'); if(ab)ab.classList.remove('pulse-btn'); }
-function openRefPicker(){ const s=$('#refSearch'); if(s)s.value=''; renderRefPick(); open_('refPickOverlay'); }
+let _refPickCb=null;
+function openRefPicker(cb){ _refPickCb=(typeof cb==='function')?cb:null; const s=$('#refSearch'); if(s)s.value=''; renderRefPick(); open_('refPickOverlay'); }
 function refPickCandidates(){
   // 실제 글 우선 + 데모, 지금 수정 중인 글은 제외
   return allPosts().filter(p=>!(_editPost && p===_editPost));
@@ -4923,6 +4996,7 @@ function renderRefPick(){
 }
 function postRefId(p){ return p.db?('db:'+p.id):('demo:'+(p.title||'')); }
 function pickRefPost(p){
+  if(_refPickCb){ const cb=_refPickCb; _refPickCb=null; close_('refPickOverlay'); cb(p); return; }
   const id=postRefId(p);
   if(postRefs.some(r=>r.type==='post'&&r.refId===id)){toast('이미 추가된 놀이예요');close_('refPickOverlay');return;}
   const a=authorOf(p), thumb=(imagesOf(p)[0]||{}).img||p.img||'';
@@ -5807,7 +5881,7 @@ const TRIP_FORMS = {
 };
 function tripPh(l){ return ({'주소':'도로명·지번 주소','입장료':'예: 유아: 무료 / 성인: 3,000원','식당 여부':'예: 3층에 도시락 먹을 공간 있음 / 2층에 푸드코트 있음','홈페이지/연락처':'예: www.site.com · 02-000-0000','주차':'예: 버스 주차 가능 / 주차비 1시간에 1,500원','업체명':'','연락처':'예: 010-0000-0000','소요시간':'예: 약 50분','비용':'예: 1인 8,000원'})[l]||''; }
 let _tripVals=null;   // {cat, vals:{항목:값}}
-function activeTripCat(){ for(const key of sel.cat){ const it=String(key).split('::')[1]; if(TRIP_FORMS[it]) return it; } return null; }
+function activeTripCat(){ for(const key of sel.cat){ const it=canonCat(String(key).split('::')[1]); if(TRIP_FORMS[it]) return it; } return null; }
 function captureTripVals(){ const sec=$('#tripSec'); if(!sec||!_tripVals)return; sec.querySelectorAll('.trip-in').forEach(inp=>{ _tripVals.vals[inp.dataset.l]=inp.value; }); }
 function renderTripSection(){
   const sec=$('#tripSec'); if(!sec)return;
@@ -5837,9 +5911,9 @@ function buildTripTag(){
 // 본문에서 정보 태그를 분리 (표 데이터 + 순수 본문)
 function parseTrip(desc){
   const s=String(desc||''); const m=s.match(/⟦trip⟧([\s\S]*?)⟦\/trip⟧/);
-  if(!m) return {trip:null, body:s};
+  if(!m) return {trip:null, body:s.replace(/\s*⟦flow⟧[\s\S]*?⟦\/flow⟧/,'').replace(/\n+$/,'')};
   let trip=null; try{ trip=JSON.parse(m[1]); }catch(e){}
-  return {trip, body:s.replace(/\s*⟦trip⟧[\s\S]*?⟦\/trip⟧/,'').replace(/\n+$/,'')};
+  return {trip, body:s.replace(/\s*⟦trip⟧[\s\S]*?⟦\/trip⟧/,'').replace(/\s*⟦flow⟧[\s\S]*?⟦\/flow⟧/,'').replace(/\n+$/,'')};
 }
 function tripCell(v){ return esc(v).replace(/((?:https?:\/\/|www\.)[^\s]+)/g, u=>`<a href="${u.startsWith('http')?u:'https://'+u}" target="_blank" rel="noopener">${u}</a>`); }
 function tripTableHTML(desc){
@@ -5849,6 +5923,95 @@ function tripTableHTML(desc){
   if(!rows) return '';
   const title=(TRIP_FORMS[trip.cat]&&TRIP_FORMS[trip.cat].title)||'ℹ️ 정보';
   return `<div class="card trip-card"><div class="trip-card-h">${title}</div><table class="trip-table"><tbody>${rows}</tbody></table></div>`;
+}
+/* ===== 놀이 흐름 도식 (선택) — 노드=놀이모아 글, 누르면 그 글로 이동 ===== */
+const FLOW_TYPES=[{key:'curve',label:'곡선 흐름',ic:'〰️'},{key:'radial',label:'방사형',ic:'✳️'}];
+let _flow={type:'',nodes:[]};   // {type:'curve'|'radial'|'arrow', nodes:[{refId,db,postId,title}]}
+function _flowTrunc(t,n){ t=String(t||''); return [...t].length>n ? [...t].slice(0,n).join('')+'…' : t; }
+function _escJs(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function renderFlowTypes(){
+  const box=$('#flowTypes'); if(!box)return; box.innerHTML='';
+  const mk=(key,label)=>{ const b=document.createElement('button'); b.type='button'; b.className='flow-type-chip'+(_flow.type===key?' on':''); b.textContent=label;
+    b.onclick=()=>{ _flow.type=(key===''?'':key); if(_flow.type&&!_flow.nodes)_flow.nodes=[]; renderFlowTypes(); renderFlowEditor(); markDirty&&markDirty(); }; return b; };
+  box.appendChild(mk('','없음'));
+  FLOW_TYPES.forEach(t=>box.appendChild(mk(t.key,t.label)));
+}
+function renderFlowEditor(){
+  const box=$('#flowEditor'); if(!box)return;
+  if(!_flow.type){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='block';
+  const rows=(_flow.nodes||[]).map((n,i)=>`<div class="flow-node-row">
+      <span class="fnr-no">${i+1}</span>
+      <span class="fnr-title">${esc(n.title||'(제목 없음)')}</span>
+      <button type="button" class="fnr-up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
+      <button type="button" class="fnr-down" data-i="${i}" ${i===(_flow.nodes.length-1)?'disabled':''}>▼</button>
+      <button type="button" class="fnr-del" data-i="${i}">✕</button>
+    </div>`).join('');
+  const hint = _flow.type==='radial' ? '첫 번째 글이 <b>가운데</b>, 나머지가 주변에 배치돼요.' : '고른 순서대로 이어져요.';
+  box.innerHTML=`<div class="flow-ed-hint">${hint}</div>
+    <div class="flow-node-list">${rows||'<div class="flow-empty">아직 고른 놀이가 없어요. 아래에서 추가해요.</div>'}</div>
+    <button type="button" class="fa-btn" id="flowAddBtn">＋ 놀이 글 추가</button>
+    <div class="flow-preview-wrap"><div class="flow-preview-label">미리보기</div><div id="flowPreview" class="flow-preview"></div></div>`;
+  box.querySelectorAll('.fnr-del').forEach(b=>b.onclick=()=>{ _flow.nodes.splice(+b.dataset.i,1); renderFlowEditor(); markDirty&&markDirty(); });
+  box.querySelectorAll('.fnr-up').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; if(i>0){ const a=_flow.nodes; [a[i-1],a[i]]=[a[i],a[i-1]]; renderFlowEditor(); markDirty&&markDirty(); } });
+  box.querySelectorAll('.fnr-down').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; const a=_flow.nodes; if(i<a.length-1){ [a[i+1],a[i]]=[a[i],a[i+1]]; renderFlowEditor(); markDirty&&markDirty(); } });
+  const ab=$('#flowAddBtn'); if(ab)ab.onclick=openFlowPicker;
+  const pv=$('#flowPreview'); if(pv)pv.innerHTML=flowDiagramFromData(_flow.type,_flow.nodes,false)||'<div class="flow-empty">놀이 글을 2개 이상 추가하면 도식이 보여요.</div>';
+}
+function openFlowPicker(){
+  openRefPicker(function(p){
+    const id=postRefId(p);
+    if((_flow.nodes||[]).some(n=>n.refId===id)){ toast('이미 추가된 놀이예요'); return; }
+    _flow.nodes.push({ refId:id, db:!!p.db, postId:p.db?p.id:null, title:(p.title||'놀이').replace(/^#/,'') });
+    renderFlowEditor(); markDirty&&markDirty();
+  });
+}
+function buildFlowTag(){
+  if(!_flow.type || !(_flow.nodes||[]).length) return '';
+  const nodes=_flow.nodes.map(n=>({refId:n.refId,db:!!n.db,postId:n.postId||null,title:n.title||''})).filter(n=>n.refId);
+  if(!nodes.length) return '';
+  return `\n⟦flow⟧${JSON.stringify({type:_flow.type,nodes})}⟦/flow⟧`;
+}
+function parseFlow(desc){
+  const m=String(desc||'').match(/⟦flow⟧([\s\S]*?)⟦\/flow⟧/);
+  if(!m) return {flow:{type:'',nodes:[]}};
+  try{ const f=JSON.parse(m[1]); if(f&&f.type&&Array.isArray(f.nodes)) return {flow:{type:f.type,nodes:f.nodes}}; }catch(e){}
+  return {flow:{type:'',nodes:[]}};
+}
+/* 저장된 desc → 도식 HTML (글 상세에서 본문 위에 표시) */
+function flowDiagramHTML(desc){ const {flow}=parseFlow(desc); return flowDiagramFromData(flow.type,flow.nodes,true); }
+function flowCardHTML(desc){ const d=flowDiagramHTML(desc); return d?`<div class="flow-card"><div class="flow-card-h">🔀 놀이 흐름</div>${d}</div>`:''; }
+function flowDiagramFromData(type,nodes,interactive){
+  nodes=(nodes||[]).filter(n=>n&&n.title!==undefined);
+  if(!type||nodes.length<1) return '';
+  const clickAttr=n=> interactive ? ` style="cursor:pointer" onclick="openRefTarget('${_escJs(n.refId)}')"` : '';
+  if(type==='arrow'){
+    const chips=nodes.map(n=>`<button type="button" class="flow-chip"${interactive?` onclick="openRefTarget('${_escJs(n.refId)}')"`:' disabled'}>${esc(_flowTrunc(n.title,16))}</button>`).join('<span class="flow-arw">→</span>');
+    return `<div class="flow-diagram flow-arrow-wrap">${chips}</div>`;
+  }
+  if(type==='curve'){
+    const n=nodes.length, W=Math.max(300, (n-1)*140+80), H=160, mx=48, top=H/2;
+    const xs=n===1?[W/2]:nodes.map((_,i)=>mx+i*(W-2*mx)/(n-1));
+    const ys=nodes.map((_,i)=>top+ (n===1?0: 26*Math.sin(i*1.15+0.4)));
+    let path='';
+    for(let i=0;i<n-1;i++){ const dx=(xs[i+1]-xs[i])/2; path+=(i===0?`M${xs[i]},${ys[i]} `:'')+`C${xs[i]+dx},${ys[i]} ${xs[i+1]-dx},${ys[i+1]} ${xs[i+1]},${ys[i+1]} `; }
+    const dots=nodes.map((nd,i)=>{ const above=i%2===0; const ly=above?ys[i]-18:ys[i]+30;
+      return `<g${clickAttr(nd)}><circle cx="${xs[i]}" cy="${ys[i]}" r="7" class="fd-dot"/><text x="${xs[i]}" y="${ly}" class="fd-label" text-anchor="middle">${esc(_flowTrunc(nd.title,10))}</text></g>`; }).join('');
+    return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="fd-svg" preserveAspectRatio="xMidYMid meet"><path d="${path}" class="fd-path"/>${dots}</svg></div>`;
+  }
+  if(type==='radial'){
+    const W=340,H=280,cx=W/2,cy=H/2, R=98;
+    const center=nodes[0], spokes=nodes.slice(1);
+    let lines='',pts='';
+    spokes.forEach((nd,i)=>{ const ang=(-90 + i*360/Math.max(1,spokes.length))*Math.PI/180; const x=cx+R*Math.cos(ang), y=cy+R*Math.sin(ang);
+      lines+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" class="fd-spoke"/>`;
+      const ly=y+ (Math.sin(ang)>=0?26:-16);
+      pts+=`<g${clickAttr(nd)}><circle cx="${x}" cy="${y}" r="7" class="fd-dot"/><text x="${x}" y="${ly}" class="fd-label" text-anchor="middle">${esc(_flowTrunc(nd.title,8))}</text></g>`;
+    });
+    const centerG=`<g${clickAttr(center)}><circle cx="${cx}" cy="${cy}" r="30" class="fd-center"/><text x="${cx}" y="${cy+4}" class="fd-clabel" text-anchor="middle">${esc(_flowTrunc(center.title,6))}</text></g>`;
+    return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="fd-svg" preserveAspectRatio="xMidYMid meet">${lines}${pts}${centerG}</svg></div>`;
+  }
+  return '';
 }
 /* 드롭다운 토글 */
 function toggleDD(which){
@@ -5888,7 +6051,7 @@ function openUpload(){
     const drafts=loadDrafts();
     if(drafts.length){ renderDraftList(drafts); open_('draftOverlay'); return; }
   }
-  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); postRefs=[]; renderRefList(); _bodyTagSet=new Set(); _editPost=null; _currentDraftId=null; _draftDirty=false; _uploadVideo=null; renderVideoBox(); }
+  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); postRefs=[]; renderRefList(); _flow={type:'',nodes:[]}; _bodyTagSet=new Set(); _editPost=null; _currentDraftId=null; _draftDirty=false; _uploadVideo=null; renderVideoBox(); }
   $('#uploadOverlay').classList.add('on');
 }
 function startFreshUpload(){ close_('draftOverlay'); _skipDraftPrompt=true; openUpload(); _skipDraftPrompt=false; }
@@ -5903,7 +6066,7 @@ function lsSet(k,v){ try{localStorage.setItem(k,JSON.stringify(v));return true;}
 function loadDrafts(){ const d=lsGet(DRAFT_KEY); return Array.isArray(d)?d:[]; }
 function saveDraft(){
   const title=($('#pTitle').value||'').trim();
-  const body=richToMarks($('#pBody')) + buildTripTag();
+  const body=richToMarks($('#pBody')) + buildTripTag() + buildFlowTag();
   // 사진: 현재 화면(모자이크 반영본) + 설명 + 구매표시 저장
   const photoData=photos.map(ph=>{
     let img=''; try{ img=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,0.7):((ph.img&&ph.img.src)||''); }catch(e){ img=(ph.img&&ph.img.src)||''; }
@@ -5995,6 +6158,7 @@ async function resumeDraft(id){
   sel.tags=[...(d.tags||[])];
   attachments=[]; renderAttachList();
   postRefs=(d.refs||[]).map(r=>({...r})); renderRefList();
+  _flow=parseFlow(d.body||'').flow||{type:'',nodes:[]}; renderFlowTypes(); renderFlowEditor();
   _bodyTagSet=new Set();
   $('#pTitle').value=d.title||'';
   { const _pt=parseTrip(d.body||''); $('#pBody').innerHTML=marksToRich(_pt.body||''); _tripVals=_pt.trip?{cat:_pt.trip.cat, vals:Object.assign({}, _pt.trip.vals)}:null; }
@@ -6026,6 +6190,7 @@ function goWrite(){
   // 글 내용이 있고 아직 아무것도 안 골랐으면 자동 추천
   if(richToMarks($('#pBody')).trim() && !sel.nuri.size && !sel.cat.size && !(sel.tags&&sel.tags.length)) aiSuggestTags(true);
   renderWritePhotoStrip();
+  renderFlowTypes(); renderFlowEditor();
   $('#uploadOverlay').classList.remove('on');
   $('#writeOverlay').classList.add('on');
 }
@@ -6382,7 +6547,7 @@ async function publishPost(){
     env:ph.env===true,               // 환경구성 사진 여부
     spots:ph.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url}))
   }));
-  const topDesc = (body || `${sel.age!=='선택 안함'?'['+sel.age+'] ':''}${[...sel.nuri].join(', ')||'새로 올린 놀이예요.'}`) + buildTripTag();
+  const topDesc = (body || `${sel.age!=='선택 안함'?'['+sel.age+'] ':''}${[...sel.nuri].join(', ')||'새로 올린 놀이예요.'}`) + buildTripTag() + buildFlowTag();
 
   // ── 실제 저장(Supabase) ─────────────────────────────
   if(SB && authUser){
@@ -6430,6 +6595,7 @@ function resetUpload(){
   postRefs=[]; renderRefList();
   _editPost=null; setWriteMode(false);
   _tripVals=null; { const ts=$('#tripSec'); if(ts){ ts.style.display='none'; ts.innerHTML=''; } }  // 체험학습 정보 초기화
+  _flow={type:'',nodes:[]}; renderFlowTypes(); renderFlowEditor();
   removeUploadVideo();   // 영상 초기화
   _currentDraftId=null; _draftDirty=false;   // 폼 상태만 초기화 (임시저장 자체는 지우지 않음)
 }
