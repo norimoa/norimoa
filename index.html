@@ -1437,7 +1437,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814f</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814h</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -6097,7 +6097,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
   nodes=(nodes||[]).filter(n=>n&&n.title!==undefined);
   if(!type||nodes.length<1) return '';
   opts=opts||{};
-  const big=!!opts.big, R=big?24:7;
+  const big=!!opts.big, R=big?46:7;
   const host=opts.host||null, curRefId=opts.curRefId||'';
   const photoOf=opts.photoOf || (host ? (n=>folderPhotoOf(n,host)) : null);
   const uid='fd'+(++_fdSeq);
@@ -6127,7 +6127,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
     return `<div class="flow-diagram flow-arrow-wrap">${chips}</div>`;
   }
   if(type==='curve'){
-    const n=nodes.length, step=big?150:140, mx=big?90:48, W=Math.max(300,(n-1)*step+2*mx), H=big?250:160, top=H/2, amp=big?30:26;
+    const n=nodes.length, step=big?155:140, mx=big?96:48, W=Math.max(big?520:300,(n-1)*step+2*mx), H=big?300:160, top=H/2, amp=big?32:26;
     const xs=n===1?[W/2]:nodes.map((_,i)=>mx+i*(W-2*mx)/(n-1));
     const ys=nodes.map((_,i)=>top+ (n===1?0: amp*Math.sin(i*1.15+0.4)));
     let path='';
@@ -6137,7 +6137,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
     return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="${svgCls}" preserveAspectRatio="xMidYMid meet"><path d="${path}" class="fd-path"/>${dots}</svg></div>`;
   }
   if(type==='radial'){
-    const RR=big?168:98, cR=big?52:30, rN=big?27:7, cGap=big?26:16;
+    const RR=big?192:98, cR=big?100:30, rN=big?52:7, cGap=big?28:16;
     const center=nodes[0], spokes=nodes.slice(1);
     const m=spokes.length, baseAng=(m===2)?180:-90;   // 점 2개면 좌우로, 그 외엔 위부터
     const cx=0, cy=0;   // 중심을 원점에 두고, 실제 내용 크기(bbox)로 viewBox를 잡아 박스에 꽉 차게
