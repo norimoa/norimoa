@@ -1046,11 +1046,11 @@
   .pdp-dl:hover{background:var(--coral)}
   /* 웹(데스크톱): 사진 + 설명을 아래로 쭉 스크롤 / 모바일: 지금처럼 그리드 */
   .pf-stack{display:flex;flex-direction:column;gap:22px}
-  .pf-item{display:flex;flex-direction:column;align-items:stretch}
-  .pf-photo{position:relative;border-radius:12px;overflow:hidden;background:#e9e9ee;cursor:pointer;width:100%}
-  .pf-photo img{width:100%;display:block;height:auto;background:#f3efec}
+  .pf-item{display:flex;flex-direction:column;align-items:center}
+  .pf-photo{position:relative;border-radius:12px;overflow:hidden;cursor:pointer;width:100%}
+  .pf-photo img{display:block;max-width:100%;max-height:70vh;width:auto;height:auto;margin:0 auto;border-radius:12px;background:#f3efec}
   .pf-photo .pcount{background:#dd5b8d;color:#fff;left:8px;right:auto;bottom:8px;top:auto}
-  .pf-desc{font-size:14.5px;line-height:1.7;color:#4a3f39;margin-top:10px;white-space:pre-wrap;word-break:break-word;text-align:left}
+  .pf-desc{font-size:14.5px;line-height:1.7;color:#4a3f39;margin-top:10px;white-space:pre-wrap;word-break:break-word;text-align:left;max-width:100%;margin-left:auto;margin-right:auto}
   /* 모바일도 웹과 동일하게: 사진 → 설명 → 사진 → 설명 세로로 쭉 (스크롤로 내려봄) */
   .cmt-row{display:flex;gap:10px;padding:12px 4px;border-bottom:1px solid var(--line)}
   .cmt-row .av{width:34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 auto}
@@ -1442,7 +1442,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814k</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814l</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -3007,7 +3007,17 @@ function renderPostPage(p){
   renderComments(p);
   renderRelGrid('#authorRel', authorRelated(p), '아직 관련 놀이가 없어요');
   renderRelGrid('#otherRel', otherRelated(p), '아직 관련 글이 없어요');
+  syncCaptionWidths();
+  document.querySelectorAll('#postBody .pf-photo img').forEach(img=>{ if(!img._capHook){ img._capHook=1; img.addEventListener('load',syncCaptionWidths); } });
 }
+/* 사진 설명글 너비를 그 사진(실제 표시 크기)에 맞춤 */
+function syncCaptionWidths(){
+  document.querySelectorAll('#postBody .pf-item').forEach(it=>{
+    const img=it.querySelector('.pf-photo img'), cap=it.querySelector('.pf-desc');
+    if(img&&cap){ const w=img.getBoundingClientRect().width; if(w>0) cap.style.maxWidth=Math.round(w)+'px'; }
+  });
+}
+window.addEventListener('resize',()=>{ try{ syncCaptionWidths(); }catch(e){} });
 function canEdit(p){ if(!p)return false; if(p.db && isAdmin())return true; /* 관리자는 모든 글 수정·삭제 */ return p.db?!!(SB&&authUser&&p.user_id===authUser.id):p.tid==='me';}
 /* 깔끔한 흑백(라인) 아이콘 */
 const ICO={
