@@ -313,6 +313,11 @@
   .flow-chip.fd-self{background:#fbe7ef;border-color:#d76a8e;color:#c04c78}
   .flow-empty{font-size:12.5px;color:var(--sub);padding:8px 2px}
   .flow-host-banner{background:#fbe7ef;border:1px solid #f0cfdd;color:#a13e68;border-radius:10px;padding:8px 11px;font-size:12.5px;margin-bottom:8px;line-height:1.5}
+  .priv-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 10px;padding:11px 13px;background:#faf7f4;border:1px solid #eee3dc;border-radius:12px;cursor:pointer;font-size:13.5px}
+  .priv-row input{width:18px;height:18px;accent-color:#86736b;flex:0 0 auto}
+  .priv-row .pr-t{font-weight:700}
+  .priv-row .pr-h{width:100%;margin-left:26px;font-size:11.5px;color:var(--sub)}
+  .priv-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#8a6d3b;background:#fbf1dd;border:1px solid #eeddc0;border-radius:8px;padding:3px 9px}
   .flow-preview-wrap{margin-top:10px;border:1px dashed #e2d7cf;border-radius:12px;padding:8px 10px;background:#fffdfb}
   .flow-preview-label{font-size:11px;color:var(--sub);margin-bottom:4px}
   .flow-diagram{width:100%;overflow-x:auto}
@@ -1041,11 +1046,11 @@
   .pdp-dl:hover{background:var(--coral)}
   /* 웹(데스크톱): 사진 + 설명을 아래로 쭉 스크롤 / 모바일: 지금처럼 그리드 */
   .pf-stack{display:flex;flex-direction:column;gap:22px}
-  .pf-item{display:flex;flex-direction:column}
-  .pf-photo{position:relative;border-radius:12px;overflow:hidden;background:#e9e9ee;cursor:pointer;align-self:center;max-width:100%}
-  .pf-photo img{width:100%;display:block;max-height:70vh;object-fit:contain;background:#f3efec}
+  .pf-item{display:flex;flex-direction:column;align-items:stretch}
+  .pf-photo{position:relative;border-radius:12px;overflow:hidden;background:#e9e9ee;cursor:pointer;width:100%}
+  .pf-photo img{width:100%;display:block;height:auto;background:#f3efec}
   .pf-photo .pcount{background:#dd5b8d;color:#fff;left:8px;right:auto;bottom:8px;top:auto}
-  .pf-desc{font-size:14.5px;line-height:1.7;color:#4a3f39;margin-top:10px;white-space:pre-wrap;word-break:break-word;text-align:center}
+  .pf-desc{font-size:14.5px;line-height:1.7;color:#4a3f39;margin-top:10px;white-space:pre-wrap;word-break:break-word;text-align:left}
   /* 모바일도 웹과 동일하게: 사진 → 설명 → 사진 → 설명 세로로 쭉 (스크롤로 내려봄) */
   .cmt-row{display:flex;gap:10px;padding:12px 4px;border-bottom:1px solid var(--line)}
   .cmt-row .av{width:34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 auto}
@@ -1437,7 +1442,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814h</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814k</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1503,7 +1508,6 @@
       <img id="detailImg" src="">
       <button class="dnav prev" id="detailPrev" onclick="detailNav(-1)">‹</button>
       <button class="dnav next" id="detailNext" onclick="detailNav(1)">›</button>
-      <button class="detail-dl-top" onclick="downloadDetailImg()" aria-label="기기에 저장" title="기기에 저장"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
     </div>
     <div class="detail-cap">
       <h3 id="detailTitle"></h3>
@@ -1781,6 +1785,7 @@
         <button type="button" class="fa-btn" onclick="document.getElementById('editAddPhoto').click()">＋ 사진 추가</button>
       </div>
     </div>
+    <label class="priv-row"><input type="checkbox" id="postPrivChk" onchange="_postPriv=this.checked"><span class="pr-t">🔒 나만 보기</span><span class="pr-h">다른 사람에겐 안 보이고, 나만 볼 수 있어요 (나중에 언제든 바꿀 수 있어요)</span></label>
     <div class="up-foot" style="display:flex;gap:10px">
       <button id="writeDraftBtn" class="btn g" style="flex:0 0 auto;width:auto;padding:12px 16px" onclick="saveDraft()">💾 임시저장</button>
       <button id="writeSubmit" style="flex:1 1 auto;width:auto" onclick="submitWrite()">✓ 업로드 완료</button>
@@ -2089,6 +2094,7 @@ function renderFeed(){
     ? (window._dbPosts||[]).filter(p=>myFollowing.has(p.user_id))
     : posts.filter(p=>t(p.tid).following);
   if(_feedAuthor){ filtered = allPosts().filter(p=>authorKey(p)===_feedAuthor); }  // 선택한 선생님 글만 최신순
+  filtered = filtered.filter(canSeePost);   // '나만 보기' 글은 작성자에게만
   window._feed=filtered;
   if(_feedAuthor){
     const bar=document.createElement('div'); bar.className='feed-author-bar';
@@ -2612,7 +2618,7 @@ async function loadDbPosts(){
     const imgs=(row.images&&row.images.length)?row.images
       :[{img:row.image_url,desc:row.description||'',spots:row.spots||[]}];
     return {
-      db:true, id:row.id, user_id:row.user_id, emoji:'🎨',
+      db:true, id:row.id, user_id:row.user_id, emoji:'🎨', priv:!!row.is_private,
       title:row.title||'놀이', date:fmtDate(row.created_at),
       desc:row.description||'', img:row.image_url, images:imgs, video:row.video_url||'',
       tags:row.tags||[], views:'0', like:0, cmt:0, liked:false, comments:[],
@@ -2812,9 +2818,9 @@ function relKeys(p){
 function relScore(a,b){ const A=relKeys(a), B=relKeys(b); let n=0; A.forEach(k=>{ if(B.has(k))n++; }); return n; }
 function shareTag(a,b){ return relScore(a,b)>0; }
 // 글쓴이의 '관련' 놀이: 같은 사람 글 중 카테고리·태그가 겹치는 것만, 많이 겹치는 순
-function authorRelated(p){ return allPosts().filter(q=>q!==p&&sameAuthor(q,p)&&relScore(q,p)>0).sort((x,y)=>relScore(y,p)-relScore(x,p)); }
+function authorRelated(p){ return allPosts().filter(q=>q!==p&&sameAuthor(q,p)&&canSeePost(q)&&relScore(q,p)>0).sort((x,y)=>relScore(y,p)-relScore(x,p)); }
 // 다른 선생님들의 '관련' 글: 다른 사람 글 중 카테고리·태그가 겹치는 것만, 많이 겹치는 순
-function otherRelated(p){ return allPosts().filter(q=>q!==p&&!sameAuthor(q,p)&&relScore(q,p)>0).sort((x,y)=>relScore(y,p)-relScore(x,p)); }
+function otherRelated(p){ return allPosts().filter(q=>q!==p&&!sameAuthor(q,p)&&canSeePost(q)&&relScore(q,p)>0).sort((x,y)=>relScore(y,p)-relScore(x,p)); }
 function nuriLabel(item){for(const g of nuriData){if(g.items.includes(item))return g.g+' &gt; '+item;}return item;}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 /* 업로드 날짜 표시 (예: 2026. 7. 29.) */
@@ -2913,6 +2919,7 @@ function openPost(p){
   if(!p)return;
   // 로그인 안 한 사람은 미리보기만 — 자세히 보기는 회원가입 안내
   if(isGuest()){ toast('회원가입하면 놀이 전체를 볼 수 있어요'); openAuth('signup'); return; }
+  if(p.priv && !isMinePost(p)){ toast('비공개(나만 보기) 글이에요'); return; }   // 남의 비공개 글 접근 차단
   _currentPost=p;
   const cur=document.querySelector('.view.on');
   const fromDetail = cur && cur.id==='v-post';
@@ -2963,6 +2970,7 @@ function renderPostPage(p){
   const hashLine=(p.tags||[]).map(x=>'#'+noSpace(x)).join(' ');
   $('#postBody').innerHTML=`
     <div class="post-hero">
+      ${(isMinePost(p)&&p.priv)?`<div style="margin-bottom:8px"><span class="priv-badge">🔒 나만 보기</span></div>`:''}
       <h1 class="ph-title">${esc((p.title||'놀이').replace(/^#/,''))}</h1>
       ${catChips?`<div class="ph-cats">${catChips}</div>`:''}
       ${nuriChips?`<div class="ph-nuri">${nuriChips}</div>`:''}
@@ -3230,6 +3238,7 @@ function openEdit(){
   $('#pTitle').value=(p.title||'').replace(/^#/,'');
   { const _pt=parseTrip(p.desc||''); $('#pBody').innerHTML=marksToRich(_pt.body||''); _tripVals=_pt.trip?{cat:_pt.trip.cat, vals:Object.assign({}, _pt.trip.vals)}:null; }
   sel={age:p.age||'선택 안함', nuri:new Set(p.nuri||[]), cat:new Set(catLabelsToKeys(p.categories||[])), tags:[...(p.tags||[])]};
+  _postPriv=!!p.priv; { const pc=$('#postPrivChk'); if(pc)pc.checked=_postPriv; }   // '나만 보기' 상태 불러오기
   attachments=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url}));
   postRefs=(p.refs||[]).map(r=>({...r}));
   _flow=parseFlow(p.desc||'').flow||{type:'',nodes:[]};
@@ -3406,7 +3415,7 @@ async function autoMosaicDataURL(src){
   return new Promise(resolve=>{
     const im=new Image();
     im.onload=async ()=>{
-      const sc=Math.min(1,520/im.width);
+      const sc=Math.min(1,PHOTO_MAXW/im.width);
       const cv=document.createElement('canvas'); cv.width=Math.round(im.width*sc); cv.height=Math.round(im.height*sc);
       cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
       let found=[];
@@ -3415,7 +3424,7 @@ async function autoMosaicDataURL(src){
         else if('FaceDetector' in window){const fd=new FaceDetector({fastMode:true}); const f=await fd.detect(cv); found=f.map(o=>({x:o.boundingBox.x,y:o.boundingBox.y,w:o.boundingBox.width,h:o.boundingBox.height}));}
       }catch(e){}
       const ph={img:im, cv, mosaicOn:true, boxes:found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}))};
-      try{ resolve(cleanPhotoDataURL(ph,0.9)); }catch(e){ resolve(src); }
+      try{ resolve(cleanPhotoDataURL(ph,0.92)); }catch(e){ resolve(src); }
     };
     im.onerror=()=>resolve(src);
     im.src=src;
@@ -3453,13 +3462,16 @@ async function saveEdit(){
   const age=sel.age, nuri=[...sel.nuri], categories=catLabels;
   let atts; try{ atts=await uploadAttachments(); }catch(e){ toast('첨부파일 업로드 실패: '+(e.message||e)); return; }
   p.title=title.replace(/^#/,'');
-  p.desc=body; p.tags=tags.length?tags:p.tags; p.images=images;
+  p.desc=body; p.tags=tags.length?tags:p.tags; p.images=images; p.priv=_postPriv;
   p.age=age; p.nuri=nuri; p.categories=categories; p.attachments=atts; p.refs=postRefs.slice();
   p.img=images[0]?images[0].img:(p.img||''); p.spots=images[0]?images[0].spots:[];
   if(p.db && SB){
-    const {error}=await SB.from('posts').update({title:p.title, description:body, tags:p.tags,
-      images, image_url:p.img, spots:p.spots, age, nuri, categories, attachments:atts, refs:p.refs}).eq('id',p.id);
+    const _upd={title:p.title, description:body, tags:p.tags,
+      images, image_url:p.img, spots:p.spots, age, nuri, categories, attachments:atts, refs:p.refs, is_private:_postPriv};
+    let {error}=await SB.from('posts').update(_upd).eq('id',p.id);
+    if(error && /is_private|column/i.test(error.message||'')){ delete _upd.is_private; ({error}=await SB.from('posts').update(_upd).eq('id',p.id)); }
     if(error){toast('수정 실패: '+error.message);return;}
+    p.priv=_postPriv;
     if(_flowHost) await saveFlowToHost(_flowHost);   // 다른 글의 흐름을 고쳤으면 원글에도 저장
     await loadDbPosts();
     const fresh=(window._dbPosts||[]).find(x=>x.id===p.id)||p;
@@ -4306,7 +4318,7 @@ function popScore(p){
 function renderBrowseFeed(){
   const box=$('#browseFeed');box.innerHTML='';
   const q=($('#brSearch').value||'').trim();
-  let list=(window._dbPosts||[]).concat(posts);  // 실제 글 먼저, 그 뒤 데모
+  let list=(window._dbPosts||[]).concat(posts).filter(canSeePost);  // 실제 글 먼저, 그 뒤 데모 · 비공개 글 제외
   if(browseFilter)list=list.filter(p=>matchesFilter(p,browseFilter));
   if(q){const forms=synForms(q); // '놀이' 접미사 무시 + 동의어(재활용=업사이클링)
     list=list.filter(p=>{const a=authorOf(p);
@@ -5257,7 +5269,7 @@ function buildPhotoCard(ph, skipDetect){
   ph.cv=card.querySelector('canvas');ph.ctx=ph.cv.getContext('2d');
   ph.layer=card.querySelector('.markers');ph.status=card.querySelector('.ai-status');
   ph.addBtn=card.querySelector('.addspot');
-  const maxW=520,sc=Math.min(1,maxW/ph.img.width);
+  const maxW=PHOTO_MAXW,sc=Math.min(1,maxW/ph.img.width);
   ph.cv.width=ph.img.width*sc;ph.cv.height=ph.img.height*sc;
   { const dEl=card.querySelector('.photo-desc'); if(ph.desc)dEl.innerHTML=marksToRich(ph.desc); dEl.addEventListener('input',()=>{ph.desc=richToMarks(dEl);markDirty();}); }
   card.querySelector('.redetect').onclick=()=>runDetectP(ph);
@@ -5440,6 +5452,7 @@ function mosaicP(ph,b){const cv=ph.cv,c=ph.ctx,px=pxStrength;
   c.restore();
 }
 /* 저장·업로드용: 모자이크는 적용하되 보라색 외곽선은 '없이' 그린 이미지 (실제 게시물엔 테두리 안 보이게) */
+const PHOTO_MAXW=1080;   // 사진 최대 가로 픽셀 (화질) — 예전 520 → 1080으로 상향
 function cleanPhotoDataURL(ph, quality){
   const s=document.createElement('canvas'); s.width=ph.cv.width; s.height=ph.cv.height;
   const c=s.getContext('2d'); c.drawImage(ph.img,0,0,s.width,s.height);
@@ -5478,7 +5491,7 @@ function _replaceImg(ph,dataUrl){
     ph.img=im;ph.boxes=[];ph.spots=[];ph.cropMode=false;ph.cropRect=null;ph.cropping=false;
     if(ph.parts){ ph.parts=null; const s=ph.el&&ph.el.querySelector('.collage-parts'); if(s)s.remove(); } // 회전·자르기하면 콜라주는 하나로 고정
     if(ph.cropBar)ph.cropBar.style.display='none';
-    const maxW=520,sc=Math.min(1,maxW/im.width);
+    const maxW=PHOTO_MAXW,sc=Math.min(1,maxW/im.width);
     ph.cv.width=im.width*sc;ph.cv.height=im.height*sc;
     renderCanvasP(ph);renderSpotsP(ph);runDetectP(ph);
   };
@@ -5521,7 +5534,7 @@ function partFromPhoto(m){
 }
 /* 조각 하나를 '현재 설정(모자이크 반영, 외곽선 없이)'대로 그린 캔버스 반환 */
 function renderPartCanvas(part){
-  const sc=Math.min(1,520/part.img.width);
+  const sc=Math.min(1,PHOTO_MAXW/part.img.width);
   const cv=document.createElement('canvas');cv.width=Math.round(part.img.width*sc);cv.height=Math.round(part.img.height*sc);
   const pseudo={cv,ctx:cv.getContext('2d'),img:part.img,mosaicOn:part.mosaicOn!==false,boxes:part.boxes||[]};
   pseudo.ctx.drawImage(part.img,0,0,cv.width,cv.height);
@@ -5540,7 +5553,7 @@ function compositeCollage(ph){
   let x=0;canvases.forEach((cnv,i)=>{cx.drawImage(cnv,x,0,ws[i],H);x+=ws[i]+gap;});
   const im=new Image();
   im.onload=()=>{ ph.img=im; ph.boxes=[];
-    const maxW=520,sc=Math.min(1,maxW/im.width);ph.cv.width=im.width*sc;ph.cv.height=im.height*sc;
+    const maxW=PHOTO_MAXW,sc=Math.min(1,maxW/im.width);ph.cv.width=im.width*sc;ph.cv.height=im.height*sc;
     renderCanvasP(ph);renderSpotsP(ph); };
   im.src=c.toDataURL('image/jpeg',0.9);
 }
@@ -5641,7 +5654,7 @@ function initPeCanvas(){
 function openPartEdit(ph,idx){
   const part=ph.parts&&ph.parts[idx]; if(!part)return;
   _pePh=ph; _pePart=part; initPeCanvas();
-  const sc=Math.min(1,520/part.img.width);
+  const sc=Math.min(1,PHOTO_MAXW/part.img.width);
   _pe.img=part.img; _pe.cv.width=Math.round(part.img.width*sc); _pe.cv.height=Math.round(part.img.height*sc);
   _pe.boxes=(part.boxes||[]).map(b=>({...b})); _pe.mosaicOn=part.mosaicOn!==false; _pe.drag=null; _pe.delMode=false;
   const mz=$('#peMz'); if(mz)mz.checked=_pe.mosaicOn;
@@ -5711,7 +5724,7 @@ function initIeCanvas(){
     }
     _ie.drag=null;renderCanvasP(_ie);});
 }
-function ieFit(im){ const maxW=520,sc=Math.min(1,maxW/im.width); _ie.cv.width=Math.round(im.width*sc); _ie.cv.height=Math.round(im.height*sc); }
+function ieFit(im){ const maxW=PHOTO_MAXW,sc=Math.min(1,maxW/im.width); _ie.cv.width=Math.round(im.width*sc); _ie.cv.height=Math.round(im.height*sc); }
 function openImgEdit(src, opts){
   opts=opts||{}; initIeCanvas();
   let triedNoCors=false;
@@ -5855,6 +5868,8 @@ const catData=[
 ];
 const ages=['선택 안함','0~2세','3세','4세','5세','혼합연령'];
 let sel;
+let _postPriv=false;   // '나만 보기'(비공개) 상태
+function canSeePost(p){ return p ? (!p.priv || isMinePost(p)) : true; }   // 비공개 글은 작성자만
 function resetSel(){sel={age:'선택 안함',nuri:new Set(),cat:new Set(),tags:[]};}
 resetSel();
 
@@ -6127,14 +6142,21 @@ function flowDiagramFromData(type,nodes,interactive,opts){
     return `<div class="flow-diagram flow-arrow-wrap">${chips}</div>`;
   }
   if(type==='curve'){
-    const n=nodes.length, step=big?155:140, mx=big?96:48, W=Math.max(big?520:300,(n-1)*step+2*mx), H=big?300:160, top=H/2, amp=big?32:26;
+    const n=nodes.length, step=big?155:140, mx=big?96:48, W=Math.max(big?520:300,(n-1)*step+2*mx), top=big?150:80, amp=big?32:26;
     const xs=n===1?[W/2]:nodes.map((_,i)=>mx+i*(W-2*mx)/(n-1));
     const ys=nodes.map((_,i)=>top+ (n===1?0: amp*Math.sin(i*1.15+0.4)));
     let path='';
     for(let i=0;i<n-1;i++){ const dx=(xs[i+1]-xs[i])/2; path+=(i===0?`M${xs[i]},${ys[i]} `:'')+`C${xs[i]+dx},${ys[i]} ${xs[i+1]-dx},${ys[i+1]} ${xs[i+1]},${ys[i+1]} `; }
+    // 세로 범위(제목 포함)를 계산해 viewBox에 담아 위/아래 제목이 잘리지 않게 함 (가로는 고정폭 유지 → 점 크기 일정)
+    let minY=1e9,maxY=-1e9;
     const dots=nodes.map((nd,i)=>{ const above=i%2===0; const ly=above?ys[i]-(R+(big?12:11)):ys[i]+(R+(big?22:16));
+      const ln=_wrapLabel(nd.title,per).length;
+      const topExt = above ? (ly-(ln-1)*lh-15) : (ys[i]-R);
+      const botExt = above ? (ys[i]+R) : (ly+(ln-1)*lh+6);
+      minY=Math.min(minY,topExt); maxY=Math.max(maxY,botExt);
       return `<g${clickAttr(nd)}>${mark(nd,xs[i],ys[i],R,i)}${labelAt(nd,xs[i],ly,above)}</g>`; }).join('');
-    return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="${svgCls}" preserveAspectRatio="xMidYMid meet"><path d="${path}" class="fd-path"/>${dots}</svg></div>`;
+    const pad=6, vbY=minY-pad, vbH=(maxY-minY)+2*pad;
+    return `<div class="flow-diagram"><svg viewBox="0 ${vbY} ${W} ${vbH}" class="${svgCls}" preserveAspectRatio="xMidYMid meet"><path d="${path}" class="fd-path"/>${dots}</svg></div>`;
   }
   if(type==='radial'){
     const RR=big?192:98, cR=big?100:30, rN=big?52:7, cGap=big?28:16;
@@ -6241,7 +6263,7 @@ function openUpload(){
     const drafts=loadDrafts();
     if(drafts.length){ renderDraftList(drafts); open_('draftOverlay'); return; }
   }
-  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); postRefs=[]; renderRefList(); _flow={type:'',nodes:[]}; _flowHost=null; _bodyTagSet=new Set(); _editPost=null; _currentDraftId=null; _draftDirty=false; _uploadVideo=null; renderVideoBox(); }
+  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); postRefs=[]; renderRefList(); _flow={type:'',nodes:[]}; _flowHost=null; _bodyTagSet=new Set(); _editPost=null; _currentDraftId=null; _draftDirty=false; _uploadVideo=null; renderVideoBox(); _postPriv=false; { const pc=$('#postPrivChk'); if(pc)pc.checked=false; } }
   $('#uploadOverlay').classList.add('on');
 }
 function startFreshUpload(){ close_('draftOverlay'); _skipDraftPrompt=true; openUpload(); _skipDraftPrompt=false; }
@@ -6732,7 +6754,7 @@ async function publishPost(){
   const tags=[...new Set([...sel.tags, ...catLabels, ...photoTags].map(noSpace).filter(Boolean))]; // 해시태그(띄어쓰기 없음)
   // 각 사진: 모자이크 적용본 + 사진별 설명 + 사진별 구매표시
   const images=photos.map(ph=>({
-    img:cleanPhotoDataURL(ph,0.9),   // 보라색 테두리 없이 모자이크만 적용된 이미지
+    img:cleanPhotoDataURL(ph,0.92),  // 보라색 테두리 없이 모자이크만 적용된 이미지
     desc:(ph.desc||'').trim(),
     env:ph.env===true,               // 환경구성 사진 여부
     spots:ph.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url}))
@@ -6753,13 +6775,15 @@ async function publishPost(){
         uploaded.push({img:pub.publicUrl,desc:images[k].desc,env:images[k].env,spots:images[k].spots});
       }
       const atts=await uploadAttachments();
-      const {error}=await SB.from('posts').insert({
+      const _row={
         user_id:authUser.id, title, description:topDesc, tags,
         image_url:uploaded[0]?uploaded[0].img:'', images:uploaded,
         age:sel.age, nuri:[...sel.nuri], categories:catLabels, spots:uploaded[0]?uploaded[0].spots:[],
-        attachments:atts, refs:postRefs,
+        attachments:atts, refs:postRefs, is_private:_postPriv,
         author_name:profile.nick, author_role:profile.roleShort||profile.role,
-        author_icon:profile.icon||'', author_avatar:profile.photo||'' });
+        author_icon:profile.icon||'', author_avatar:profile.photo||'' };
+      let {error}=await SB.from('posts').insert(_row);
+      if(error && /is_private|column/i.test(error.message||'')){ delete _row.is_private; ({error}=await SB.from('posts').insert(_row)); }   // 컬럼 없으면 비공개 제외하고 저장
       if(error)throw error;
       toast(uploaded.length?`업로드 완료! 사진 ${uploaded.length}장 저장`:'업로드 완료!');
       await loadDbPosts();
@@ -6770,7 +6794,7 @@ async function publishPost(){
 
   // ── 데모 저장(로컬) ─────────────────────────────────
   const demoAtts=await uploadAttachments();
-  posts.unshift({tid:'me',title:title.startsWith('#')?title:'#'+title,desc:topDesc, date:fmtDate(Date.now()),
+  posts.unshift({tid:'me',title:title.startsWith('#')?title:'#'+title,desc:topDesc, date:fmtDate(Date.now()), priv:_postPriv,
     img:images[0]?images[0].img:'', images, video:(_uploadVideo?_uploadVideo.url:''), tags:tags.length?tags:['새놀이'], nuri:[...sel.nuri], categories:catLabels,
     views:'0',like:0,cmt:0,liked:false,emoji:'🎨', spots:images[0]?images[0].spots:[], attachments:demoAtts, refs:postRefs.slice()});
   toast('놀이를 업로드했어요! (데모)');
