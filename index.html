@@ -1437,7 +1437,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814d</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814f</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -6097,7 +6097,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
   nodes=(nodes||[]).filter(n=>n&&n.title!==undefined);
   if(!type||nodes.length<1) return '';
   opts=opts||{};
-  const big=!!opts.big, R=big?18:7;
+  const big=!!opts.big, R=big?24:7;
   const host=opts.host||null, curRefId=opts.curRefId||'';
   const photoOf=opts.photoOf || (host ? (n=>folderPhotoOf(n,host)) : null);
   const uid='fd'+(++_fdSeq);
@@ -6137,42 +6137,58 @@ function flowDiagramFromData(type,nodes,interactive,opts){
     return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="${svgCls}" preserveAspectRatio="xMidYMid meet"><path d="${path}" class="fd-path"/>${dots}</svg></div>`;
   }
   if(type==='radial'){
-    const W=big?470:340,H=big?410:280,cx=W/2,cy=H/2, RR=big?120:98, cR=big?38:30;
+    const RR=big?168:98, cR=big?52:30, rN=big?27:7, cGap=big?26:16;
     const center=nodes[0], spokes=nodes.slice(1);
+    const m=spokes.length, baseAng=(m===2)?180:-90;   // 점 2개면 좌우로, 그 외엔 위부터
+    const cx=0, cy=0;   // 중심을 원점에 두고, 실제 내용 크기(bbox)로 viewBox를 잡아 박스에 꽉 차게
+    const lw=big?76:52; // 라벨 대략 반폭(넘침 방지용 여백)
+    let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+    const acc=(x,y,r,nd,below,gap)=>{ const ln=_wrapLabel(nd.title,per).length;
+      minX=Math.min(minX,x-Math.max(r,lw)); maxX=Math.max(maxX,x+Math.max(r,lw));
+      if(below){ minY=Math.min(minY,y-r); maxY=Math.max(maxY,y+(gap||r)+ln*lh); }
+      else { minY=Math.min(minY,y-r-8-(ln-1)*lh); maxY=Math.max(maxY,y+r); } };
     let lines='',pts='';
-    spokes.forEach((nd,i)=>{ const ang=(-90 + i*360/Math.max(1,spokes.length))*Math.PI/180; const x=cx+RR*Math.cos(ang), y=cy+RR*Math.sin(ang);
+    spokes.forEach((nd,i)=>{ const ang=(baseAng + i*360/Math.max(1,m))*Math.PI/180; const x=cx+RR*Math.cos(ang), y=cy+RR*Math.sin(ang);
       lines+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" class="fd-spoke"/>`;
-      const below=Math.sin(ang)>=0; const ly=y+ (below?(R+(big?15:13)):-(R+(big?6:6)));
-      pts+=`<g${clickAttr(nd)}>${mark(nd,x,y,R,i+1)}${labelAt(nd,x,ly,!below)}</g>`;
+      const below=Math.sin(ang)>=0; const ly=y+ (below?(rN+13):-(rN+6));
+      pts+=`<g${clickAttr(nd)}>${mark(nd,x,y,rN,i+1)}${labelAt(nd,x,ly,!below)}</g>`;
+      acc(x,y,rN,nd,below);
     });
     const curl=photoOf?photoOf(center):'';
     let centerMark;
     if(curl){ centerMark=`<clipPath id="${uid}_c"><circle cx="${cx}" cy="${cy}" r="${cR}"/></clipPath>`
       +`<image href="${esc(curl)}" x="${cx-cR}" y="${cy-cR}" width="${cR*2}" height="${cR*2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${uid}_c)"/>`
       +`<circle cx="${cx}" cy="${cy}" r="${cR}" class="fd-ring${isCur(center)?' fd-self':''}"/>`
-      +labelAt(center,cx,cy+cR+(big?16:14),false); }
-    else { centerMark=`<circle cx="${cx}" cy="${cy}" r="${cR}" class="fd-center${isCur(center)?' fd-self':''}"/><text x="${cx}" y="${cy+4}" class="fd-clabel" text-anchor="middle">${esc(_flowTrunc(center.title,6))}</text>`; }
+      +labelAt(center,cx,cy+cR+cGap,false); acc(cx,cy,cR,center,true,cR+cGap); }
+    else { centerMark=`<circle cx="${cx}" cy="${cy}" r="${cR}" class="fd-center${isCur(center)?' fd-self':''}"/><text x="${cx}" y="${cy+4}" class="fd-clabel" text-anchor="middle">${esc(_flowTrunc(center.title,6))}</text>`; acc(cx,cy,cR,center,true,cR); }
     const centerG=`<g${clickAttr(center)}>${centerMark}</g>`;
-    return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="${svgCls}" preserveAspectRatio="xMidYMid meet">${lines}${pts}${centerG}</svg></div>`;
+    const pad=6, vbX=minX-pad, vbY=minY-pad, vbW=(maxX-minX)+2*pad, vbH=(maxY-minY)+2*pad;
+    return `<div class="flow-diagram"><svg viewBox="${vbX} ${vbY} ${vbW} ${vbH}" class="${svgCls}" preserveAspectRatio="xMidYMid meet">${lines}${pts}${centerG}</svg></div>`;
   }
   return '';
 }
 /* ===== 폴더 안에 놀이흐름이 있으면 도식으로 보여주기 (점 옆에 대표사진) ===== */
 function folderFlow(posts){ for(const p of (posts||[])){ const f=parseFlow(p.desc||'').flow; if(f&&f.type&&(f.nodes||[]).length) return {flow:f, host:p}; } return null; }
+/* 폴더 안의 모든 놀이흐름(원글마다 하나씩) */
+function folderFlows(posts){ const out=[]; for(const p of (posts||[])){ const f=parseFlow(p.desc||'').flow; if(f&&f.type&&(f.nodes||[]).length) out.push({flow:f, host:p}); } return out; }
 function coverOf(p){ try{ const im=imagesOf(p); return (im[0]&&im[0].img)||p.img||''; }catch(e){ return (p&&p.img)||''; } }
 function folderNodePost(n, host){ if(n.self) return host; if(n.refId) return allPosts().find(x=>postRefId(x)===n.refId)||null; return null; }
 function folderPhotoOf(n, host){ const p=folderNodePost(n,host); return p?coverOf(p):''; }
 function fillFolderFlowOrList(posts, listFiller){
   const g=$('#folderPosts'); if(!g)return; g.innerHTML='';
-  const ff=folderFlow(posts);
-  if(ff){
-    // 1) 놀이흐름 도식 (크게)
-    const card=document.createElement('div'); card.className='folder-flow-card';
-    const dia=flowDiagramFromData(ff.flow.type, ff.flow.nodes, true, {big:true, host:ff.host});
-    card.innerHTML=`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span> <span class="hint" style="font-weight:500">· 사진을 누르면 그 놀이로 이동해요</span></div>${dia}</div>`;
-    g.appendChild(card);
-    // 2) 흐름에 포함되지 않은 나머지 글 → 타일로 함께 표시
-    const mem=new Set(); if(ff.host)mem.add(postRefId(ff.host)); (ff.flow.nodes||[]).forEach(n=>{if(n.refId)mem.add(n.refId);});
+  const flows=folderFlows(posts);
+  if(flows.length){
+    // 1) 폴더 안 놀이흐름 도식들 — 세로로 위에서 아래로 나열
+    const mem=new Set();
+    flows.forEach((ff,idx)=>{
+      if(ff.host)mem.add(postRefId(ff.host)); (ff.flow.nodes||[]).forEach(n=>{if(n.refId)mem.add(n.refId);});
+      const card=document.createElement('div'); card.className='folder-flow-card';
+      const dia=flowDiagramFromData(ff.flow.type, ff.flow.nodes, true, {big:true, host:ff.host});
+      const cnt = flows.length>1 ? ` <span class="hint" style="font-weight:500">· ${idx+1}/${flows.length}</span>` : '';
+      card.innerHTML=`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${cnt} <span class="hint" style="font-weight:500">· 사진을 누르면 그 놀이로 이동해요</span></div>${dia}</div>`;
+      g.appendChild(card);
+    });
+    // 2) 어떤 흐름에도 없는 나머지 글 → 타일로 함께 표시
     const rest=(posts||[]).filter(p=>!mem.has(postRefId(p)));
     if(rest.length){
       const h=document.createElement('div'); h.className='folder-rest-h'; h.textContent='그 밖의 놀이';
