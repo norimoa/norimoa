@@ -192,7 +192,7 @@
   .modal{background:#fff;border-radius:18px;width:100%;max-width:420px;max-height:82vh;
     overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
   .modal.teacher-modal{max-width:640px}   /* 프로필 팝업은 더 넓게 (스탯 한 줄 + 오른쪽 버튼 여유) */
-  .modal.folder-modal{max-width:600px}    /* 폴더 팝업: 조금 더 넓게 (글이 많아도 넉넉하게) */
+  .modal.folder-modal{max-width:940px}    /* 폴더 팝업: 놀이흐름 도식이 크게 보이도록 넉넉하게 */
   @media(min-width:560px){ .folder-modal .teacher-posts{grid-template-columns:repeat(3,1fr)} }  /* 넓은 화면에선 3개씩 */
   .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;
     border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff}
@@ -300,20 +300,32 @@
   .flow-node-row .fnr-link{width:auto;padding:0 9px;height:28px;font-size:11.5px;font-weight:700;white-space:nowrap}
   .flow-node-row .fnr-link.on{background:#e6efe6;color:#3f7a4a}
   .flow-node-row.self{background:#f3ede8;border-color:#e0d3c8}
-  .flow-node-row .fnr-no.self{background:#86736b}
-  .flow-node-row .fnr-title.self{color:#86736b;font-weight:800}
-  .flow-node-row .fnr-selfbadge{flex:0 0 auto;font-size:10.5px;font-weight:700;color:#86736b;background:#efe6df;border-radius:6px;padding:3px 7px}
-  .fd-dot.fd-self{fill:#86736b}
-  .fd-center.fd-self{fill:#86736b}
-  .fd-label.fd-self{fill:#86736b;font-weight:800}
+  .flow-node-row.self{background:#fdf0f5;border-color:#f0cfdd}
+  .flow-node-row .fnr-no.self{background:#d76a8e}
+  .flow-node-row .fnr-title.self{color:#c04c78;font-weight:800}
+  .flow-node-row .fnr-selfbadge{flex:0 0 auto;font-size:10.5px;font-weight:700;color:#c04c78;background:#fbe7ef;border-radius:6px;padding:3px 7px}
+  .fd-dot.fd-self{fill:#d76a8e}
+  .fd-center.fd-self{fill:#d76a8e}
+  .fd-label.fd-self{fill:#c04c78;font-weight:800;font-size:14.5px}
+  .fd-svg.fd-lg .fd-label.fd-self{font-size:19px}
   .fd-ring{fill:none;stroke:#fff;stroke-width:2.5}
-  .fd-ring.fd-self{stroke:#86736b;stroke-width:4}
-  .flow-chip.fd-self{background:#efe6df;border-color:#86736b;color:#5a4a42}
+  .fd-ring.fd-self{stroke:#d76a8e;stroke-width:4}
+  .flow-chip.fd-self{background:#fbe7ef;border-color:#d76a8e;color:#c04c78}
   .flow-empty{font-size:12.5px;color:var(--sub);padding:8px 2px}
+  .flow-host-banner{background:#fbe7ef;border:1px solid #f0cfdd;color:#a13e68;border-radius:10px;padding:8px 11px;font-size:12.5px;margin-bottom:8px;line-height:1.5}
   .flow-preview-wrap{margin-top:10px;border:1px dashed #e2d7cf;border-radius:12px;padding:8px 10px;background:#fffdfb}
   .flow-preview-label{font-size:11px;color:var(--sub);margin-bottom:4px}
   .flow-diagram{width:100%;overflow-x:auto}
   .fd-svg{width:100%;height:auto;max-height:300px;display:block}
+  .fd-svg.fd-lg .fd-label{font-size:15.5px}
+  .fd-svg.fd-lg .fd-clabel{font-size:14px}
+  .flow-ico{width:16px;height:16px;vertical-align:-3px;margin-right:1px}
+  /* 폴더 안 놀이흐름: 크게 보이기 + 나머지 글 */
+  .folder-flow-card{grid-column:1/-1}
+  .folder-flow-card .fd-svg{max-height:520px}
+  .folder-flow-card .flow-card-h{font-size:16px}
+  .folder-rest-h{grid-column:1/-1;font-size:13px;font-weight:700;color:var(--sub);margin:6px 2px 0}
+  .folder-flow-toggle{grid-column:1/-1;justify-self:start}
   .fd-path{fill:none;stroke:#e0a9b8;stroke-width:2.5}
   .fd-spoke{stroke:#e0c3b0;stroke-width:2}
   .fd-dot{fill:var(--coral);stroke:#fff;stroke-width:2}
@@ -1429,7 +1441,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0813w</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814a</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -3225,6 +3237,13 @@ function openEdit(){
   attachments=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url}));
   postRefs=(p.refs||[]).map(r=>({...r}));
   _flow=parseFlow(p.desc||'').flow||{type:'',nodes:[]};
+  _flowHost=null; _flowHostBaseline='';
+  // 이 글에 자체 흐름이 없고, 다른 글이 이 글을 흐름으로 연결했다면 → 그 원글의 흐름을 여기서 수정
+  if(!(_flow.type && (_flow.nodes||[]).length)){
+    const meRef=postRefId(p);
+    const owner=allPosts().find(q=>q!==p && (function(){ const f=parseFlow(q.desc||'').flow; return f&&f.type&&(f.nodes||[]).some(n=>n.refId===meRef); })());
+    if(owner){ _flowHost=owner; _flow=parseFlow(owner.desc||'').flow; _flowHostBaseline=(function(){ const s='\n⟦flow⟧'+JSON.stringify({type:_flow.type,nodes:(_flow.nodes||[]).map(n=>({title:String(n.title||'').trim(),refId:n.refId||'',db:!!n.db,postId:n.postId||null,self:!!n.self})).filter(n=>n.title||n.refId)})+'⟦/flow⟧'; return s; })(); }
+  }
   _bodyTagSet=new Set();
   renderAge();renderNuri();renderCat();renderTags();renderAttachList();renderRefList();
   renderFlowTypes();renderFlowEditor();
@@ -3445,11 +3464,13 @@ async function saveEdit(){
     const {error}=await SB.from('posts').update({title:p.title, description:body, tags:p.tags,
       images, image_url:p.img, spots:p.spots, age, nuri, categories, attachments:atts, refs:p.refs}).eq('id',p.id);
     if(error){toast('수정 실패: '+error.message);return;}
+    if(_flowHost) await saveFlowToHost(_flowHost);   // 다른 글의 흐름을 고쳤으면 원글에도 저장
     await loadDbPosts();
     const fresh=(window._dbPosts||[]).find(x=>x.id===p.id)||p;
-    _editPost=null;setWriteMode(false);close_('writeOverlay');openPost(fresh);toast('수정되었어요 (저장됨)');return;
+    _editPost=null;_flowHost=null;setWriteMode(false);close_('writeOverlay');openPost(fresh);toast('수정되었어요 (저장됨)');return;
   }
-  _editPost=null;setWriteMode(false);close_('writeOverlay');renderPostPage(p);renderFeed();
+  if(_flowHost) await saveFlowToHost(_flowHost);
+  _editPost=null;_flowHost=null;setWriteMode(false);close_('writeOverlay');renderPostPage(p);renderFeed();
   if($('#v-browse').classList.contains('on'))renderBrowseFeed();
   toast('수정되었어요');
   } finally { _publishing=false; showUploading(false); }
@@ -4986,7 +5007,7 @@ function refLinkPending(){
 }
 function clearRefLinkWarn(){ const w=$('#refLinkWarn'); if(w)w.style.display='none'; const ab=$('#refAddBtn'); if(ab)ab.classList.remove('pulse-btn'); }
 let _refPickCb=null, _refPickOwnOnly=false;
-function openRefPicker(cb, ownOnly){ _refPickCb=(typeof cb==='function')?cb:null; _refPickOwnOnly=!!ownOnly; const s=$('#refSearch'); if(s)s.value=''; renderRefPick(); open_('refPickOverlay'); }
+function openRefPicker(cb, ownOnly){ _refPickCb=(typeof cb==='function')?cb:null; _refPickOwnOnly=!!ownOnly; const s=$('#refSearch'); if(s){ s.value=''; s.placeholder = ownOnly ? '놀이 제목·해시태그 검색' : '놀이 제목·해시태그·선생님 이름 검색'; } renderRefPick(); open_('refPickOverlay'); }
 function isMinePost(p){ return p ? (p.db ? !!(SB&&authUser&&p.user_id===authUser.id) : p.tid==='me') : false; }
 function refPickCandidates(){
   // 실제 글 우선 + 데모, 지금 수정 중인 글은 제외
@@ -5931,8 +5952,25 @@ function tripTableHTML(desc){
 }
 /* ===== 놀이 흐름 도식 (선택) — 노드=놀이모아 글, 누르면 그 글로 이동 ===== */
 const FLOW_TYPES=[{key:'curve',label:'곡선 흐름',ic:'〰️'},{key:'radial',label:'방사형',ic:'✳️'}];
-let _flow={type:'',nodes:[]};   // {type:'curve'|'radial'|'arrow', nodes:[{refId,db,postId,title}]}
+let _flow={type:'',nodes:[]};   // {type:'curve'|'radial'|'arrow', nodes:[{refId,db,postId,title,self}]}
+let _flowHost=null;             // 다른 글의 흐름을 수정 중이면 그 원글(host). null이면 지금 글이 흐름 주인
+let _flowHostBaseline='';       // 원글 흐름의 원래 내용(바뀌었을 때만 저장)
 function _flowTrunc(t,n){ t=String(t||''); return [...t].length>n ? [...t].slice(0,n).join('')+'…' : t; }
+/* 도식 라벨: 긴 제목을 …로 자르지 않고 여러 줄로 나눠서 전부 보여줌 (공백 우선 줄바꿈) */
+function _wrapLabel(t, per){
+  const chars=[...String(t||'').trim()];
+  if(!chars.length) return [''];
+  const lines=[]; let i=0;
+  while(i<chars.length){
+    let end=Math.min(i+per, chars.length);
+    if(end<chars.length){ let br=-1; for(let j=end;j>i+1;j--){ if(chars[j-1]===' '){br=j-1;break;} } if(br>i)end=br; }
+    lines.push(chars.slice(i,end).join('').trim());
+    i=end; while(chars[i]===' ')i++;
+  }
+  return lines.length?lines:[''];
+}
+/* 놀이 흐름 카드 아이콘 (흑백·깔끔) */
+const FLOW_ICO='<svg class="flow-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.7 7.2 10.6 16"/><path d="M17.3 7.2 13.4 16"/></svg>';
 function _escJs(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function renderFlowTypes(){
   const box=$('#flowTypes'); if(!box)return; box.innerHTML='';
@@ -5942,43 +5980,47 @@ function renderFlowTypes(){
   FLOW_TYPES.forEach(t=>box.appendChild(mk(t.key,t.label)));
 }
 /* 지금 쓰고 있는 글(=본문)을 나타내는 '이 글' 점을 흐름에 기본으로 하나 넣어줌 */
-function ensureSelfNode(){ if(!_flow.type)return; _flow.nodes=_flow.nodes||[]; if(!_flow.nodes.some(n=>n.self)){ _flow.nodes.unshift({title:(($('#pTitle')||{}).value||'').trim(), refId:'', db:false, postId:null, self:true}); } }
-/* '이 글' 점의 제목은 실제 글 제목과 항상 같게 맞춰줌 */
-function syncSelfTitles(){ const t=(($('#pTitle')||{}).value||'').trim(); (_flow.nodes||[]).forEach(n=>{ if(n.self) n.title=t; }); }
-function refreshFlowPreview(){ const pv=$('#flowPreview'); if(pv)pv.innerHTML=flowDiagramFromData(_flow.type,_flow.nodes,false)||'<div class="flow-empty">점을 1개 이상 추가하면 도식이 보여요.</div>'; }
+function ensureSelfNode(){ if(!_flow.type||_flowHost)return; _flow.nodes=_flow.nodes||[]; if(!_flow.nodes.some(n=>n.self)){ _flow.nodes.unshift({title:(($('#pTitle')||{}).value||'').trim(), refId:'', db:false, postId:null, self:true}); } }
+/* '이 글' 점의 제목은 실제 글 제목과 항상 같게 맞춰줌 (단, 다른 글의 흐름을 수정 중일 땐 원글 제목 유지) */
+function syncSelfTitles(){ if(_flowHost) return; const t=(($('#pTitle')||{}).value||'').trim(); (_flow.nodes||[]).forEach(n=>{ if(n.self) n.title=t; }); }
+function refreshFlowPreview(){ const pv=$('#flowPreview'); if(!pv)return; const opts=_flowHost?{host:_flowHost, curRefId:(_editPost?postRefId(_editPost):'')}:{}; pv.innerHTML=flowDiagramFromData(_flow.type,_flow.nodes,false,opts)||'<div class="flow-empty">점을 1개 이상 추가하면 도식이 보여요.</div>'; }
 function addFlowNode(){ _flow.nodes=_flow.nodes||[]; _flow.nodes.push({title:'', refId:'', db:false, postId:null, self:false}); renderFlowEditor(); markDirty&&markDirty(); }
 /* 글 제목을 고치면 '이 글' 점 제목·미리보기도 실시간으로 따라오게 */
-function hookFlowTitleSync(){ const pt=$('#pTitle'); if(pt && !pt._flowHook){ pt._flowHook=1; pt.addEventListener('input',()=>{ if(_flow&&_flow.type){ syncSelfTitles(); const s=document.querySelector('#flowEditor .fnr-title.self'); if(s)s.textContent=(pt.value||'').trim()||'(이 글 · 제목을 적어주세요)'; refreshFlowPreview(); } }); } }
+function hookFlowTitleSync(){ const pt=$('#pTitle'); if(pt && !pt._flowHook){ pt._flowHook=1; pt.addEventListener('input',()=>{ if(_flow&&_flow.type&&!_flowHost){ syncSelfTitles(); const s=document.querySelector('#flowEditor .fnr-title.self'); if(s)s.textContent=(pt.value||'').trim()||'(이 글 · 제목을 적어주세요)'; refreshFlowPreview(); } }); } }
 function renderFlowEditor(){
   const box=$('#flowEditor'); if(!box)return;
   if(!_flow.type){ box.style.display='none'; box.innerHTML=''; return; }
   box.style.display='block';
   syncSelfTitles();
+  const meRef = _flowHost && _editPost ? postRefId(_editPost) : null;
   const rows=(_flow.nodes||[]).map((n,i)=>{
     if(n.self){
       return `<div class="flow-node-row self">
         <span class="fnr-no self">✎</span>
         <span class="fnr-title self">${esc(n.title||'(이 글 · 제목을 적어주세요)')}</span>
-        <span class="fnr-selfbadge">이 글</span>
+        <span class="fnr-selfbadge">${_flowHost?'원글':'이 글'}</span>
         <button type="button" class="fnr-up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
         <button type="button" class="fnr-down" data-i="${i}" ${i===(_flow.nodes.length-1)?'disabled':''}>▼</button>
         <button type="button" class="fnr-del" data-i="${i}" title="흐름에서 빼기">✕</button>
       </div>`;
     }
     const linked=!!n.refId;
-    return `<div class="flow-node-row">
-      <span class="fnr-no">${i+1}</span>
+    const isMe = meRef && n.refId===meRef;   // 다른 글의 흐름을 수정 중일 때, 지금 보고 있는 글
+    return `<div class="flow-node-row${isMe?' self':''}">
+      <span class="fnr-no${isMe?' self':''}">${i+1}</span>
       <input class="fnr-in" data-i="${i}" value="${esc(n.title||'')}" placeholder="점 이름 (예: 물감 탐색)">
+      ${isMe?'<span class="fnr-selfbadge">지금 이 글</span>':''}
       <button type="button" class="fnr-link${linked?' on':''}" data-i="${i}" title="${linked?'연결된 놀이글 바꾸기':'이 점에 내 놀이글 연결'}">${linked?'🔗 연결됨':'🔗 연결'}</button>
       <button type="button" class="fnr-up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
       <button type="button" class="fnr-down" data-i="${i}" ${i===(_flow.nodes.length-1)?'disabled':''}>▼</button>
       <button type="button" class="fnr-del" data-i="${i}">✕</button>
     </div>`;
   }).join('');
+  const hostBanner = _flowHost ? `<div class="flow-host-banner">✎ 이 놀이흐름은 '<b>${esc((_flowHost.title||'놀이').replace(/^#/,''))}</b>' 글에 있어요. 여기서 고치면 <b>연결된 모든 글</b>에 함께 반영돼요.</div>` : '';
   const hint = _flow.type==='radial' ? '첫 번째 점이 <b>가운데</b>, 나머지가 주변에 배치돼요.' : '점을 추가한 순서대로 이어져요.';
-  box.innerHTML=`<div class="flow-ed-hint">${hint}<br>점 이름을 자유롭게 적고, <b>🔗 연결</b>을 누르면 그 점에 <b>내 놀이글</b>을 이을 수 있어요. (놀이글은 나중에 올려도 돼요)</div>
+  box.innerHTML=`${hostBanner}<div class="flow-ed-hint">${hint}<br>점 이름을 자유롭게 적고, <b>🔗 연결</b>을 누르면 그 점에 <b>내 놀이글</b>을 이을 수 있어요. (놀이글은 나중에 올려도 돼요)</div>
     <div class="flow-node-list">${rows||'<div class="flow-empty">아직 점이 없어요. 아래에서 추가해요.</div>'}</div>
-    <button type="button" class="fa-btn" id="flowAddBtn">＋ 점 추가</button>
+    <button type="button" class="fa-btn" id="flowAddBtn">＋ 내 놀이 추가</button>
     <div class="flow-preview-wrap"><div class="flow-preview-label">미리보기</div><div id="flowPreview" class="flow-preview"></div></div>`;
   box.querySelectorAll('.fnr-in').forEach(inp=>{ inp.oninput=()=>{ const nd=_flow.nodes[+inp.dataset.i]; if(nd)nd.title=inp.value; refreshFlowPreview(); markDirty&&markDirty(); }; });
   box.querySelectorAll('.fnr-link').forEach(b=>b.onclick=()=>openFlowLink(+b.dataset.i));
@@ -5999,12 +6041,24 @@ function openFlowLink(i){
     renderFlowEditor(); markDirty&&markDirty();
   }, true);   // true = 내가 올린 글만 목록에 표시
 }
-function buildFlowTag(){
+function buildFlowTagStr(){
   if(!_flow.type) return '';
   syncSelfTitles();
   const nodes=(_flow.nodes||[]).map(n=>({title:String(n.title||'').trim(), refId:n.refId||'', db:!!n.db, postId:n.postId||null, self:!!n.self})).filter(n=>n.title||n.refId);
   if(!nodes.length) return '';
   return `\n⟦flow⟧${JSON.stringify({type:_flow.type,nodes})}⟦/flow⟧`;
+}
+// 다른 글(원글)의 흐름을 수정 중이면 내 본문엔 안 넣음 → 원글에 따로 저장(saveFlowToHost)
+function buildFlowTag(){ return _flowHost ? '' : buildFlowTagStr(); }
+/* 수정한 흐름을 원글(host)에 저장. 바뀐 게 없으면 아무것도 안 함 */
+async function saveFlowToHost(host){
+  if(!host) return;
+  const tag=buildFlowTagStr();
+  if(tag===_flowHostBaseline) return;   // 흐름이 그대로면 원글 안 건드림
+  const base=String(host.desc||'').replace(/\s*⟦flow⟧[\s\S]*?⟦\/flow⟧/,'');
+  const newDesc = tag ? (base + tag) : base;
+  host.desc=newDesc;
+  if(host.db && SB){ try{ await SB.from('posts').update({description:newDesc}).eq('id',host.id); }catch(e){ try{toast('흐름 저장 실패: '+(e.message||e));}catch(_){} } }
 }
 function parseFlow(desc){
   const m=String(desc||'').match(/⟦flow⟧([\s\S]*?)⟦\/flow⟧/);
@@ -6014,7 +6068,7 @@ function parseFlow(desc){
 }
 /* 저장된 desc → 도식 HTML (글 상세에서 본문 위에 표시) */
 function flowDiagramHTML(desc){ const {flow}=parseFlow(desc); return flowDiagramFromData(flow.type,flow.nodes,true); }
-function flowCardHTML(desc){ const d=flowDiagramHTML(desc); return d?`<div class="flow-card"><div class="flow-card-h">🔀 놀이 흐름</div>${d}</div>`:''; }
+function flowCardHTML(desc){ const d=flowDiagramHTML(desc); return d?`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} 놀이 흐름</div>${d}</div>`:''; }
 /* 글 상세: 이 글의 흐름 — 이 글이 직접 만든 흐름이 있으면 그걸, 없으면 이 글을 연결한 다른 글의 흐름을 찾아서 표시.
    보고 있는 글에 해당하는 점이 굵게(갈색) 강조되고, 나머지 점은 대표사진+클릭 이동. */
 function postFlowCardHTML(post){
@@ -6026,7 +6080,7 @@ function postFlowCardHTML(post){
     if(owner){ host=owner; flow=parseFlow(owner.desc||'').flow; } else { return ''; }
   }
   const dia=flowDiagramFromData(flow.type, flow.nodes, true, {big:true, host, curRefId:postRefId(post)});
-  return dia?`<div class="flow-card"><div class="flow-card-h">🔀 놀이 흐름 <span class="hint" style="font-weight:500">· 사진을 누르면 그 놀이로 이동해요</span></div>${dia}</div>`:'';
+  return dia?`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} 놀이 흐름 <span class="hint" style="font-weight:500">· 사진을 누르면 그 놀이로 이동해요</span></div>${dia}</div>`:'';
 }
 let _fdSeq=0;
 function flowDiagramFromData(type,nodes,interactive,opts){
@@ -6043,6 +6097,11 @@ function flowDiagramFromData(type,nodes,interactive,opts){
   const isCur=n=> curRefId ? (!!navRef(n) && navRef(n)===curRefId) : !!n.self;
   const clickAttr=n=>{ const r=navRef(n); return (interactive && r && !isCur(n)) ? ` style="cursor:pointer" onclick="openRefTarget('${_escJs(r)}')"` : ''; };
   const labCls=n=> 'fd-label'+(isCur(n)?' fd-self':'');
+  const per=big?10:8, lh=big?24:18;   // 줄당 글자수 · 줄 높이(행간)
+  // 여러 줄 라벨. above=true면 블록의 '아래끝'이 ly에 오도록 위로 쌓음
+  const labelAt=(nd,x,ly,above)=>{ const lines=_wrapLabel(nd.title, per); const startY=above?ly-(lines.length-1)*lh:ly;
+    const tspans=lines.map((l,k)=>`<tspan x="${x}" dy="${k===0?0:lh}">${esc(l)}</tspan>`).join('');
+    return `<text x="${x}" y="${startY}" class="${labCls(nd)}" text-anchor="middle">${tspans}</text>`; };
   // 점 하나 그리기: 사진이 있으면 원형 사진, 없으면 기본 점
   const mark=(nd,x,y,r,idx)=>{ const sc=isCur(nd)?' fd-self':''; const url=photoOf?photoOf(nd):'';
     if(url){ const cid=uid+'_'+idx;
@@ -6050,38 +6109,39 @@ function flowDiagramFromData(type,nodes,interactive,opts){
         +`<image href="${esc(url)}" x="${x-r}" y="${y-r}" width="${r*2}" height="${r*2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${cid})"/>`
         +`<circle cx="${x}" cy="${y}" r="${r}" class="fd-ring${sc}"/>`; }
     return `<circle cx="${x}" cy="${y}" r="${Math.min(r,9)}" class="fd-dot${sc}"/>`; };
+  const svgCls='fd-svg'+(big?' fd-lg':'');
   if(type==='arrow'){
     const chips=nodes.map(n=>{ const r=navRef(n); const cl=(interactive&&r&&!isCur(n)); return `<button type="button" class="flow-chip${isCur(n)?' fd-self':''}"${cl?` onclick="openRefTarget('${_escJs(r)}')"`:' disabled'}>${esc(_flowTrunc(n.title,16))}</button>`; }).join('<span class="flow-arw">→</span>');
     return `<div class="flow-diagram flow-arrow-wrap">${chips}</div>`;
   }
   if(type==='curve'){
-    const n=nodes.length, step=big?150:140, W=Math.max(300,(n-1)*step+(big?110:80)), H=big?210:160, mx=big?54:48, top=H/2, amp=big?34:26;
+    const n=nodes.length, step=big?160:140, W=Math.max(300,(n-1)*step+(big?120:80)), H=big?240:160, mx=big?60:48, top=H/2, amp=big?34:26;
     const xs=n===1?[W/2]:nodes.map((_,i)=>mx+i*(W-2*mx)/(n-1));
     const ys=nodes.map((_,i)=>top+ (n===1?0: amp*Math.sin(i*1.15+0.4)));
     let path='';
     for(let i=0;i<n-1;i++){ const dx=(xs[i+1]-xs[i])/2; path+=(i===0?`M${xs[i]},${ys[i]} `:'')+`C${xs[i]+dx},${ys[i]} ${xs[i+1]-dx},${ys[i+1]} ${xs[i+1]},${ys[i+1]} `; }
-    const dots=nodes.map((nd,i)=>{ const above=i%2===0; const ly=above?ys[i]-(big?26:18):ys[i]+(big?34:30);
-      return `<g${clickAttr(nd)}>${mark(nd,xs[i],ys[i],R,i)}<text x="${xs[i]}" y="${ly}" class="${labCls(nd)}" text-anchor="middle">${esc(_flowTrunc(nd.title,10))}</text></g>`; }).join('');
-    return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="fd-svg" preserveAspectRatio="xMidYMid meet"><path d="${path}" class="fd-path"/>${dots}</svg></div>`;
+    const dots=nodes.map((nd,i)=>{ const above=i%2===0; const ly=above?ys[i]-(R+(big?12:11)):ys[i]+(R+(big?24:16));
+      return `<g${clickAttr(nd)}>${mark(nd,xs[i],ys[i],R,i)}${labelAt(nd,xs[i],ly,above)}</g>`; }).join('');
+    return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="${svgCls}" preserveAspectRatio="xMidYMid meet"><path d="${path}" class="fd-path"/>${dots}</svg></div>`;
   }
   if(type==='radial'){
-    const W=big?420:340,H=big?340:280,cx=W/2,cy=H/2, RR=big?130:98, cR=big?40:30;
+    const W=big?440:340,H=big?360:280,cx=W/2,cy=H/2, RR=big?135:98, cR=big?40:30;
     const center=nodes[0], spokes=nodes.slice(1);
     let lines='',pts='';
     spokes.forEach((nd,i)=>{ const ang=(-90 + i*360/Math.max(1,spokes.length))*Math.PI/180; const x=cx+RR*Math.cos(ang), y=cy+RR*Math.sin(ang);
       lines+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" class="fd-spoke"/>`;
-      const ly=y+ (Math.sin(ang)>=0?(big?36:26):(big?-24:-16));
-      pts+=`<g${clickAttr(nd)}>${mark(nd,x,y,R,i+1)}<text x="${x}" y="${ly}" class="${labCls(nd)}" text-anchor="middle">${esc(_flowTrunc(nd.title,8))}</text></g>`;
+      const below=Math.sin(ang)>=0; const ly=y+ (below?(R+(big?15:13)):-(R+(big?6:6)));
+      pts+=`<g${clickAttr(nd)}>${mark(nd,x,y,R,i+1)}${labelAt(nd,x,ly,!below)}</g>`;
     });
     const curl=photoOf?photoOf(center):'';
     let centerMark;
     if(curl){ centerMark=`<clipPath id="${uid}_c"><circle cx="${cx}" cy="${cy}" r="${cR}"/></clipPath>`
       +`<image href="${esc(curl)}" x="${cx-cR}" y="${cy-cR}" width="${cR*2}" height="${cR*2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${uid}_c)"/>`
       +`<circle cx="${cx}" cy="${cy}" r="${cR}" class="fd-ring${isCur(center)?' fd-self':''}"/>`
-      +`<text x="${cx}" y="${cy+cR+16}" class="${labCls(center)}" text-anchor="middle">${esc(_flowTrunc(center.title,8))}</text>`; }
+      +labelAt(center,cx,cy+cR+(big?16:14),false); }
     else { centerMark=`<circle cx="${cx}" cy="${cy}" r="${cR}" class="fd-center${isCur(center)?' fd-self':''}"/><text x="${cx}" y="${cy+4}" class="fd-clabel" text-anchor="middle">${esc(_flowTrunc(center.title,6))}</text>`; }
     const centerG=`<g${clickAttr(center)}>${centerMark}</g>`;
-    return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="fd-svg" preserveAspectRatio="xMidYMid meet">${lines}${pts}${centerG}</svg></div>`;
+    return `<div class="flow-diagram"><svg viewBox="0 0 ${W} ${H}" class="${svgCls}" preserveAspectRatio="xMidYMid meet">${lines}${pts}${centerG}</svg></div>`;
   }
   return '';
 }
@@ -6094,14 +6154,25 @@ function fillFolderFlowOrList(posts, listFiller){
   const g=$('#folderPosts'); if(!g)return; g.innerHTML='';
   const ff=folderFlow(posts);
   if(ff){
-    const card=document.createElement('div');
+    // 1) 놀이흐름 도식 (크게)
+    const card=document.createElement('div'); card.className='folder-flow-card';
     const dia=flowDiagramFromData(ff.flow.type, ff.flow.nodes, true, {big:true, host:ff.host});
-    card.innerHTML=`<div class="flow-card"><div class="flow-card-h">🔀 놀이 흐름 <span class="hint" style="font-weight:500">· 사진을 누르면 그 놀이로 이동해요</span></div>${dia}</div>
-      <button type="button" class="fa-btn" id="ffToggle" style="margin-top:8px">📋 글 목록으로 보기</button>`;
+    card.innerHTML=`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} 놀이 흐름 <span class="hint" style="font-weight:500">· 사진을 누르면 그 놀이로 이동해요</span></div>${dia}</div>`;
     g.appendChild(card);
-    const tg=$('#ffToggle'); if(tg)tg.onclick=()=>{ g.innerHTML=''; listFiller(g);
-      const back=document.createElement('button'); back.type='button'; back.className='fa-btn'; back.style.marginTop='8px'; back.textContent='🔀 흐름 도식으로 보기';
+    // 2) 흐름에 포함되지 않은 나머지 글 → 타일로 함께 표시
+    const mem=new Set(); if(ff.host)mem.add(postRefId(ff.host)); (ff.flow.nodes||[]).forEach(n=>{if(n.refId)mem.add(n.refId);});
+    const rest=(posts||[]).filter(p=>!mem.has(postRefId(p)));
+    if(rest.length){
+      const h=document.createElement('div'); h.className='folder-rest-h'; h.textContent='그 밖의 놀이';
+      g.appendChild(h);
+      rest.forEach(p=>g.appendChild(tpostEl(p)));   // 눌러서 바로 글로 이동
+    }
+    // 3) 관리(순서변경·빼기)가 필요하면 목록으로 전환
+    const tg=document.createElement('button'); tg.type='button'; tg.className='fa-btn folder-flow-toggle'; tg.textContent='📋 전체를 목록으로 보기';
+    tg.onclick=()=>{ g.innerHTML=''; listFiller(g);
+      const back=document.createElement('button'); back.type='button'; back.className='fa-btn'; back.style.marginTop='8px'; back.textContent='흐름 도식으로 보기';
       back.onclick=()=>fillFolderFlowOrList(posts,listFiller); g.appendChild(back); };
+    g.appendChild(tg);
   } else { listFiller(g); }
 }
 /* 드롭다운 토글 */
@@ -6142,7 +6213,7 @@ function openUpload(){
     const drafts=loadDrafts();
     if(drafts.length){ renderDraftList(drafts); open_('draftOverlay'); return; }
   }
-  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); postRefs=[]; renderRefList(); _flow={type:'',nodes:[]}; _bodyTagSet=new Set(); _editPost=null; _currentDraftId=null; _draftDirty=false; _uploadVideo=null; renderVideoBox(); }
+  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); postRefs=[]; renderRefList(); _flow={type:'',nodes:[]}; _flowHost=null; _bodyTagSet=new Set(); _editPost=null; _currentDraftId=null; _draftDirty=false; _uploadVideo=null; renderVideoBox(); }
   $('#uploadOverlay').classList.add('on');
 }
 function startFreshUpload(){ close_('draftOverlay'); _skipDraftPrompt=true; openUpload(); _skipDraftPrompt=false; }
@@ -6686,7 +6757,7 @@ function resetUpload(){
   postRefs=[]; renderRefList();
   _editPost=null; setWriteMode(false);
   _tripVals=null; { const ts=$('#tripSec'); if(ts){ ts.style.display='none'; ts.innerHTML=''; } }  // 체험학습 정보 초기화
-  _flow={type:'',nodes:[]}; renderFlowTypes(); renderFlowEditor();
+  _flow={type:'',nodes:[]}; _flowHost=null; renderFlowTypes(); renderFlowEditor();
   removeUploadVideo();   // 영상 초기화
   _currentDraftId=null; _draftDirty=false;   // 폼 상태만 초기화 (임시저장 자체는 지우지 않음)
 }
