@@ -780,6 +780,9 @@
   .photo-card{border:1px solid #efe7e2;border-radius:14px;padding:12px;margin-bottom:16px}
   .photo-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .photo-head .pnum{font-size:13px;font-weight:700;color:var(--coral-tx);background:var(--coral-soft);padding:5px 12px;border-radius:14px}
+  .photo-card.is-cover .pnum{background:#fbe7ef;color:#c04c78}
+  .wp-thumb.is-cover{outline:2px solid #d76a8e;outline-offset:1px}
+  .wp-thumb.is-cover .wp-no{background:#d76a8e;color:#fff;padding:0 5px;border-radius:8px;width:auto}
   .pmove{display:flex;gap:6px}
   .mmove{border:1px solid #e4ded8;background:#fff;color:#666;border-radius:8px;width:32px;height:32px;font-size:12px;font-weight:700}
   .mmove.mtop,.mmove.ei-top{width:auto;padding:0 10px;white-space:nowrap;color:var(--coral-tx)}
@@ -1453,7 +1456,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814r</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814s</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -3314,12 +3317,12 @@ function renderEditImages(){
         <button class="espot-del" data-i="${idx}" data-s="${si}">✕</button>
       </div>`).join('');
     const markersHtml=im.spots.map((s,si)=>`<span class="ei-marker" data-i="${idx}" data-s="${si}" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%">${si+1}</span>`).join('');
-    const card=document.createElement('div');card.className='photo-card edit-img';card.dataset.i=idx;
+    const card=document.createElement('div');card.className='photo-card edit-img'+(idx===0?' is-cover':'');card.dataset.i=idx;
     card.innerHTML=`
       <div class="photo-head">
-        <div class="ph-left"><span class="drag-handle" title="끌어서 순서 변경">⠿</span><span class="pnum">사진</span></div>
+        <div class="ph-left"><span class="drag-handle" title="끌어서 순서 변경">⠿</span><span class="pnum">${idx===0?'⭐ 대표사진':(idx+1)+'번째 사진'}</span></div>
         <div class="pmove">
-          <button type="button" class="mmove ei-top" data-i="${idx}" title="맨 앞으로" ${idx===0?'disabled':''}>⤒ 맨앞</button>
+          <button type="button" class="mmove ei-top" data-i="${idx}" title="이 사진을 대표사진으로 지정 (맨 앞으로)" ${idx===0?'disabled':''}>⭐ 대표로</button>
           <button type="button" class="mmove ei-up" data-i="${idx}" title="위로">▲</button>
           <button type="button" class="mmove ei-down" data-i="${idx}" title="아래로">▼</button>
           <button type="button" class="btn g ei-del-btn" data-i="${idx}">🗑 삭제</button>
@@ -5269,7 +5272,7 @@ function buildPhotoCard(ph, skipDetect){
     <div class="photo-head">
       <div class="ph-left"><span class="drag-handle" title="끌어서 순서 변경">⠿</span><span class="pnum">사진</span></div>
       <div class="pmove">
-        <button class="mmove mtop" title="맨 앞으로">⤒ 맨앞</button>
+        <button class="mmove mtop" title="이 사진을 대표사진으로 지정 (맨 앞으로)">⭐ 대표로</button>
         <button class="mmove mup" title="위로">▲</button>
         <button class="mmove mdown" title="아래로">▼</button>
         <button class="btn g delphoto">🗑 삭제</button>
@@ -5440,7 +5443,8 @@ function enableDragSort(listEl, cardSel, onDrop){
 }
 function updatePhotoOrder(){
   photos.forEach((p,idx)=>{if(!p.el)return;
-    const n=p.el.querySelector('.pnum');if(n)n.textContent=`${idx+1}번째 사진`;
+    const n=p.el.querySelector('.pnum');if(n)n.textContent=idx===0?'⭐ 대표사진':`${idx+1}번째 사진`;
+    if(p.el.classList)p.el.classList.toggle('is-cover',idx===0);
     const up=p.el.querySelector('.mup'),dn=p.el.querySelector('.mdown'),tp=p.el.querySelector('.mtop');
     if(up)up.disabled=idx===0; if(dn)dn.disabled=idx===photos.length-1; if(tp)tp.disabled=idx===0;
   });
@@ -6466,17 +6470,17 @@ function renderWritePhotoStrip(){
   if(!sec||!strip)return;
   if(_editPost||!photos.length){ sec.style.display='none'; strip.innerHTML=''; return; }
   sec.style.display='';
-  const lab=sec.querySelector('.hint'); if(lab)lab.textContent='드래그로 순서 변경 · 누르면 그 사진 편집(회전·자르기·구매 링크·설명)';
+  const lab=sec.querySelector('.hint'); if(lab)lab.textContent='드래그로 순서 변경 · 누르면 편집 · 맨 앞(⭐) 사진이 대표사진이에요';
   strip.innerHTML='';
   photos.forEach((ph,idx)=>{
     let src='';
     try{ src=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,.8):(ph.img&&ph.img.src)||''; }catch(e){ src=(ph.img&&ph.img.src)||''; }
     const hasSpot=(ph.spots&&ph.spots.length)?'<span class="wp-badge" title="구매 링크 있음">🛒</span>':'';
     const d=document.createElement('div');
-    d.className='wp-thumb';
-    d.title=`${idx+1}번째 사진 · 드래그로 순서 변경, 누르면 편집`;
+    d.className='wp-thumb'+(idx===0?' is-cover':'');
+    d.title=idx===0?'⭐ 대표사진 · 드래그로 순서 변경, 누르면 편집':`${idx+1}번째 사진 · 드래그로 순서 변경, 누르면 편집`;
     d._ph=ph;
-    d.innerHTML=`<span class="wp-no">${idx+1}</span>${hasSpot}${src?`<img src="${src}" alt="">`:''}<span class="wp-edit">✎ 편집</span>`;
+    d.innerHTML=`<span class="wp-no">${idx===0?'⭐':idx+1}</span>${hasSpot}${src?`<img src="${src}" alt="">`:''}<span class="wp-edit">✎ 편집</span>`;
     strip.appendChild(d);
   });
   enableWriteStripDrag(strip);
