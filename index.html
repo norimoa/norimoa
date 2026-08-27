@@ -326,6 +326,8 @@
   .fd-svg.fd-lg .fd-clabel{font-size:13px}
   .flow-ico{width:16px;height:16px;vertical-align:-3px;margin-right:1px}
   .folder-ico{width:19px;height:19px;vertical-align:-4px;margin-right:3px}
+  .grp-ico{display:inline-block;width:15px;height:15px;vertical-align:-2px;flex:0 0 auto}
+  .hd-ico{display:inline-block;width:18px;height:18px;vertical-align:-3px;margin-right:1px}
   .flow-card-h .fc-h-t{white-space:nowrap}
   /* 폴더 안 놀이흐름: 크게 보이기 + 나머지 글 */
   .folder-flow-card{grid-column:1/-1}
@@ -1059,7 +1061,7 @@
   .pf-photo .pcount{background:#dd5b8d;color:#fff;left:8px;right:auto;bottom:8px;top:auto}
   .pf-desc{font-size:14.5px;line-height:1.7;color:#4a3f39;margin-top:10px;white-space:pre-wrap;word-break:break-word;text-align:left;max-width:100%;margin-left:auto;margin-right:auto}
   /* 웹(데스크톱, 981px 이상): 원래대로 — 사진 높이 제한(꽉 안 참), 설명글은 그 사진 너비에 맞춤(JS). 모바일(≤980px)은 사진·설명 꽉 차게 */
-  @media(min-width:981px){ .pf-photo img{width:auto;max-height:70vh} .pf-photo{width:fit-content;margin-left:auto;margin-right:auto} }
+  @media(min-width:981px){ .pf-photo img{width:auto;max-height:70vh} .pf-photo{width:fit-content;margin-left:auto;margin-right:auto;cursor:zoom-in} }
   /* 모바일도 웹과 동일하게: 사진 → 설명 → 사진 → 설명 세로로 쭉 (스크롤로 내려봄) */
   .cmt-row{display:flex;gap:10px;padding:12px 4px;border-bottom:1px solid var(--line)}
   .cmt-row .av{width:34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 auto}
@@ -1451,7 +1453,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814o</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814r</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2974,7 +2976,7 @@ function renderPostPage(p){
     const spot=(im.spots&&im.spots.length)?'<span class="pcount">🏷️ 상품 태그</span>':'';
     const markers=(im.spots||[]).map((s,si)=>`<button type="button" class="marker filled pulse" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%" onclick="event.stopPropagation();spotPopAt(this,${idx},${si})">＋</button>`).join('');
     const desc=(im.desc&&im.desc.trim())?`<div class="pf-desc">${linkifyTags(im.desc,p.tags)}</div>`:'';
-    return `<div class="pf-item"><div class="pf-photo"><img src="${im.img}" alt="">${spot}${markers}</div>${desc}</div>`;
+    return `<div class="pf-item"><div class="pf-photo" onclick="pfPhotoClick(${idx})"><img src="${im.img}" alt="">${spot}${markers}</div>${desc}</div>`;
   }).join('');
   $('#ptMini').textContent=viewLabel(_postBack);   // '뒤로' 옆에 돌아갈 이전 페이지 이름
   const hashLine=(p.tags||[]).map(x=>'#'+noSpace(x)).join(' ');
@@ -3183,7 +3185,7 @@ function renderECatChips(){const c=$('#eCatChips');if(!c)return;c.innerHTML='';
     el.querySelector('.x').onclick=()=>{esel.cat.delete(it);renderECat();};c.appendChild(el);});}
 function renderECatPanel(){const p=$('#eCatPanel');if(!p)return;p.innerHTML='';
   catData.forEach(grp=>{const g=document.createElement('div');g.className='opt-group';
-    g.innerHTML=`<div class="gl">${grp.ic} ${grp.g}</div>`;const w=document.createElement('div');w.className='opts';
+    g.innerHTML=`<div class="gl">${groupIco(grp)} ${grp.g}</div>`;const w=document.createElement('div');w.className='opts';
     grp.items.forEach(it=>{const on=esel.cat.has(it);const b=document.createElement('button');
       b.className='opt'+(on?' on':'')+hiCat(it);b.textContent=(on?'✓ ':'')+it;
       b.onclick=()=>{on?esel.cat.delete(it):esel.cat.add(it);renderECat();};w.appendChild(b);});
@@ -3256,7 +3258,8 @@ function openEdit(){
   _editPost=p;
   _editImages=imagesOf(p).map(im=>({img:im.img,desc:im.desc||'',env:im.env===true,spots:(im.spots||[]).map(s=>({...s}))}));
   $('#pTitle').value=(p.title||'').replace(/^#/,'');
-  { const _pt=parseTrip(p.desc||''); $('#pBody').innerHTML=marksToRich(_pt.body||''); _tripVals=_pt.trip?{cat:_pt.trip.cat, vals:Object.assign({}, _pt.trip.vals)}:null; }
+  { const _pt=parseTrip(p.desc||''); $('#pBody').innerHTML=marksToRich(_pt.body||''); _tripVals=_pt.trip?{cat:_pt.trip.cat, vals:Object.assign({}, _pt.trip.vals)}:null;
+    const _ts=$('#tripSec'); if(_ts){ _ts.innerHTML=''; _ts.style.display='none'; } }   // 예전 글의 정보표 DOM 잔상 제거(안 그러면 다른 글 값이 덮어써짐)
   sel={age:p.age||'선택 안함', nuri:new Set(p.nuri||[]), cat:new Set(catLabelsToKeys(p.categories||[])), tags:[...(p.tags||[])]};
   _postPriv=!!p.priv; { const pc=$('#postPrivChk'); if(pc)pc.checked=_postPriv; }   // '나만 보기' 상태 불러오기
   attachments=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url}));
@@ -3912,6 +3915,8 @@ function renderDetail(){
   open_('detailOverlay');
 }
 /* 상세 스크롤 사진 위 핑크 마커 클릭 → 구매 정보 팝오버 (라이트박스 없이 바로) */
+/* 웹(데스크톱)에서만 사진 클릭 → 크게 보기. 모바일은 이미 꽉 차서 그대로 */
+function pfPhotoClick(idx){ if(window.innerWidth>=981) openPhotos(_currentPost, idx); }
 function spotPopAt(el, imgIdx, spotIdx){
   const im=(imagesOf(_currentPost)||[])[imgIdx]; const s=im&&im.spots&&im.spots[spotIdx];
   if(s) showSpotPop(el.closest('.pf-photo'), s);
@@ -4411,7 +4416,7 @@ function renderCatDrawer(){
   html+=`<button type="button" class="cat-about-btn" onclick="close_('catOverlay');go('about')"><img alt="" width="16" height="16" style="border-radius:4px;vertical-align:-3px;margin-right:3px" src="data:image/png;base64,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"> 놀이모아 소개</button>`;
   if(canEditCats()) html+=`<button type="button" class="cat-admin-btn" onclick="openCatAdmin()">✏️ 카테고리 편집${isAdmin()?' (관리자)':' (미리보기)'}</button>`;
   d.groups.forEach((grp,gi)=>{
-    html+=`<div class="cat-group"><div class="cgl">${grp.ic} ${grp.g}</div><div class="cg-grid">`+
+    html+=`<div class="cat-group"><div class="cgl">${groupIco(grp)} ${grp.g}</div><div class="cg-grid">`+
       grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
       `</div></div>`;
     if(gi===0) html+=`<button type="button" class="cat-env-btn" onclick="openEnv()">🖼️ 환경구성 모아보기</button>`; // '놀이 주제'와 '놀이 유형' 사이
@@ -4472,7 +4477,7 @@ function renderCatAdmin(){
   _catEdit.forEach((grp,gi)=>{
     const sec=document.createElement('div'); sec.className='ca-group'; sec.dataset.g=gi;
     const rows=grp.items.map((it,ii)=>`<div class="ca-row" data-g="${gi}" data-i="${ii}"><span class="ca-drag ca-idrag" draggable="true" data-g="${gi}" data-i="${ii}" title="드래그해서 순서 변경">⠿</span><input class="ca-in" data-g="${gi}" data-i="${ii}" value="${esc(it)}"><button class="ca-del" data-g="${gi}" data-i="${ii}" title="삭제">×</button></div>`).join('');
-    sec.innerHTML=`<div class="ca-gl"><span class="ca-drag ca-gdrag" draggable="true" data-g="${gi}" title="드래그해서 카테고리 순서 변경">⠿</span> ${grp.ic} ${esc(grp.g)}</div><div class="ca-items">${rows}</div>
+    sec.innerHTML=`<div class="ca-gl"><span class="ca-drag ca-gdrag" draggable="true" data-g="${gi}" title="드래그해서 카테고리 순서 변경">⠿</span> ${groupIco(grp)} ${esc(grp.g)}</div><div class="ca-items">${rows}</div>
       <div class="ca-add"><input class="ca-newin" data-g="${gi}" placeholder="새 항목 추가"><button class="ca-addbtn" data-g="${gi}">＋ 추가</button></div>`;
     box.appendChild(sec);
   });
@@ -4872,11 +4877,20 @@ let sideSection='kinder';
 function setSideSection(s){sideSection=s;
   document.querySelectorAll('.side-menu a[data-sc]').forEach(a=>a.classList.toggle('on',a.dataset.sc===s));
   renderSideCats();}
+/* 카테고리 그룹 아이콘 (흑백·라인). 이름이 맞으면 SVG, 아니면 기존 이모지 사용 */
+const GROUP_ICONS={
+  '놀이 주제':'<svg class="grp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8.5"/><path d="M12 13c-.6-3.2-3.2-5.2-6.3-5.2-.1 3.2 2.6 5.6 6.3 5.2z"/><path d="M12 11.8c.4-2.8 2.8-4.6 5.8-4.6C17.6 10 15.2 11.9 12 11.8z"/></svg>',
+  '놀이 유형':'<svg class="grp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>',
+  '특색교육':'<svg class="grp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8.5 12 4.5l9.5 4-9.5 4z"/><path d="M6 11v4.2c0 1.4 2.7 2.8 6 2.8s6-1.4 6-2.8V11"/><path d="M21.5 8.5v4.8"/></svg>',
+  '상황별':'<svg class="grp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>',
+  '연령별':'<svg class="grp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="8" r="2.7"/><path d="M4 20c0-3 2-4.8 4.5-4.8S13 17 13 20"/><circle cx="16.7" cy="10" r="2"/><path d="M14.2 20c0-2.3 1.2-3.6 2.8-3.6S19.8 17.7 19.8 20"/></svg>'
+};
+function groupIco(grp){ return (grp&&GROUP_ICONS[grp.g]) || (grp&&grp.ic) || '📁'; }
 function renderSideCats(){
   const box=$('#sideCats');if(!box)return;
   const d=catDrawer[sideSection];if(!d){box.innerHTML='';return;}
   box.innerHTML=d.groups.map((grp,gi)=>
-    `<div class="side-cat-group"><div class="scg-label">${grp.ic} ${grp.g}</div>`+
+    `<div class="side-cat-group"><div class="scg-label">${groupIco(grp)} ${grp.g}</div>`+
     `<div class="side-cat-items">`+
     grp.items.map(it=>`<button class="${hiCat(it).trim()}" onclick="filterByLabel('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
     `</div></div>`+
@@ -5936,7 +5950,7 @@ function renderCatPanel(){
   const p=$('#catPanel');p.innerHTML='';
   catData.forEach((grp,gi)=>{
     const g=document.createElement('div');g.className='opt-group';
-    g.innerHTML=`<div class="gl">${grp.ic} ${grp.g}</div>`;
+    g.innerHTML=`<div class="gl">${groupIco(grp)} ${grp.g}</div>`;
     const w=document.createElement('div');w.className='opts';
     grp.items.forEach(it=>{const key=gi+'::'+it;const on=sel.cat.has(key);
       const b=document.createElement('button');b.className='opt'+(on?' on':'')+hiCat(it);b.textContent=(on?'✓ ':'')+it;
@@ -6302,7 +6316,7 @@ function openUpload(){
     const drafts=loadDrafts();
     if(drafts.length){ renderDraftList(drafts); open_('draftOverlay'); return; }
   }
-  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); postRefs=[]; renderRefList(); _flow={type:'',nodes:[]}; _flowHost=null; _bodyTagSet=new Set(); _editPost=null; _currentDraftId=null; _draftDirty=false; _uploadVideo=null; renderVideoBox(); _postPriv=false; { const pc=$('#postPrivChk'); if(pc)pc.checked=false; } }
+  if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); postRefs=[]; renderRefList(); _flow={type:'',nodes:[]}; _flowHost=null; _bodyTagSet=new Set(); _editPost=null; _currentDraftId=null; _draftDirty=false; _uploadVideo=null; renderVideoBox(); _postPriv=false; { const pc=$('#postPrivChk'); if(pc)pc.checked=false; } _tripVals=null; { const _ts=$('#tripSec'); if(_ts){_ts.innerHTML='';_ts.style.display='none';} } }
   $('#uploadOverlay').classList.add('on');
 }
 function startFreshUpload(){ close_('draftOverlay'); _skipDraftPrompt=true; openUpload(); _skipDraftPrompt=false; }
@@ -6412,7 +6426,8 @@ async function resumeDraft(id){
   _flow=parseFlow(d.body||'').flow||{type:'',nodes:[]}; renderFlowTypes(); renderFlowEditor();
   _bodyTagSet=new Set();
   $('#pTitle').value=d.title||'';
-  { const _pt=parseTrip(d.body||''); $('#pBody').innerHTML=marksToRich(_pt.body||''); _tripVals=_pt.trip?{cat:_pt.trip.cat, vals:Object.assign({}, _pt.trip.vals)}:null; }
+  { const _pt=parseTrip(d.body||''); $('#pBody').innerHTML=marksToRich(_pt.body||''); _tripVals=_pt.trip?{cat:_pt.trip.cat, vals:Object.assign({}, _pt.trip.vals)}:null;
+    const _ts=$('#tripSec'); if(_ts){ _ts.innerHTML=''; _ts.style.display='none'; } }
   // 사진 복원 (모자이크가 이미 입혀진 이미지 → 재인식 없이 그대로)
   photos.length=0; $('#photoList').innerHTML='';
   const list=d.photos||[];
