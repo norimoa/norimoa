@@ -785,7 +785,8 @@
   .wp-thumb.is-cover .wp-no{background:#d76a8e;color:#fff;padding:0 5px;border-radius:8px;width:auto}
   .pmove{display:flex;gap:6px}
   .mmove{border:1px solid #e4ded8;background:#fff;color:#666;border-radius:8px;width:32px;height:32px;font-size:12px;font-weight:700}
-  .mmove.mtop,.mmove.ei-top{width:auto;padding:0 10px;white-space:nowrap;color:var(--coral-tx)}
+  .mmove.mcover,.mmove.ei-cover{width:auto;padding:0 10px;white-space:nowrap;color:var(--coral-tx)}
+  .mmove.mcover.is-set,.mmove.ei-cover.is-set{background:#d76a8e;border-color:#d76a8e;color:#fff}
   .mmove:disabled{opacity:.35;cursor:default}
   .ph-left{display:flex;align-items:center;gap:8px}
   .drag-handle{cursor:grab;touch-action:none;color:#bfb2a8;font-size:19px;line-height:1;padding:4px 7px;border-radius:7px;user-select:none;-webkit-user-select:none}
@@ -824,7 +825,7 @@
   /* 현장체험학습 정보 입력 폼 */
   .trip-form{display:flex;flex-direction:column;gap:8px;background:#faf7f4;border:1px solid #ece3db;border-radius:12px;padding:12px}
   .trip-row{display:flex;align-items:center;gap:10px}
-  .trip-row label{flex:0 0 96px;font-size:13px;font-weight:700;color:#7a6a60}
+  .trip-row label{flex:0 0 112px;font-size:13px;font-weight:700;color:#7a6a60;white-space:nowrap}
   .trip-in{flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:9px;padding:9px 11px;font-family:inherit;background:#fff;font-size:13.5px}
   .trip-star-row{flex:1;display:flex;align-items:center;gap:2px}
   .trip-star{background:none;border:none;padding:0 2px;font-size:26px;line-height:1;color:#e0d7cf;cursor:pointer}
@@ -1456,7 +1457,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814u</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0814w</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -3260,7 +3261,7 @@ function closeConfirmDiscard(){ close_('closeConfirmOverlay'); reallyCloseWrite(
 function openEdit(){
   const p=_currentPost;if(!p||!canEdit(p))return;
   _editPost=p;
-  _editImages=imagesOf(p).map(im=>({img:im.img,desc:im.desc||'',env:im.env===true,spots:(im.spots||[]).map(s=>({...s}))}));
+  _editImages=imagesOf(p).map(im=>({img:im.img,desc:im.desc||'',env:im.env===true,cover:im.cover===true,spots:(im.spots||[]).map(s=>({...s}))}));
   $('#pTitle').value=(p.title||'').replace(/^#/,'');
   { const _pt=parseTrip(p.desc||''); $('#pBody').innerHTML=marksToRich(_pt.body||''); _tripVals=_pt.trip?{cat:_pt.trip.cat, vals:Object.assign({}, _pt.trip.vals)}:null;
     const _ts=$('#tripSec'); if(_ts){ _ts.innerHTML=''; _ts.style.display='none'; } }   // 예전 글의 정보표 DOM 잔상 제거(안 그러면 다른 글 값이 덮어써짐)
@@ -3305,6 +3306,7 @@ function deletePost(){
 }
 function renderEditImages(){
   const box=$('#writeImages');if(!box)return;box.innerHTML='';
+  const ci=coverIndexOf(_editImages);
   _editImages.forEach((im,idx)=>{
     const spotsHtml=im.spots.map((s,si)=>`
       <div class="espot">
@@ -3318,12 +3320,12 @@ function renderEditImages(){
         <button class="espot-del" data-i="${idx}" data-s="${si}">✕</button>
       </div>`).join('');
     const markersHtml=im.spots.map((s,si)=>`<span class="ei-marker" data-i="${idx}" data-s="${si}" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%">${si+1}</span>`).join('');
-    const card=document.createElement('div');card.className='photo-card edit-img'+(idx===0?' is-cover':'');card.dataset.i=idx;
+    const card=document.createElement('div');card.className='photo-card edit-img';card.dataset.i=idx;
     card.innerHTML=`
       <div class="photo-head">
-        <div class="ph-left"><span class="drag-handle" title="끌어서 순서 변경">⠿</span><span class="pnum">${idx===0?'⭐ 대표사진':(idx+1)+'번째 사진'}</span></div>
+        <div class="ph-left"><span class="drag-handle" title="끌어서 순서 변경">⠿</span><span class="pnum">${(idx+1)+'번째 사진'}</span></div>
         <div class="pmove">
-          <button type="button" class="mmove ei-top" data-i="${idx}" title="이 사진을 대표사진으로 지정 (맨 앞으로)" ${idx===0?'disabled':''}>⭐ 대표로</button>
+          <button type="button" class="mmove ei-cover${idx===ci?' is-set':''}" data-i="${idx}" title="이 사진을 대표사진으로 지정 (둘러보기·인기놀이에서 대표로 보여요)">⭐ 대표</button>
           <button type="button" class="mmove ei-up" data-i="${idx}" title="위로">▲</button>
           <button type="button" class="mmove ei-down" data-i="${idx}" title="아래로">▼</button>
           <button type="button" class="btn g ei-del-btn" data-i="${idx}">🗑 삭제</button>
@@ -3353,7 +3355,7 @@ function renderEditImages(){
   });
   box.querySelectorAll('.ei-photo, .ei-edit-btn').forEach(el=>el.onclick=()=>openEditImage(+el.dataset.i));
   box.querySelectorAll('.ei-del-btn').forEach(b=>b.onclick=()=>deleteEditImage(+b.dataset.i));
-  box.querySelectorAll('.ei-top').forEach(b=>b.onclick=()=>moveEditImageTop(+b.dataset.i));
+  box.querySelectorAll('.ei-cover').forEach(b=>b.onclick=()=>setCoverPhoto(_editImages, +b.dataset.i, renderEditImages));
   box.querySelectorAll('.ei-up').forEach(b=>b.onclick=()=>moveEditImage(+b.dataset.i,-1));
   box.querySelectorAll('.ei-down').forEach(b=>b.onclick=()=>moveEditImage(+b.dataset.i,1));
   enableDragSort(box, '.photo-card', ordered=>{
@@ -3483,7 +3485,8 @@ async function saveEdit(){
   const catLabels=[...sel.cat].map(k=>k.split('::')[1]);          // 카테고리(띄어쓰기 유지)
   const photoTags=_editImages.flatMap(im=>extractHashtags(im.desc,true));   // 사진 설명 속 해시태그도 수집
   const tags=[...new Set([...(sel.tags||[]), ...catLabels, ...photoTags].map(noSpace).filter(Boolean))]; // 해시태그(띄어쓰기 없음)
-  const images=_editImages.map(im=>({img:im.img,desc:(im.desc||'').trim(),env:im.env===true,
+  const _eci=coverIndexOf(_editImages);   // 대표사진 위치(지정 안 하면 첫 사진)
+  const images=_editImages.map((im,k)=>({img:im.img,desc:(im.desc||'').trim(),env:im.env===true,cover:k===_eci,
     spots:im.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:(s.name||'').trim(),mall:(s.mall||'').trim(),
       url:s.url&&!/^https?:\/\//i.test(s.url)?'https://'+s.url:(s.url||'')}))}));
   const age=sel.age, nuri=[...sel.nuri], categories=catLabels;
@@ -3491,7 +3494,8 @@ async function saveEdit(){
   p.title=title.replace(/^#/,'');
   p.desc=body; p.tags=tags.length?tags:p.tags; p.images=images; p.priv=_postPriv;
   p.age=age; p.nuri=nuri; p.categories=categories; p.attachments=atts; p.refs=postRefs.slice();
-  p.img=images[0]?images[0].img:(p.img||''); p.spots=images[0]?images[0].spots:[];
+  const _ecov=images[_eci]||images[0];   // 대표사진(썸네일)
+  p.img=_ecov?_ecov.img:(p.img||''); p.spots=_ecov?_ecov.spots:[];
   if(p.db && SB){
     const _upd={title:p.title, description:body, tags:p.tags,
       images, image_url:p.img, spots:p.spots, age, nuri, categories, attachments:atts, refs:p.refs, is_private:_postPriv};
@@ -4321,7 +4325,10 @@ function photoGrid(p){
   if(vid){ // 영상: 피드에서 소리 없이 자동 미리보기 (스크롤해서 보일 때 몇 초 재생)
     return `<div class="photo single vid-wrap"><video class="feed-vid" src="${vid}" muted playsinline preload="metadata"${p.img?` poster="${p.img}"`:''}></video><span class="vid-badge">▶ 영상</span></div>`;
   }
-  const imgs=imagesOf(p).filter(im=>im&&im.img), n=imgs.length;
+  let imgs=imagesOf(p).filter(im=>im&&im.img);
+  const _c=imgs.findIndex(im=>im.cover===true);   // 대표사진을 맨 앞으로 (순서는 원본 그대로, 표시만 앞으로)
+  if(_c>0){ imgs=[imgs[_c],...imgs.slice(0,_c),...imgs.slice(_c+1)]; }
+  const n=imgs.length;
   if(!n)return '';
   if(n<=1)return `<div class="photo single"><img src="${imgs[0].img||p.img}" alt=""></div>`;
   const show=imgs.slice(0,4);
@@ -5280,7 +5287,7 @@ function buildPhotoCard(ph, skipDetect){
     <div class="photo-head">
       <div class="ph-left"><span class="drag-handle" title="끌어서 순서 변경">⠿</span><span class="pnum">사진</span></div>
       <div class="pmove">
-        <button class="mmove mtop" title="이 사진을 대표사진으로 지정 (맨 앞으로)">⭐ 대표로</button>
+        <button class="mmove mcover" title="이 사진을 대표사진으로 지정 (둘러보기·인기놀이에서 대표로 보여요)">⭐ 대표</button>
         <button class="mmove mup" title="위로">▲</button>
         <button class="mmove mdown" title="아래로">▼</button>
         <button class="btn g delphoto">🗑 삭제</button>
@@ -5313,7 +5320,7 @@ function buildPhotoCard(ph, skipDetect){
     const newOrder=ordered.map(c=>photos.find(p=>p.el===c)).filter(Boolean);
     if(newOrder.length===photos.length){ photos.length=0; photos.push(...newOrder); updatePhotoOrder(); }
   });
-  card.querySelector('.mtop').onclick=()=>movePhotoTop(ph);
+  card.querySelector('.mcover').onclick=()=>setCoverPhoto(photos, photos.indexOf(ph), updatePhotoOrder);
   card.querySelector('.mup').onclick=()=>movePhoto(ph,-1);
   card.querySelector('.mdown').onclick=()=>movePhoto(ph,1);
   ph.cv=card.querySelector('canvas');ph.ctx=ph.cv.getContext('2d');
@@ -5449,12 +5456,26 @@ function enableDragSort(listEl, cardSel, onDrop){
     h.addEventListener('pointercancel', end);
   });
 }
+/* 대표사진(커버) 지정: 순서는 그대로 두고 한 장만 '대표'로 표시. 지정 안 하면 첫 사진이 대표.
+   네이버 블로그 대표사진처럼 다시 누르면 해제된다. */
+function coverIndexOf(arr){ if(!arr||!arr.length)return 0; const i=arr.findIndex(x=>x&&x.cover===true); return i>=0?i:0; }
+function setCoverPhoto(arr, idx, renderFn){
+  if(!arr||!arr[idx])return;
+  const wasCover = arr[idx].cover===true;
+  arr.forEach(x=>{ if(x) x.cover=false; });
+  if(!wasCover){ arr[idx].cover=true; toast('대표사진으로 지정했어요'); }
+  else { toast('대표사진을 해제했어요 · 첫 사진이 대표가 돼요'); }
+  markDirty && markDirty();
+  if(renderFn)renderFn();
+}
 function updatePhotoOrder(){
+  const ci=coverIndexOf(photos);
   photos.forEach((p,idx)=>{if(!p.el)return;
-    const n=p.el.querySelector('.pnum');if(n)n.textContent=idx===0?'⭐ 대표사진':`${idx+1}번째 사진`;
-    if(p.el.classList)p.el.classList.toggle('is-cover',idx===0);
-    const up=p.el.querySelector('.mup'),dn=p.el.querySelector('.mdown'),tp=p.el.querySelector('.mtop');
-    if(up)up.disabled=idx===0; if(dn)dn.disabled=idx===photos.length-1; if(tp)tp.disabled=idx===0;
+    const n=p.el.querySelector('.pnum');if(n)n.textContent=`${idx+1}번째 사진`;   // 대표 표시는 분홍 '대표' 버튼으로만
+    if(p.el.classList)p.el.classList.toggle('is-cover',false);
+    const up=p.el.querySelector('.mup'),dn=p.el.querySelector('.mdown'),cv=p.el.querySelector('.mcover');
+    if(up)up.disabled=idx===0; if(dn)dn.disabled=idx===photos.length-1;
+    if(cv)cv.classList.toggle('is-set',idx===ci);
   });
 }
 function removePhoto(ph){markDirty();const i=photos.indexOf(ph);if(i>=0)photos.splice(i,1);ph.el.remove();closeSpotForm();
@@ -6478,17 +6499,18 @@ function renderWritePhotoStrip(){
   if(!sec||!strip)return;
   if(_editPost||!photos.length){ sec.style.display='none'; strip.innerHTML=''; return; }
   sec.style.display='';
-  const lab=sec.querySelector('.hint'); if(lab)lab.textContent='드래그로 순서 변경 · 누르면 편집 · 맨 앞(⭐) 사진이 대표사진이에요';
+  const lab=sec.querySelector('.hint'); if(lab)lab.textContent='드래그로 순서 변경 · 누르면 편집 · 분홍 번호가 대표사진이에요';
   strip.innerHTML='';
+  const ci=coverIndexOf(photos);
   photos.forEach((ph,idx)=>{
     let src='';
     try{ src=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,.8):(ph.img&&ph.img.src)||''; }catch(e){ src=(ph.img&&ph.img.src)||''; }
     const hasSpot=(ph.spots&&ph.spots.length)?'<span class="wp-badge" title="구매 링크 있음">🛒</span>':'';
     const d=document.createElement('div');
-    d.className='wp-thumb'+(idx===0?' is-cover':'');
-    d.title=idx===0?'⭐ 대표사진 · 드래그로 순서 변경, 누르면 편집':`${idx+1}번째 사진 · 드래그로 순서 변경, 누르면 편집`;
+    d.className='wp-thumb'+(idx===ci?' is-cover':'');
+    d.title=(idx===ci?`${idx+1}번째 사진 (대표) · `:`${idx+1}번째 사진 · `)+'드래그로 순서 변경, 누르면 편집';
     d._ph=ph;
-    d.innerHTML=`<span class="wp-no">${idx===0?'⭐':idx+1}</span>${hasSpot}${src?`<img src="${src}" alt="">`:''}<span class="wp-edit">✎ 편집</span>`;
+    d.innerHTML=`<span class="wp-no">${idx+1}</span>${hasSpot}${src?`<img src="${src}" alt="">`:''}<span class="wp-edit">✎ 편집</span>`;
     strip.appendChild(d);
   });
   enableWriteStripDrag(strip);
@@ -6825,6 +6847,8 @@ async function publishPost(){
     env:ph.env===true,               // 환경구성 사진 여부
     spots:ph.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url}))
   }));
+  const coverI=coverIndexOf(photos);              // 대표사진 위치(지정 안 하면 첫 사진)
+  images.forEach((im,k)=>im.cover=(k===coverI));  // 순서는 그대로 두고 대표사진만 표시
   const topDesc = (body || `${sel.age!=='선택 안함'?'['+sel.age+'] ':''}${[...sel.nuri].join(', ')||'새로 올린 놀이예요.'}`) + buildTripTag() + buildFlowTag();
 
   // ── 실제 저장(Supabase) ─────────────────────────────
@@ -6838,13 +6862,14 @@ async function publishPost(){
         const up=await SB.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg'});
         if(up.error)throw up.error;
         const {data:pub}=SB.storage.from(STORAGE_BUCKET).getPublicUrl(path);
-        uploaded.push({img:pub.publicUrl,desc:images[k].desc,env:images[k].env,spots:images[k].spots});
+        uploaded.push({img:pub.publicUrl,desc:images[k].desc,env:images[k].env,cover:images[k].cover===true,spots:images[k].spots});
       }
       const atts=await uploadAttachments();
+      const _cov=uploaded[coverI]||uploaded[0];    // 대표사진(썸네일)
       const _row={
         user_id:authUser.id, title, description:topDesc, tags,
-        image_url:uploaded[0]?uploaded[0].img:'', images:uploaded,
-        age:sel.age, nuri:[...sel.nuri], categories:catLabels, spots:uploaded[0]?uploaded[0].spots:[],
+        image_url:_cov?_cov.img:'', images:uploaded,
+        age:sel.age, nuri:[...sel.nuri], categories:catLabels, spots:_cov?_cov.spots:[],
         attachments:atts, refs:postRefs, is_private:_postPriv,
         author_name:profile.nick, author_role:profile.roleShort||profile.role,
         author_icon:profile.icon||'', author_avatar:profile.photo||'' };
@@ -6860,9 +6885,10 @@ async function publishPost(){
 
   // ── 데모 저장(로컬) ─────────────────────────────────
   const demoAtts=await uploadAttachments();
+  const _dcov=images[coverI]||images[0];   // 대표사진(썸네일)
   posts.unshift({tid:'me',title:title.startsWith('#')?title:'#'+title,desc:topDesc, date:fmtDate(Date.now()), priv:_postPriv,
-    img:images[0]?images[0].img:'', images, video:(_uploadVideo?_uploadVideo.url:''), tags:tags.length?tags:['새놀이'], nuri:[...sel.nuri], categories:catLabels,
-    views:'0',like:0,cmt:0,liked:false,emoji:'🎨', spots:images[0]?images[0].spots:[], attachments:demoAtts, refs:postRefs.slice()});
+    img:_dcov?_dcov.img:'', images, video:(_uploadVideo?_uploadVideo.url:''), tags:tags.length?tags:['새놀이'], nuri:[...sel.nuri], categories:catLabels,
+    views:'0',like:0,cmt:0,liked:false,emoji:'🎨', spots:_dcov?_dcov.spots:[], attachments:demoAtts, refs:postRefs.slice()});
   toast('놀이를 업로드했어요! (데모)');
   clearPublishedDraft();resetUpload();closeUpload();go('browse');renderBrowse();
   } finally { _publishing=false; showUploading(false); }
