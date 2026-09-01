@@ -62,7 +62,7 @@
   .brand .logo{width:34px;height:34px;border-radius:9px;background:var(--coral);
     display:grid;place-items:center;font-size:19px}
   .brand b{font-size:19px}
-  .brand .wordmark{height:34px;width:auto;display:block;margin-bottom:1px}
+  .brand .wordmark{height:27px;width:auto;display:block;margin-bottom:1px}
   .brand small{display:block;color:var(--sub);font-size:12px;font-weight:400;margin-top:1px}
   .cat-btn{width:auto;background:var(--coral);color:#fff;border:none;border-radius:12px;
     padding:11px 18px;font-size:14.5px;font-weight:700;display:inline-flex;align-items:center;gap:8px;
@@ -228,7 +228,9 @@
   .canvas-wrap{position:relative;margin-top:14px;border-radius:12px;overflow:hidden;background:#e9e9ee}
   .canvas-wrap canvas{width:100%;display:block;cursor:crosshair}
   .ai-status{margin-top:10px;font-size:13px;color:#c04a6e;font-weight:600;display:flex;align-items:center;gap:8px}
-  .ai-status svg{width:15px;height:15px;flex:0 0 auto}
+  .ai-status svg{width:15px;height:15px;flex:0 0 auto;margin-top:1px}
+  .ai-status{align-items:flex-start}
+  .ai-status .ais-t{line-height:1.5}
   .ai-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
   .crop-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;background:#fcf4f1;border:1px solid #eed9cf;border-radius:10px;padding:9px 11px}
   .crop-bar .crop-hint{flex:1;min-width:120px;color:#8a7168;font-size:12.5px;font-weight:600}
@@ -805,7 +807,10 @@
   .photo-desc:focus{outline:none;border-color:var(--coral);background:#fff}
   /* 콜라주 사진 순서 바꾸기 (드래그) */
   .collage-parts{margin:10px 0 2px;background:#faf5f2;border:1px solid #eadfd8;border-radius:12px;padding:9px 10px}
-  .cp-label{font-size:12px;color:var(--coral-tx);font-weight:700;margin-bottom:8px}
+  .cp-label{font-size:12px;color:var(--coral-tx);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .cp-label > span{flex:1;min-width:0}
+  .cp-split{flex:0 0 auto;border:1px solid #e0cdd4;background:#fff;color:#c04c78;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .cp-split:hover{background:#fbf1f5;border-color:#e6a9b8}
   .cp-row{display:flex;gap:8px;flex-wrap:wrap}
   .cp-thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:2px solid #e6d9d1;
     cursor:grab;background:#fff;touch-action:none;user-select:none;transition:transform .08s,border-color .12s,box-shadow .12s}
@@ -1472,7 +1477,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0815r</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0815v</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4309,7 +4314,7 @@ function miniCard(c){
 /* 카드 사진 밑 캡션: 관리자가 지정한 값이 있으면 그걸, 없으면 자동(#첫태그/제목) */
 let _caps={};
 async function loadCaptions(){ if(!SB)return; try{const {data}=await SB.from('site_config').select('value').eq('key','captions').maybeSingle(); if(data&&data.value&&data.value.map)_caps=data.value.map; }catch(e){} }
-function autoCap(p){ return (p.tags&&p.tags[0])?'#'+p.tags[0]:String(p.title||'놀이').replace(/^#/,''); }
+function autoCap(p){ return String(p.title||'놀이').replace(/^#/,''); }   // 카드 밑 글자: 해시태그 대신 해당 글 제목
 function capText(p){ if(p&&p.id&&_caps[p.id]!=null&&_caps[p.id]!=='')return _caps[p.id]; return autoCap(p); }
 async function editCaption(p){
   if(!isAdmin()||!p||!p.id){ return; }
@@ -5558,7 +5563,7 @@ async function runDetectP(ph){
   }catch(e){found=[];}
   ph.boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
   renderCanvasP(ph);
-  ph.status.innerHTML=ph.boxes.length?`${CHK_ICO} 얼굴 ${ph.boxes.length}개 모자이크 · 빈 곳을 눌러(드래그해) 더 가릴 수 있어요`:'얼굴을 못 찾았어요. 가릴 곳을 눌러(또는 드래그해) 직접 가려주세요.';
+  ph.status.innerHTML=ph.boxes.length?`${CHK_ICO}<span class="ais-t">얼굴 ${ph.boxes.length}개 모자이크<br>빈 곳을 눌러(드래그해) 더 가릴 수 있어요</span>`:'얼굴을 못 찾았어요. 가릴 곳을 눌러(또는 드래그해) 직접 가려주세요.';
 }
 // 삭제 모드에서 각 모자이크 오른쪽 위에 뜨는 ✕ 배지의 위치·크기
 function delBadge(ph,b){ const cv=ph.cv, r=Math.max(8, cv.width*0.024);
@@ -5712,6 +5717,29 @@ function compositeCollage(ph){
     renderCanvasP(ph);renderSpotsP(ph); };
   im.src=c.toDataURL('image/jpeg',0.9);
 }
+/* 콜라주 해제: 합쳐둔 조각들을 다시 각각의 사진으로 되돌림 */
+function splitCollage(ph){
+  if(!(ph.parts&&ph.parts.length>1)) return;
+  const i=photos.indexOf(ph); if(i<0) return;
+  const parts=ph.parts.slice();
+  if(ph.el) ph.el.remove();
+  photos.splice(i,1);
+  const made=parts.map((part,k)=>({
+    img:part.img,
+    boxes:(part.boxes||[]).map(b=>({...b})),
+    spots:[], desc:(k===0?(ph.desc||''):''), mosaicOn:part.mosaicOn!==false,
+    env:(k===0?ph.env===true:false), cover:(k===0?!!ph.cover:false),
+    addSpotMode:false, drag:null
+  }));
+  photos.splice(i,0,...made);
+  made.forEach(p=>{ buildPhotoCard(p, true);   // skipDetect: 조각의 모자이크를 그대로 유지
+    if(p.status) p.status.innerHTML = p.boxes.length
+      ? `${CHK_ICO}<span class="ais-t">얼굴 ${p.boxes.length}개 모자이크<br>빈 곳을 눌러(드래그해) 더 가릴 수 있어요</span>`
+      : '가릴 곳을 눌러(또는 드래그해) 직접 가려주세요.'; });
+  const list=$('#photoList'); if(list)photos.forEach(p=>{ if(p.el)list.appendChild(p.el); });
+  updatePhotoOrder(); renderWritePhotoStrip(); markDirty&&markDirty();
+  toast(`콜라주를 ${made.length}장으로 나눴어요`);
+}
 /* 두 사진(현재+아래)을 콜라주로 합치기 — 조각으로 보관해 순서 변경·개별 수정 가능 */
 function mergeCollage(ph){
   const i=photos.indexOf(ph);
@@ -5734,7 +5762,8 @@ function buildCollageStrip(ph){
     const anchor=ph.el.querySelector('.up-photo');
     anchor.parentNode.insertBefore(strip, anchor.nextSibling);
   }
-  strip.innerHTML='<div class="cp-label">🔀 드래그로 순서 변경 · 사진을 누르면 모자이크 수정</div><div class="cp-row"></div>';
+  strip.innerHTML='<div class="cp-label"><span>🔀 드래그로 순서 변경 · 누르면 모자이크 수정</span><button type="button" class="cp-split">✂ 콜라주 해제</button></div><div class="cp-row"></div>';
+  { const sb=strip.querySelector('.cp-split'); if(sb)sb.onclick=()=>splitCollage(ph); }
   const row=strip.querySelector('.cp-row');
   ph.parts.forEach((p,idx)=>{
     const t=document.createElement('div');t.className='cp-thumb';
@@ -5832,7 +5861,7 @@ async function peRedetect(){
   }catch(e){found=[];}
   _pe.boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
   renderCanvasP(_pe);
-  if(st)st.innerHTML=_pe.boxes.length?`${CHK_ICO} 얼굴 ${_pe.boxes.length}개 모자이크 · 빈 곳을 눌러(드래그해) 더 가릴 수 있어요`:'얼굴을 못 찾았어요. 빈 곳을 드래그해 직접 가려주세요.';
+  if(st)st.innerHTML=_pe.boxes.length?`${CHK_ICO}<span class="ais-t">얼굴 ${_pe.boxes.length}개 모자이크<br>빈 곳을 눌러(드래그해) 더 가릴 수 있어요</span>`:'얼굴을 못 찾았어요. 빈 곳을 드래그해 직접 가려주세요.';
 }
 function peClear(){ if(!_pe.boxes.length){const st=$('#peStatus');if(st)st.textContent='지울 모자이크가 없어요.';return;} _pe.delMode=!_pe.delMode; if(!_pe.delMode&&_pe.cv)_pe.cv.style.cursor=''; renderCanvasP(_pe); const st=$('#peStatus'); if(st)st.textContent=_pe.delMode?'지울 모자이크의 ✕를 누르세요 (끝나면 버튼을 다시 눌러요)':'삭제를 마쳤어요.'; }
 function peToggleMz(){ const mz=$('#peMz'); _pe.mosaicOn=mz?mz.checked:true; renderCanvasP(_pe); }
@@ -5915,7 +5944,7 @@ async function ieRedetect(){
   }catch(e){found=[];}
   _ie.boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
   renderCanvasP(_ie);
-  if(st)st.innerHTML=_ie.boxes.length?`${CHK_ICO} 얼굴 ${_ie.boxes.length}개 모자이크 · 빈 곳을 눌러(드래그해) 더 가릴 수 있어요`:'얼굴을 못 찾았어요. 빈 곳을 드래그해 직접 가려주세요.';
+  if(st)st.innerHTML=_ie.boxes.length?`${CHK_ICO}<span class="ais-t">얼굴 ${_ie.boxes.length}개 모자이크<br>빈 곳을 눌러(드래그해) 더 가릴 수 있어요</span>`:'얼굴을 못 찾았어요. 빈 곳을 드래그해 직접 가려주세요.';
 }
 function ieClear(){ if(!_ie.boxes.length){const st=$('#ieStatus');if(st)st.textContent='지울 모자이크가 없어요.';return;} _ie.delMode=!_ie.delMode; if(!_ie.delMode&&_ie.cv)_ie.cv.style.cursor=''; renderCanvasP(_ie); const st=$('#ieStatus'); if(st)st.textContent=_ie.delMode?'지울 모자이크의 ✕를 누르세요 (끝나면 버튼을 다시 눌러요)':'삭제를 마쳤어요.'; }
 function ieToggleMz(){ const mz=$('#ieMz'); _ie.mosaicOn=mz?mz.checked:true; renderCanvasP(_ie); }
