@@ -303,8 +303,6 @@
   .flow-node-row .fnr-in{flex:1;min-width:0;font-size:13px;border:1px solid #e6ddd6;border-radius:8px;padding:6px 8px;font-family:inherit}
   .flow-node-row .fnr-link{width:auto;padding:0 9px;height:28px;font-size:11.5px;font-weight:700;white-space:nowrap}
   .flow-node-row .fnr-link.on{background:#e6efe6;color:#3f7a4a}
-  .flow-node-row .fnr-big{width:auto;padding:0 9px;height:28px;font-size:11.5px;font-weight:700;white-space:nowrap}
-  .flow-node-row .fnr-big.on{background:var(--coral);color:#fff}
   .flow-node-row.self{background:#f3ede8;border-color:#e0d3c8}
   .flow-node-row.self{background:#fdf0f5;border-color:#f0cfdd}
   .flow-node-row .fnr-no.self{background:#d76a8e}
@@ -329,8 +327,6 @@
   .flow-diagram{width:100%;overflow-x:auto}
   .fd-svg{width:100%;height:auto;max-height:380px;display:block}
   .fd-svg.fd-lg .fd-label{font-size:14px}
-  .fd-label.fd-big{font-weight:800;font-size:15px}
-  .fd-svg.fd-lg .fd-label.fd-big{font-size:18.5px}
   .fd-svg.fd-lg .fd-clabel{font-size:13px}
   .flow-ico{width:16px;height:16px;vertical-align:-3px;margin-right:1px}
   .folder-ico{width:19px;height:19px;vertical-align:-4px;margin-right:3px}
@@ -1477,7 +1473,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0815v</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0815x</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -3826,7 +3822,7 @@ function renderRelGrid(sel,list,empty){
   list.slice(0,6).forEach(q=>{const a=authorOf(q);
     const el=document.createElement('div');el.className='rel-post';
     el.innerHTML=`<div class="rp-img"><img src="${q.img}" alt="">${imagesOf(q).length>1?`<span class="pcount">📷 ${imagesOf(q).length}</span>`:''}</div>
-      <div class="rp-t">${(q.tags&&q.tags[0])?'#'+q.tags[0]:q.title}</div>
+      <div class="rp-t">${esc((q.title||'놀이').replace(/^#/,''))}</div>
       <div class="rp-a">${a?a.name:''}</div><div class="rp-l">♡ ${(q.like||0).toLocaleString()}</div>`;
     el.onclick=()=>openPost(q);box.appendChild(el);});
 }
@@ -4019,7 +4015,7 @@ function openProduct(s){
   const g=$('#prodPlays');g.innerHTML='';
   plays.forEach(p=>{const a=authorOf(p);const el=document.createElement('div');el.className='tpost';
     el.innerHTML=`<img src="${p.img}" alt="">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}</span>`:''}
-      <div class="tt">${a?esc(a.name)+' · ':''}${(p.tags&&p.tags[0])?'#'+p.tags[0]:''}</div>`;
+      <div class="tt">${a?esc(a.name)+' · ':''}${esc((p.title||'놀이').replace(/^#/,''))}</div>`;
     el.onclick=()=>{['detailOverlay','productOverlay'].forEach(close_);openPost(p);};g.appendChild(el);});
   if(!plays.length)g.innerHTML='<div class="empty">아직 이 상품을 쓴 놀이가 없어요</div>';
   open_('productOverlay');
@@ -6231,7 +6227,6 @@ function renderFlowEditor(){
       <span class="fnr-no${isMe?' self':''}">${i+1}</span>
       <input class="fnr-in" data-i="${i}" value="${esc(n.title||'')}" placeholder="점 이름 (예: 물감 탐색)">
       ${isMe?'<span class="fnr-selfbadge">지금 이 글</span>':''}
-      <button type="button" class="fnr-big${n.big?' on':''}" data-i="${i}" title="${n.big?'제목 크게 켜짐 (다시 누르면 보통)':'이 점 제목을 크고 굵게'}">크게</button>
       <button type="button" class="fnr-link${linked?' on':''}" data-i="${i}" title="${linked?'연결된 놀이글 바꾸기':'이 점에 내 놀이글 연결'}">${linked?'🔗 연결됨':'🔗 연결'}</button>
       <button type="button" class="fnr-up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
       <button type="button" class="fnr-down" data-i="${i}" ${i===(_flow.nodes.length-1)?'disabled':''}>▼</button>
@@ -6245,7 +6240,6 @@ function renderFlowEditor(){
     <button type="button" class="fa-btn" id="flowAddBtn">＋ 내 놀이 추가</button>
     <div class="flow-preview-wrap"><div class="flow-preview-label">미리보기</div><div id="flowPreview" class="flow-preview"></div></div>`;
   box.querySelectorAll('.fnr-in').forEach(inp=>{ inp.oninput=()=>{ const nd=_flow.nodes[+inp.dataset.i]; if(nd){ nd.title=inp.value; nd.autoTitle=false; } refreshFlowPreview(); markDirty&&markDirty(); }; });
-  box.querySelectorAll('.fnr-big').forEach(b=>b.onclick=()=>{ const nd=_flow.nodes[+b.dataset.i]; if(nd){ nd.big=!nd.big; renderFlowEditor(); markDirty&&markDirty(); } });
   box.querySelectorAll('.fnr-link').forEach(b=>b.onclick=()=>openFlowLink(+b.dataset.i));
   box.querySelectorAll('.fnr-del').forEach(b=>b.onclick=()=>{ _flow.nodes.splice(+b.dataset.i,1); renderFlowEditor(); markDirty&&markDirty(); });
   box.querySelectorAll('.fnr-up').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; if(i>0){ const a=_flow.nodes; [a[i-1],a[i]]=[a[i],a[i-1]]; renderFlowEditor(); markDirty&&markDirty(); } });
@@ -6269,7 +6263,7 @@ function openFlowLink(i){
 function buildFlowTagStr(){
   if(!_flow.type) return '';
   syncSelfTitles();
-  const nodes=(_flow.nodes||[]).map(n=>({title:String(n.title||'').trim(), refId:n.refId||'', db:!!n.db, postId:n.postId||null, self:!!n.self, autoTitle:!!n.autoTitle, big:!!n.big})).filter(n=>n.title||n.refId);
+  const nodes=(_flow.nodes||[]).map(n=>({title:String(n.title||'').trim(), refId:n.refId||'', db:!!n.db, postId:n.postId||null, self:!!n.self, autoTitle:!!n.autoTitle})).filter(n=>n.title||n.refId);
   if(!nodes.length) return '';
   return `\n⟦flow⟧${JSON.stringify({type:_flow.type,nodes})}⟦/flow⟧`;
 }
@@ -6323,7 +6317,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
   // 클릭 불가: '지금 보고 있는 바로 그 글'만. 폴더처럼 보는 글이 없으면 원글도 클릭 가능(그 글로 이동)
   const isCurrent=n=> curRefId ? (!!navRef(n) && navRef(n)===curRefId) : false;
   const clickAttr=n=>{ const r=navRef(n); return (interactive && r && !isCurrent(n)) ? ` style="cursor:pointer" onclick="openRefTarget('${_escJs(r)}')"` : ''; };
-  const labCls=n=> 'fd-label'+(isCur(n)?' fd-self':'')+(n.big?' fd-big':'');
+  const labCls=n=> 'fd-label'+(isCur(n)?' fd-self':'');
   const per=big?10:8, lh=big?21:17;   // 줄당 글자수 · 줄 높이(행간)
   // 여러 줄 라벨. above=true면 블록의 '아래끝'이 ly에 오도록 위로 쌓음
   const labelAt=(nd,x,ly,above)=>{ const lines=_wrapLabel(nd.title, per); const startY=above?ly-(lines.length-1)*lh:ly;
