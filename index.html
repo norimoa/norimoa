@@ -1474,7 +1474,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0815z</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816b</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4363,6 +4363,7 @@ let _catAlias = {
 function canonCat(name){
   let n=String(name==null?'':name).trim(), seen=0;
   while(_catAlias[n] && _catAlias[n]!==n && seen++<8) n=_catAlias[n];
+  n=n.replace(/\s*교육$/,'');   // '생태'↔'생태교육'처럼 뒤에 '교육'만 붙인 이름 변경을 같은 카테고리로 인식 (예전 글 유지)
   return n;
 }
 function sameCat(a,b){ return canonCat(a)===canonCat(b); }
@@ -4616,7 +4617,8 @@ async function saveCatAdmin(){
   try{ if(_catEditOrig){ _catEdit.forEach(ng=>{ const og=_catEditOrig.find(o=>o.g===ng.g); if(!og)return;
         const removed=(og.items||[]).filter(x=>!ng.items.includes(x));
         const added=ng.items.filter(x=>!(og.items||[]).includes(x));
-        if(removed.length===1 && added.length===1){ _catAlias[added[0]]=canonCat(removed[0]); _aliasChanged=true; }
+        // 한 번에 여러 개를 바꿔도(순서대로 짝지어) 별칭 기록 → 이름만 바뀌고 안의 글은 그대로 유지
+        if(removed.length && removed.length===added.length){ removed.forEach((rm,ri)=>{ _catAlias[added[ri]]=canonCat(rm); }); _aliasChanged=true; }
       }); } }catch(e){}
   // 순서까지 반영: catData를 _catEdit 순서/내용으로 다시 구성 (아이콘은 기존 값 유지)
   const rebuilt=_catEdit.map(e=>{ const old=catData.find(c=>c.g===e.g); return {g:e.g, ic:e.ic||(old&&old.ic)||'📁', items:e.items.slice()}; });
@@ -7043,7 +7045,11 @@ function resetUpload(){
 }
 /* 업로드가 '성공'했을 때만 그 임시저장을 정리 */
 function clearPublishedDraft(){
-  if(_currentDraftId){ try{ const rest=loadDrafts().filter(d=>d.id!==_currentDraftId); lsSet(DRAFT_KEY,rest);}catch(e){} }
+  if(_currentDraftId){
+    try{ const rest=loadDrafts().filter(d=>d.id!==_currentDraftId); lsSet(DRAFT_KEY,rest);}catch(e){}
+    try{ deleteDraftServer(_currentDraftId); }catch(e){}   // 계정에 저장된 임시저장도 삭제 → 새로고침·다른 기기에도 안 남게
+    _currentDraftId=null;
+  }
 }
 
 /* ---------------- init ---------------- */
