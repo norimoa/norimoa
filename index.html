@@ -326,6 +326,7 @@
   .flow-preview-label{font-size:11px;color:var(--sub);margin-bottom:4px}
   .flow-diagram{width:100%;overflow-x:auto}
   .fd-svg{width:100%;height:auto;max-height:380px;display:block}
+  .fd-svg.fd-lg{max-height:600px}   /* 상세·폴더의 큰 도식: 너무 작게 축소되지 않도록 넉넉히 */
   .fd-svg.fd-lg .fd-label{font-size:14px}
   .fd-svg.fd-lg .fd-clabel{font-size:13px}
   .flow-ico{width:16px;height:16px;vertical-align:-3px;margin-right:1px}
@@ -579,9 +580,9 @@
 
   /* ---------- detail lightbox ---------- */
   .overlay.dark{background:rgba(10,10,14,.9)}
-  .detail{width:100%;max-width:640px}
-  .detail-photo{position:relative}
-  .detail-photo img{width:100%;display:block;border-radius:14px}
+  .detail{width:100%;max-width:min(1080px,94vw)}
+  .detail-photo{position:relative;width:fit-content;max-width:100%;margin:0 auto}
+  .detail-photo img{display:block;max-width:100%;max-height:84vh;width:auto;height:auto;margin:0 auto;border-radius:14px}
   .detail-photo .marker{width:34px;height:34px;font-size:17px}
   .spot-pop{position:absolute;transform:translate(-50%,calc(-100% - 22px));z-index:8;background:#fff;
     border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);padding:11px 14px;min-width:132px;text-align:center}
@@ -1473,7 +1474,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0815x</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0815z</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -3912,7 +3913,13 @@ function openBrowseDetail(i){_openDetail(window._browse[i]);}
 let _dImgs=[], _dIdx=0, _dTitle='', _dBaseDesc='';
 function _openDetail(p,startIdx){
   if(!p)return;
-  _dImgs=imagesOf(p);_dIdx=startIdx||0;
+  // 콜라주 사진은 조각(개별 사진)으로 펼쳐서 하나씩 크게 보이도록 함
+  const orig=imagesOf(p); const expanded=[]; const startMap=[];
+  orig.forEach((im,oi)=>{ startMap[oi]=expanded.length;
+    const parts=im&&im.parts;
+    if(parts && parts.length>1){ parts.forEach(pu=>expanded.push({img:(typeof pu==='string'?pu:(pu&&pu.img)||''), desc:im.desc||'', spots:[]})); }
+    else expanded.push(im); });
+  _dImgs=expanded; _dIdx=startMap[startIdx||0]||0;
   _dTitle=(p.emoji?p.emoji+' ':'')+p.title.replace(/^#/,'');
   _dBaseDesc=p.desc||'';
   renderDetail();open_('detailOverlay');
@@ -5697,6 +5704,12 @@ function renderPartCanvas(part){
   if(pseudo.mosaicOn)(pseudo.boxes||[]).filter(b=>b.on).forEach(b=>mosaicP(pseudo,b));
   return cv;
 }
+/* 콜라주 조각 하나를 워터마크까지 넣어 개별 이미지(dataURL)로 반환 — 라이트박스에서 하나씩 크게 보기용 */
+function partDataURL(part){
+  const cv=renderPartCanvas(part);
+  try{ drawWatermark(cv.getContext('2d'), cv.width, cv.height); }catch(e){}
+  return cv.toDataURL('image/jpeg',0.92);
+}
 /* 조각들을 순서대로 가로로 이어붙여 사진 캔버스에 다시 그리기 */
 function compositeCollage(ph){
   const parts=ph.parts;if(!parts||!parts.length)return;
@@ -6378,7 +6391,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
       +labelAt(center,cx,cy+cR+cGap,false); acc(cx,cy,cR,center,true,cR+cGap); }
     else { centerMark=`<circle cx="${cx}" cy="${cy}" r="${cR}" class="fd-center${isCur(center)?' fd-self':''}"/><text x="${cx}" y="${cy+4}" class="fd-clabel" text-anchor="middle">${esc(_flowTrunc(center.title,6))}</text>`; acc(cx,cy,cR,center,true,cR); }
     const centerG=`<g${clickAttr(center)}>${centerMark}</g>`;
-    const pad=6, vbX=minX-pad, vbY=minY-pad, vbW=(maxX-minX)+2*pad, vbH=(maxY-minY)+2*pad;
+    const pad=big?18:8, vbX=minX-pad, vbY=minY-pad, vbW=(maxX-minX)+2*pad, vbH=(maxY-minY)+2*pad;
     return `<div class="flow-diagram"><svg viewBox="${vbX} ${vbY} ${vbW} ${vbH}" class="${svgCls}" preserveAspectRatio="xMidYMid meet">${lines}${pts}${centerG}</svg></div>`;
   }
   return '';
@@ -6953,7 +6966,9 @@ async function publishPost(){
     img:cleanPhotoDataURL(ph,0.92),  // 보라색 테두리 없이 모자이크만 적용된 이미지
     desc:(ph.desc||'').trim(),
     env:ph.env===true,               // 환경구성 사진 여부
-    spots:ph.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url}))
+    spots:ph.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url})),
+    // 콜라주면 조각(개별 사진)도 따로 보관 → 클릭 확대 시 하나씩 크게 보기
+    partsData:(ph.parts&&ph.parts.length>1)?ph.parts.map(partDataURL):null
   }));
   const coverI=coverIndexOf(photos);              // 대표사진 위치(지정 안 하면 첫 사진)
   images.forEach((im,k)=>im.cover=(k===coverI));  // 순서는 그대로 두고 대표사진만 표시
@@ -6970,7 +6985,19 @@ async function publishPost(){
         const up=await SB.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg'});
         if(up.error)throw up.error;
         const {data:pub}=SB.storage.from(STORAGE_BUCKET).getPublicUrl(path);
-        uploaded.push({img:pub.publicUrl,desc:images[k].desc,env:images[k].env,cover:images[k].cover===true,spots:images[k].spots});
+        let partsUrls=null;
+        if(images[k].partsData && images[k].partsData.length){
+          partsUrls=[];
+          for(let pj=0;pj<images[k].partsData.length;pj++){
+            try{ const pblob=await (await fetch(images[k].partsData[pj])).blob();
+              const ppath=`${authUser.id}/${Date.now()}_${k}_p${pj}.jpg`;
+              const pup=await SB.storage.from(STORAGE_BUCKET).upload(ppath,pblob,{contentType:'image/jpeg'});
+              if(!pup.error){ partsUrls.push(SB.storage.from(STORAGE_BUCKET).getPublicUrl(ppath).data.publicUrl); }
+            }catch(e){}
+          }
+          if(partsUrls.length<2) partsUrls=null;   // 조각 업로드 실패 시엔 콜라주 그대로
+        }
+        uploaded.push({img:pub.publicUrl,desc:images[k].desc,env:images[k].env,cover:images[k].cover===true,spots:images[k].spots, parts:partsUrls||undefined});
       }
       const atts=await uploadAttachments();
       const _cov=uploaded[coverI]||uploaded[0];    // 대표사진(썸네일)
@@ -6993,6 +7020,7 @@ async function publishPost(){
 
   // ── 데모 저장(로컬) ─────────────────────────────────
   const demoAtts=await uploadAttachments();
+  images.forEach(im=>{ if(im.partsData&&im.partsData.length>1){ im.parts=im.partsData; } delete im.partsData; }); // 콜라주 조각 보관
   const _dcov=images[coverI]||images[0];   // 대표사진(썸네일)
   posts.unshift({tid:'me',title:title.startsWith('#')?title:'#'+title,desc:topDesc, date:fmtDate(Date.now()), priv:_postPriv,
     img:_dcov?_dcov.img:'', images, video:(_uploadVideo?_uploadVideo.url:''), tags:tags.length?tags:['새놀이'], nuri:[...sel.nuri], categories:catLabels,
