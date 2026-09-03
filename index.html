@@ -194,6 +194,9 @@
     overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
   .modal.teacher-modal{max-width:640px}   /* 프로필 팝업은 더 넓게 (스탯 한 줄 + 오른쪽 버튼 여유) */
   .modal.folder-modal{max-width:940px}    /* 폴더 팝업: 놀이흐름 도식이 크게 보이도록 넉넉하게 */
+  .modal.comm-modal{max-width:760px;max-height:88vh}   /* 행정자료실 게시글: 문서·첨부를 넉넉히 보도록 크게 */
+  .modal.comm-modal .auth-body{padding:8px 22px 22px}
+  @media(max-width:640px){ .modal.comm-modal{max-width:100%;max-height:92vh} }
   @media(min-width:560px){ .folder-modal .teacher-posts{grid-template-columns:repeat(3,1fr)} }  /* 넓은 화면에선 3개씩 */
   .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;
     border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff}
@@ -315,6 +318,8 @@
   .flow-pick img{width:100%;height:100%;object-fit:cover;display:block}
   .flow-pick.on{border-color:#d76a8e;box-shadow:0 0 0 2px #fbe7ef}
   .flow-pick-no{position:absolute;left:5px;bottom:5px;font-size:10.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);border-radius:6px;padding:2px 6px}
+  .flow-pick.part{border-style:dashed;border-color:#d9c7bd}
+  .flow-pick.part .flow-pick-no{background:rgba(192,76,120,.72)}
   .flow-pick.none{aspect-ratio:auto;width:100%;margin-top:11px;height:40px;font-size:12.5px;font-weight:700;color:#8a7166}
   .flow-pick.none.on{color:#c04c78}
   .flow-node-row.self{background:#f3ede8;border-color:#e0d3c8}
@@ -1086,6 +1091,8 @@
   .pf-photo{position:relative;width:100%}
   .pf-photo img{display:block;max-width:100%;width:100%;height:auto;max-height:none;margin:0 auto;border-radius:12px;background:#f3efec}
   .pf-photo .pcount{background:#dd5b8d;color:#fff;left:8px;right:auto;bottom:8px;top:auto}
+  .pf-photo.collage{cursor:zoom-in}
+  .pf-collage-hint{position:absolute;right:8px;bottom:8px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.58);color:#fff;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:8px;pointer-events:none}
   .pf-desc{font-size:14.5px;line-height:1.7;color:#4a3f39;margin-top:10px;white-space:pre-wrap;word-break:break-word;text-align:left;max-width:100%;margin-left:auto;margin-right:auto}
   /* 웹(데스크톱, 981px 이상): 원래대로 — 사진 높이 제한(꽉 안 참), 설명글은 그 사진 너비에 맞춤(JS). 모바일(≤980px)은 사진·설명 꽉 차게 */
   @media(min-width:981px){ .pf-photo{width:100%;max-width:560px;margin-left:auto;margin-right:auto;cursor:zoom-in} .pf-photo img{width:100%;height:auto;max-height:none} }
@@ -1488,7 +1495,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816e</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816g</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1671,7 +1678,7 @@
 
 <!-- ============ 커뮤니티 글 보기 ============ -->
 <div class="overlay" id="commPostOverlay" onclick="if(event.target===this)close_('commPostOverlay')">
-  <div class="modal">
+  <div class="modal comm-modal">
     <div class="modal-head"><b id="commPostHead">게시글</b><button class="x" onclick="close_('commPostOverlay')">×</button></div>
     <div class="auth-body" id="commPostBody"></div>
   </div>
@@ -2904,10 +2911,21 @@ function relKeys(p){
 }
 function relScore(a,b){ const A=relKeys(a), B=relKeys(b); let n=0; A.forEach(k=>{ if(B.has(k))n++; }); return n; }
 function shareTag(a,b){ return relScore(a,b)>0; }
-// 글쓴이의 '관련' 놀이: 같은 사람 글 중 카테고리·태그가 겹치는 것만, 많이 겹치는 순
-function authorRelated(p){ return allPosts().filter(q=>q!==p&&sameAuthor(q,p)&&canSeePost(q)&&relScore(q,p)>0).sort((x,y)=>relScore(y,p)-relScore(x,p)); }
-// 다른 선생님들의 '관련' 글: 다른 사람 글 중 카테고리·태그가 겹치는 것만, 많이 겹치는 순
-function otherRelated(p){ return allPosts().filter(q=>q!==p&&!sameAuthor(q,p)&&canSeePost(q)&&relScore(q,p)>0).sort((x,y)=>relScore(y,p)-relScore(x,p)); }
+/* 태그·카테고리별 '몇 개 글에 쓰였나'(문서빈도) — 여러 글이 공유하는 흔한 키워드는 관련도 점수를 낮게, 이 글에만 가까운 드문 키워드는 높게 (관련성 정확도↑) */
+function relDF(){ const df=new Map(); const all=allPosts(); all.forEach(p=>{ relKeys(p).forEach(k=>df.set(k,(df.get(k)||0)+1)); }); return df; }
+/* 겹치는 키워드의 '희소도' 합 = 관련도 점수. 드물게 공유되는 태그일수록(=정말 비슷한 주제) 크게 반영 */
+function relScoreW(a,b,df){ const A=relKeys(a), B=relKeys(b); let s=0; A.forEach(k=>{ if(B.has(k)){ const d=(df&&df.get(k))||1; s+= 1/Math.log2(2+d); } }); return s; }
+const REL_MIN=0.42;   // 이 정도 이상 겹쳐야 '관련'으로 인정 (흔한 카테고리 하나만 겹친 글은 제외)
+// 글쓴이의 '관련' 놀이: 같은 사람 글 중 카테고리·태그가 겹치는 것 (같은 작가는 조금 느슨하게, 희소도순 정렬)
+function authorRelated(p){ const df=relDF();
+  return allPosts().filter(q=>q!==p&&sameAuthor(q,p)&&canSeePost(q)&&relScore(q,p)>0)
+    .sort((x,y)=>relScoreW(y,p,df)-relScoreW(x,p,df)); }
+// 다른 선생님들의 '관련' 글: 다른 사람 글 중 해시태그·카테고리가 '정말' 비슷한 것만 (드문 태그가 겹치거나 여러 개 겹칠 때), 관련도 높은 순
+function otherRelated(p){ const df=relDF();
+  return allPosts().filter(q=>q!==p&&!sameAuthor(q,p)&&canSeePost(q))
+    .map(q=>({q, s:relScoreW(q,p,df)}))
+    .filter(o=>o.s>=REL_MIN)
+    .sort((x,y)=>y.s-x.s).map(o=>o.q); }
 function nuriLabel(item){for(const g of nuriData){if(g.items.includes(item))return g.g+' &gt; '+item;}return item;}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 /* 업로드 날짜 표시 (예: 2026. 7. 29.) */
@@ -3052,7 +3070,8 @@ function renderPostPage(p){
     const spot=(im.spots&&im.spots.length)?'<span class="pcount">🏷️ 상품 태그</span>':'';
     const markers=(im.spots||[]).map((s,si)=>`<button type="button" class="marker filled pulse" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%" onclick="event.stopPropagation();spotPopAt(this,${idx},${si})">＋</button>`).join('');
     const desc=(im.desc&&im.desc.trim())?`<div class="pf-desc">${linkifyTags(im.desc,p.tags)}</div>`:'';
-    return `<div class="pf-item"><div class="pf-photo" onclick="pfPhotoClick(${idx})"><img src="${im.img}" alt="">${spot}${markers}</div>${desc}</div>`;
+    const collageHint=(im.parts&&im.parts.length>1)?`<span class="pf-collage-hint"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> 눌러서 낱장 보기 · ${im.parts.length}장</span>`:'';
+    return `<div class="pf-item"><div class="pf-photo${(im.parts&&im.parts.length>1)?' collage':''}" onclick="pfPhotoClick(${idx})"><img src="${im.img}" alt="">${spot}${markers}${collageHint}</div>${desc}</div>`;
   }).join('');
   $('#ptMini').textContent=viewLabel(_postBack);   // '뒤로' 옆에 돌아갈 이전 페이지 이름
   const hashLine=(p.tags||[]).map(x=>'#'+noSpace(x)).join(' ');
@@ -4001,7 +4020,12 @@ function renderDetail(){
 }
 /* 상세 스크롤 사진 위 핑크 마커 클릭 → 구매 정보 팝오버 (라이트박스 없이 바로) */
 /* 웹(데스크톱)에서만 사진 클릭 → 크게 보기. 모바일은 이미 꽉 차서 그대로 */
-function pfPhotoClick(idx){ if(window.innerWidth>=981) openPhotos(_currentPost, idx); }
+function pfPhotoClick(idx){
+  const im=(imagesOf(_currentPost)||[])[idx];
+  const isCollage = !!(im && im.parts && im.parts.length>1);
+  // 웹: 모든 사진 크게 보기 / 모바일: 콜라주는 낱장으로 크게 볼 수 있게 열어줌(단일 사진은 이미 꽉 차 있어 그대로)
+  if(window.innerWidth>=981 || isCollage) openPhotos(_currentPost, idx);
+}
 function spotPopAt(el, imgIdx, spotIdx){
   const im=(imagesOf(_currentPost)||[])[imgIdx]; const s=im&&im.spots&&im.spots[spotIdx];
   if(s) showSpotPop(el.closest('.pf-photo'), s);
@@ -5002,7 +5026,7 @@ function renderSideCats(){
     `<div class="side-cat-items">`+
     grp.items.map(it=>`<button class="${hiCat(it).trim()}" onclick="filterByLabel('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
     `</div></div>`+
-    (gi===0?`<button type="button" class="side-env-btn" onclick="openEnv()">🖼️ 환경구성 모아보기</button>`:'')  // '놀이 주제'와 '놀이 유형' 사이
+    (gi===0?`<button type="button" class="side-env-btn" onclick="openEnv()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성 모아보기</button>`:'')  // '놀이 주제'와 '놀이 유형' 사이
   ).join('');
 }
 /* 선생님 프로필 모달 */
@@ -5252,10 +5276,12 @@ function productsHTML(p){
   return `<div class="pd-sec"><h4>🛒 상품 태그 <span class="hint">이 놀이에 쓴 재료·교구예요</span></h4><div class="prod-list">${cards}</div></div>`;
 }
 /* 놀이흐름 점에 넣은 '이 글 사진' 클릭 → 그 사진을 설명과 함께 크게 (사진 라이트박스) */
-function openFlowPhoto(hostRef, idx){
+function openFlowPhoto(hostRef, idx, partIdx){
   const p=allPosts().find(x=>postRefId(x)===hostRef);
   if(!p){ toast('사진을 찾을 수 없어요'); return; }
   _openDetail(p, +idx||0);
+  // 콜라주 낱장을 넣은 점이면 그 낱장으로 바로 이동 (펼친 목록에서 해당 조각 위치로)
+  if(partIdx!=null && !isNaN(+partIdx)){ _dIdx=Math.min(_dImgs.length-1, _dIdx+(+partIdx)); renderDetail(); }
 }
 function openRefTarget(refId){
   if(!refId)return;
@@ -6248,7 +6274,7 @@ function ensureSelfNode(){ if(!_flow.type||_flowHost)return; _flow.nodes=_flow.n
 /* '이 글' 점의 제목은 실제 글 제목과 항상 같게 맞춰줌 (단, 다른 글의 흐름을 수정 중일 땐 원글 제목 유지) */
 function syncSelfTitles(){ if(_flowHost) return; const t=(($('#pTitle')||{}).value||'').trim(); (_flow.nodes||[]).forEach(n=>{ if(n.self) n.title=t; }); }
 function refreshFlowPreview(){ const pv=$('#flowPreview'); if(!pv)return;
-  const opts={ photoOf:(n)=> (n&&n.photoIdx!=null) ? curFlowPhotoSrc(n.photoIdx) : (_flowHost?folderPhotoOf(n,_flowHost):'') };
+  const opts={ photoOf:(n)=> (n&&n.photoIdx!=null) ? curFlowPhotoSrc(n.photoIdx, n.partIdx) : (_flowHost?folderPhotoOf(n,_flowHost):'') };
   if(_flowHost){ opts.host=_flowHost; opts.curRefId=(_editPost?postRefId(_editPost):''); }
   pv.innerHTML=flowDiagramFromData(_flow.type,_flow.nodes,false,opts)||'<div class="flow-empty">점을 1개 이상 추가하면 도식이 보여요.</div>'; }
 function addFlowNode(){ _flow.nodes=_flow.nodes||[]; _flow.nodes.push({title:'', refId:'', db:false, postId:null, self:false}); renderFlowEditor(); markDirty&&markDirty(); }
@@ -6308,22 +6334,34 @@ function openFlowLink(i){
     if(!isMinePost(p)){ toast('내가 올린 놀이글만 연결할 수 있어요'); return; }
     const node=_flow.nodes[i]; if(!node)return;
     node.refId=postRefId(p); node.db=!!p.db; node.postId=p.db?p.id:null;
-    delete node.photoIdx;   // 다른 글 연결 → 사진 넣기는 해제(둘 중 하나만)
+    delete node.photoIdx; delete node.partIdx;   // 다른 글 연결 → 사진 넣기는 해제(둘 중 하나만)
     // 제목: 비어있거나 '자동으로 넣었던' 제목이면 → 방금 고른 글 제목으로 맞춤(엉뚱한 옛 제목이 남지 않게).
     //       사용자가 직접 쓴 제목이면 그대로 둠.
     if(!String(node.title||'').trim() || node.autoTitle){ node.title=(p.title||'놀이').replace(/^#/,''); node.autoTitle=true; }
     renderFlowEditor(); markDirty&&markDirty();
   }, true);   // true = 내가 올린 글만 목록에 표시
 }
-/* 지금 이 글에서 올린 사진들 → [{idx, src}] (수정 중이면 _editImages, 새 글이면 photos) */
+/* 콜라주 조각 하나 → 이미지 소스 (업로드 중이면 조각 객체, 수정 중이면 이미 URL) */
+function _flowPartSrc(part){
+  if(!part) return '';
+  if(typeof part==='string') return part;
+  if(part.img && typeof part.img==='string' && /^(data:|https?:|blob:)/.test(part.img)) return part.img;
+  try{ return partDataURL(part); }catch(e){ return (part.img&&part.img.src)||''; }
+}
+/* 지금 이 글에서 올린 사진들 → [{idx, src, parts:[{partIdx,src}]}] (수정 중이면 _editImages, 새 글이면 photos) */
 function curFlowPhotos(){
-  if(_editImages && _editImages.length) return _editImages.map((im,i)=>({idx:i, src:(im.img||'')}));
+  const withParts=(idx, src, rawParts)=>({ idx, src,
+    parts:(rawParts && rawParts.length>1) ? rawParts.map((pt,pi)=>({partIdx:pi, src:_flowPartSrc(pt)})).filter(pp=>pp.src) : [] });
+  if(_editImages && _editImages.length) return _editImages.map((im,i)=>withParts(i, im.img||'', im.parts));
   return (photos||[]).map((ph,i)=>{ let src='';
     try{ src=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,0.6):((ph.img&&ph.img.src)||''); }
     catch(e){ src=(ph.img&&ph.img.src)||''; }
-    return {idx:i, src}; });
+    return withParts(i, src, ph.parts); });
 }
-function curFlowPhotoSrc(idx){ if(idx==null)return''; const f=curFlowPhotos().find(p=>p.idx===idx); return f?f.src:''; }
+function curFlowPhotoSrc(idx, partIdx){ if(idx==null)return'';
+  const f=curFlowPhotos().find(p=>p.idx===idx); if(!f)return'';
+  if(partIdx!=null){ const pp=(f.parts||[]).find(x=>x.partIdx===partIdx); return pp?pp.src:f.src; }
+  return f.src; }
 /* 점 하나에 '이 글에 올린 사진' 넣기 (사진을 고르면 점 대신 그 사진이 보임) */
 function openFlowPhotoPick(i){
   const node=_flow.nodes[i]; if(!node)return;
@@ -6331,28 +6369,37 @@ function openFlowPhotoPick(i){
   if(!list.length){ toast('먼저 1단계에서 사진을 올려주세요'); return; }
   const old=document.getElementById('flowPhotoOv'); if(old)old.remove();
   const ov=document.createElement('div'); ov.id='flowPhotoOv'; ov.className='flow-photo-ov';
-  const cells=list.map(p=>`<button type="button" class="flow-pick${node.photoIdx===p.idx?' on':''}" data-idx="${p.idx}"><img src="${esc(p.src)}" alt=""><span class="flow-pick-no">${p.idx+1}번째</span></button>`).join('');
+  const cells=list.map(p=>{
+    const wholeOn = node.photoIdx===p.idx && node.partIdx==null;
+    const isCollage = p.parts.length>0;
+    let html=`<button type="button" class="flow-pick${wholeOn?' on':''}" data-idx="${p.idx}" data-part=""><img src="${esc(p.src)}" alt=""><span class="flow-pick-no">${p.idx+1}번째${isCollage?' 전체':''}</span></button>`;
+    if(isCollage){ html+=p.parts.map(pp=>{ const on=node.photoIdx===p.idx&&node.partIdx===pp.partIdx;
+      return `<button type="button" class="flow-pick part${on?' on':''}" data-idx="${p.idx}" data-part="${pp.partIdx}"><img src="${esc(pp.src)}" alt=""><span class="flow-pick-no">${p.idx+1}-${pp.partIdx+1}</span></button>`; }).join(''); }
+    return html;
+  }).join('');
+  const hasCollage = list.some(p=>p.parts.length>0);
   ov.innerHTML=`<div class="flow-photo-box">
     <div class="flow-photo-hd">점에 넣을 사진 고르기<button type="button" class="flow-photo-x" aria-label="닫기">✕</button></div>
-    <div class="flow-photo-sub">이 글에 올린 사진 중에서 골라요. 고르면 점 대신 사진이 보여요.</div>
+    <div class="flow-photo-sub">이 글에 올린 사진 중에서 골라요. 고르면 점 대신 사진이 보여요.${hasCollage?'<br>콜라주 사진은 <b>전체</b>로 넣을지, 안의 <b>낱장</b>을 넣을지 고를 수 있어요.':''}</div>
     <div class="flow-pick-grid">${cells}</div>
-    <button type="button" class="flow-pick none${node.photoIdx==null?' on':''}" data-idx="">사진 없이 점으로 두기</button>
+    <button type="button" class="flow-pick none${node.photoIdx==null?' on':''}" data-idx="" data-part="">사진 없이 점으로 두기</button>
   </div>`;
   document.body.appendChild(ov);
   const close=()=>ov.remove();
   ov.addEventListener('click',e=>{ if(e.target===ov)close(); });
   ov.querySelector('.flow-photo-x').onclick=close;
   ov.querySelectorAll('.flow-pick').forEach(b=>b.onclick=()=>{
-    const v=b.dataset.idx;
-    if(v===''){ delete node.photoIdx; }
-    else { node.photoIdx=+v; node.refId=''; node.db=false; node.postId=null; }   // 사진 넣기 ↔ 다른 글 연결은 둘 중 하나
+    const v=b.dataset.idx, pv=b.dataset.part;
+    if(v===''){ delete node.photoIdx; delete node.partIdx; }
+    else { node.photoIdx=+v; node.refId=''; node.db=false; node.postId=null;   // 사진 넣기 ↔ 다른 글 연결은 둘 중 하나
+      if(pv==='' || pv==null) delete node.partIdx; else node.partIdx=+pv; }
     close(); renderFlowEditor(); markDirty&&markDirty();
   });
 }
 function buildFlowTagStr(){
   if(!_flow.type) return '';
   syncSelfTitles();
-  const nodes=(_flow.nodes||[]).map(n=>{ const o={title:String(n.title||'').trim(), refId:n.refId||'', db:!!n.db, postId:n.postId||null, self:!!n.self, autoTitle:!!n.autoTitle}; if(n.photoIdx!=null)o.photoIdx=n.photoIdx; return o; }).filter(n=>n.title||n.refId||n.photoIdx!=null);
+  const nodes=(_flow.nodes||[]).map(n=>{ const o={title:String(n.title||'').trim(), refId:n.refId||'', db:!!n.db, postId:n.postId||null, self:!!n.self, autoTitle:!!n.autoTitle}; if(n.photoIdx!=null)o.photoIdx=n.photoIdx; if(n.partIdx!=null)o.partIdx=n.partIdx; return o; }).filter(n=>n.title||n.refId||n.photoIdx!=null);
   if(!nodes.length) return '';
   return `\n⟦flow⟧${JSON.stringify({type:_flow.type,nodes})}⟦/flow⟧`;
 }
@@ -6406,7 +6453,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
   // 클릭 불가: '지금 보고 있는 바로 그 글'만. 폴더처럼 보는 글이 없으면 원글도 클릭 가능(그 글로 이동)
   const isCurrent=n=> curRefId ? (!!navRef(n) && navRef(n)===curRefId) : false;
   const clickAttr=n=>{
-    if(interactive && n && n.photoIdx!=null && host){ return ` style="cursor:zoom-in" onclick="openFlowPhoto('${_escJs(postRefId(host))}',${n.photoIdx})"`; }
+    if(interactive && n && n.photoIdx!=null && host){ return ` style="cursor:zoom-in" onclick="openFlowPhoto('${_escJs(postRefId(host))}',${n.photoIdx}${n.partIdx!=null?','+n.partIdx:''})"`; }
     const r=navRef(n); return (interactive && r && !isCurrent(n)) ? ` style="cursor:pointer" onclick="openRefTarget('${_escJs(r)}')"` : ''; };
   const labCls=n=> 'fd-label'+(isCur(n)?' fd-self':'');
   const per=big?10:8, lh=big?21:17;   // 줄당 글자수 · 줄 높이(행간)
@@ -6481,7 +6528,9 @@ function folderFlows(posts){ const out=[]; for(const p of (posts||[])){ const f=
 function coverOf(p){ try{ const im=imagesOf(p); return (im[0]&&im[0].img)||p.img||''; }catch(e){ return (p&&p.img)||''; } }
 function folderNodePost(n, host){ if(n.self) return host; if(n.refId) return allPosts().find(x=>postRefId(x)===n.refId)||null; return null; }
 function folderPhotoOf(n, host){
-  if(n && n.photoIdx!=null && host){ try{ const ims=imagesOf(host); const im=ims[n.photoIdx]; if(im&&im.img)return im.img; }catch(e){} }
+  if(n && n.photoIdx!=null && host){ try{ const ims=imagesOf(host); const im=ims[n.photoIdx];
+    if(im){ if(n.partIdx!=null && im.parts && im.parts[n.partIdx]!=null){ const pt=im.parts[n.partIdx]; return (typeof pt==='string')?pt:((pt&&pt.img)||im.img||''); }
+      if(im.img) return im.img; } }catch(e){} }
   const p=folderNodePost(n,host); return p?coverOf(p):''; }
 function fillFolderFlowOrList(posts, listFiller){
   const g=$('#folderPosts'); if(!g)return; g.innerHTML='';
