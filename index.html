@@ -303,6 +303,20 @@
   .flow-node-row .fnr-in{flex:1;min-width:0;font-size:13px;border:1px solid #e6ddd6;border-radius:8px;padding:6px 8px;font-family:inherit}
   .flow-node-row .fnr-link{width:auto;padding:0 9px;height:28px;font-size:11.5px;font-weight:700;white-space:nowrap}
   .flow-node-row .fnr-link.on{background:#e6efe6;color:#3f7a4a}
+  .flow-node-row .fnr-photo{width:auto;padding:0 9px;height:28px;font-size:11.5px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+  .flow-node-row .fnr-photo.on{background:#fbe7ef;color:#c04c78}
+  .flow-photo-ov{position:fixed;inset:0;z-index:9000;background:rgba(40,30,28,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+  .flow-photo-box{background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:86vh;overflow:auto;padding:16px 16px 18px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+  .flow-photo-hd{display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:800;color:#5a4a42}
+  .flow-photo-x{border:none;background:#f0e7e1;color:#8a7166;border-radius:8px;width:30px;height:30px;font-size:14px;cursor:pointer}
+  .flow-photo-sub{font-size:12px;color:#9a8a80;margin:5px 0 12px}
+  .flow-pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px}
+  .flow-pick{position:relative;padding:0;border:2px solid #eee3dc;background:#faf7f4;border-radius:11px;cursor:pointer;overflow:hidden;aspect-ratio:1/1}
+  .flow-pick img{width:100%;height:100%;object-fit:cover;display:block}
+  .flow-pick.on{border-color:#d76a8e;box-shadow:0 0 0 2px #fbe7ef}
+  .flow-pick-no{position:absolute;left:5px;bottom:5px;font-size:10.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);border-radius:6px;padding:2px 6px}
+  .flow-pick.none{aspect-ratio:auto;width:100%;margin-top:11px;height:40px;font-size:12.5px;font-weight:700;color:#8a7166}
+  .flow-pick.none.on{color:#c04c78}
   .flow-node-row.self{background:#f3ede8;border-color:#e0d3c8}
   .flow-node-row.self{background:#fdf0f5;border-color:#f0cfdd}
   .flow-node-row .fnr-no.self{background:#d76a8e}
@@ -1474,7 +1488,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816b</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816d</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1763,7 +1777,7 @@
 
       <!-- 연령 -->
       <div class="sec">
-        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 21c0-3.9 3.1-6 7-6s7 2.1 7 6"/></svg><span class="sl-t">연령</span></div>
+        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 21c0-3.9 3.1-6 7-6s7 2.1 7 6"/></svg><span class="sl-t">연령</span> <span class="hint">여러 개 선택할 수 있어요</span></div>
         <div class="seg" id="ageSeg"></div>
       </div>
 
@@ -2112,6 +2126,8 @@ let _publishing=false;
 let _commPublishing=false;
 /* 흑백 선 체크 아이콘 (얼굴 모자이크 상태 등에 사용) */
 const CHK_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.3 12.4l2.5 2.5 4.9-5.4"/></svg>';
+/* 흑백 선 카메라 아이콘 (놀이흐름 점에 이 글 사진 넣기) */
+const FNR_CAM='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
 function showUploading(on,msg){
   const m=$('#uploadingOverlay');
   if(m){ if(msg){const t=$('#uploadingMsg'); if(t)t.textContent=msg;} m.classList.toggle('on',!!on); }
@@ -4373,7 +4389,7 @@ function matchesFilter(p,label){
   const hit=v=>{const d=dePlay(v); return forms.some(L=>L&&d.includes(L));};
   const inArr=a=>(a||[]).some(hit);
   // 연령별 필터: 글에 저장된 age 값과 정확히 일치하면 통과 (0~2세, 3세 … 혼합연령)
-  const ageHit = !!(p.age && p.age!=='선택 안함' && p.age===label);
+  const ageHit = !!(p.age && p.age!=='선택 안함' && String(p.age).split(',').map(x=>x.trim()).includes(label));
   // 이름이 바뀐 카테고리: 예전 이름으로 저장된 글도 현재 이름으로 찾아지게 함
   const catAliasHit = (p.categories||[]).some(c=>sameCat(c,label));
   return ageHit||catAliasHit||inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||hit(p.title||'');
@@ -6068,11 +6084,21 @@ function canSeePost(p){ return p ? (!p.priv || isMinePost(p)) : true; }   // 비
 function resetSel(){sel={age:'선택 안함',nuri:new Set(),cat:new Set(),tags:[]};}
 resetSel();
 
-/* 연령 */
+/* 연령 (여러 개 선택 가능 · 값은 쉼표로 이어 저장) */
+function ageSet(){ return new Set((sel.age&&sel.age!=='선택 안함')?String(sel.age).split(',').map(x=>x.trim()).filter(Boolean):[]); }
+function toggleAge(a){
+  if(a==='선택 안함'){ sel.age='선택 안함'; renderAge(); markDirty&&markDirty(); return; }
+  const set=ageSet();
+  if(set.has(a))set.delete(a); else set.add(a);
+  sel.age = set.size ? [...set].join(',') : '선택 안함';
+  renderAge(); markDirty&&markDirty();
+}
 function renderAge(){
   const s=$('#ageSeg');s.innerHTML='';
+  const set=ageSet();
   ages.forEach(a=>{const b=document.createElement('button');b.textContent=a;
-    b.className=sel.age===a?'on':'';b.onclick=()=>{sel.age=a;renderAge();};s.appendChild(b);});
+    const on = a==='선택 안함' ? set.size===0 : set.has(a);
+    b.className=on?'on':'';b.onclick=()=>toggleAge(a);s.appendChild(b);});
 }
 /* 누리과정 (항목 고유) */
 function renderNuriChips(){
@@ -6215,7 +6241,10 @@ function renderFlowTypes(){
 function ensureSelfNode(){ if(!_flow.type||_flowHost)return; _flow.nodes=_flow.nodes||[]; if(!_flow.nodes.some(n=>n.self)){ _flow.nodes.unshift({title:(($('#pTitle')||{}).value||'').trim(), refId:'', db:false, postId:null, self:true}); } }
 /* '이 글' 점의 제목은 실제 글 제목과 항상 같게 맞춰줌 (단, 다른 글의 흐름을 수정 중일 땐 원글 제목 유지) */
 function syncSelfTitles(){ if(_flowHost) return; const t=(($('#pTitle')||{}).value||'').trim(); (_flow.nodes||[]).forEach(n=>{ if(n.self) n.title=t; }); }
-function refreshFlowPreview(){ const pv=$('#flowPreview'); if(!pv)return; const opts=_flowHost?{host:_flowHost, curRefId:(_editPost?postRefId(_editPost):'')}:{}; pv.innerHTML=flowDiagramFromData(_flow.type,_flow.nodes,false,opts)||'<div class="flow-empty">점을 1개 이상 추가하면 도식이 보여요.</div>'; }
+function refreshFlowPreview(){ const pv=$('#flowPreview'); if(!pv)return;
+  const opts={ photoOf:(n)=> (n&&n.photoIdx!=null) ? curFlowPhotoSrc(n.photoIdx) : (_flowHost?folderPhotoOf(n,_flowHost):'') };
+  if(_flowHost){ opts.host=_flowHost; opts.curRefId=(_editPost?postRefId(_editPost):''); }
+  pv.innerHTML=flowDiagramFromData(_flow.type,_flow.nodes,false,opts)||'<div class="flow-empty">점을 1개 이상 추가하면 도식이 보여요.</div>'; }
 function addFlowNode(){ _flow.nodes=_flow.nodes||[]; _flow.nodes.push({title:'', refId:'', db:false, postId:null, self:false}); renderFlowEditor(); markDirty&&markDirty(); }
 /* 글 제목을 고치면 '이 글' 점 제목·미리보기도 실시간으로 따라오게 */
 function hookFlowTitleSync(){ const pt=$('#pTitle'); if(pt && !pt._flowHook){ pt._flowHook=1; pt.addEventListener('input',()=>{ if(_flow&&_flow.type&&!_flowHost){ syncSelfTitles(); const s=document.querySelector('#flowEditor .fnr-title.self'); if(s)s.textContent=(pt.value||'').trim()||'(이 글 · 제목을 적어주세요)'; refreshFlowPreview(); } }); } }
@@ -6226,11 +6255,13 @@ function renderFlowEditor(){
   syncSelfTitles();
   const meRef = _flowHost && _editPost ? postRefId(_editPost) : null;
   const rows=(_flow.nodes||[]).map((n,i)=>{
+    const hasPhoto = n.photoIdx!=null;
     if(n.self){
       return `<div class="flow-node-row self">
         <span class="fnr-no self">✎</span>
         <span class="fnr-title self">${esc(n.title||'(이 글 · 제목을 적어주세요)')}</span>
         <span class="fnr-selfbadge">${_flowHost?'원글':'이 글'}</span>
+        <button type="button" class="fnr-photo${hasPhoto?' on':''}" data-i="${i}" title="이 글에 올린 사진을 점에 넣기">${FNR_CAM} ${hasPhoto?'사진 넣음':'사진'}</button>
         <button type="button" class="fnr-up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
         <button type="button" class="fnr-down" data-i="${i}" ${i===(_flow.nodes.length-1)?'disabled':''}>▼</button>
         <button type="button" class="fnr-del" data-i="${i}" title="흐름에서 빼기">✕</button>
@@ -6242,6 +6273,7 @@ function renderFlowEditor(){
       <span class="fnr-no${isMe?' self':''}">${i+1}</span>
       <input class="fnr-in" data-i="${i}" value="${esc(n.title||'')}" placeholder="점 이름 (예: 물감 탐색)">
       ${isMe?'<span class="fnr-selfbadge">지금 이 글</span>':''}
+      <button type="button" class="fnr-photo${hasPhoto?' on':''}" data-i="${i}" title="이 글에 올린 사진을 점에 넣기">${FNR_CAM} ${hasPhoto?'사진 넣음':'사진'}</button>
       <button type="button" class="fnr-link${linked?' on':''}" data-i="${i}" title="${linked?'연결된 놀이글 바꾸기':'이 점에 내 놀이글 연결'}">${linked?'🔗 연결됨':'🔗 연결'}</button>
       <button type="button" class="fnr-up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
       <button type="button" class="fnr-down" data-i="${i}" ${i===(_flow.nodes.length-1)?'disabled':''}>▼</button>
@@ -6250,11 +6282,12 @@ function renderFlowEditor(){
   }).join('');
   const hostBanner = _flowHost ? `<div class="flow-host-banner">✎ 이 놀이흐름은 '<b>${esc((_flowHost.title||'놀이').replace(/^#/,''))}</b>' 글에 있어요. 여기서 고치면 <b>연결된 모든 글</b>에 함께 반영돼요.</div>` : '';
   const hint = _flow.type==='radial' ? '첫 번째 점이 <b>가운데</b>, 나머지가 주변에 배치돼요.' : '점을 추가한 순서대로 이어져요.';
-  box.innerHTML=`${hostBanner}<div class="flow-ed-hint">${hint}<br>점 이름을 자유롭게 적고, <b>🔗 연결</b>을 누르면 그 점에 <b>내 놀이글</b>을 이을 수 있어요. (놀이글은 나중에 올려도 돼요)</div>
+  box.innerHTML=`${hostBanner}<div class="flow-ed-hint">${hint}<br>점 이름을 자유롭게 적고, <b>📷 사진</b>을 누르면 <b>이 글에 올린 사진</b>을 점에 넣을 수 있어요. (다른 놀이글과 잇고 싶으면 <b>🔗 연결</b>)</div>
     <div class="flow-node-list">${rows||'<div class="flow-empty">아직 점이 없어요. 아래에서 추가해요.</div>'}</div>
     <button type="button" class="fa-btn" id="flowAddBtn">＋ 내 놀이 추가</button>
     <div class="flow-preview-wrap"><div class="flow-preview-label">미리보기</div><div id="flowPreview" class="flow-preview"></div></div>`;
   box.querySelectorAll('.fnr-in').forEach(inp=>{ inp.oninput=()=>{ const nd=_flow.nodes[+inp.dataset.i]; if(nd){ nd.title=inp.value; nd.autoTitle=false; } refreshFlowPreview(); markDirty&&markDirty(); }; });
+  box.querySelectorAll('.fnr-photo').forEach(b=>b.onclick=()=>openFlowPhotoPick(+b.dataset.i));
   box.querySelectorAll('.fnr-link').forEach(b=>b.onclick=()=>openFlowLink(+b.dataset.i));
   box.querySelectorAll('.fnr-del').forEach(b=>b.onclick=()=>{ _flow.nodes.splice(+b.dataset.i,1); renderFlowEditor(); markDirty&&markDirty(); });
   box.querySelectorAll('.fnr-up').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; if(i>0){ const a=_flow.nodes; [a[i-1],a[i]]=[a[i],a[i-1]]; renderFlowEditor(); markDirty&&markDirty(); } });
@@ -6269,16 +6302,51 @@ function openFlowLink(i){
     if(!isMinePost(p)){ toast('내가 올린 놀이글만 연결할 수 있어요'); return; }
     const node=_flow.nodes[i]; if(!node)return;
     node.refId=postRefId(p); node.db=!!p.db; node.postId=p.db?p.id:null;
+    delete node.photoIdx;   // 다른 글 연결 → 사진 넣기는 해제(둘 중 하나만)
     // 제목: 비어있거나 '자동으로 넣었던' 제목이면 → 방금 고른 글 제목으로 맞춤(엉뚱한 옛 제목이 남지 않게).
     //       사용자가 직접 쓴 제목이면 그대로 둠.
     if(!String(node.title||'').trim() || node.autoTitle){ node.title=(p.title||'놀이').replace(/^#/,''); node.autoTitle=true; }
     renderFlowEditor(); markDirty&&markDirty();
   }, true);   // true = 내가 올린 글만 목록에 표시
 }
+/* 지금 이 글에서 올린 사진들 → [{idx, src}] (수정 중이면 _editImages, 새 글이면 photos) */
+function curFlowPhotos(){
+  if(_editImages && _editImages.length) return _editImages.map((im,i)=>({idx:i, src:(im.img||'')}));
+  return (photos||[]).map((ph,i)=>{ let src='';
+    try{ src=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,0.6):((ph.img&&ph.img.src)||''); }
+    catch(e){ src=(ph.img&&ph.img.src)||''; }
+    return {idx:i, src}; });
+}
+function curFlowPhotoSrc(idx){ if(idx==null)return''; const f=curFlowPhotos().find(p=>p.idx===idx); return f?f.src:''; }
+/* 점 하나에 '이 글에 올린 사진' 넣기 (사진을 고르면 점 대신 그 사진이 보임) */
+function openFlowPhotoPick(i){
+  const node=_flow.nodes[i]; if(!node)return;
+  const list=curFlowPhotos().filter(p=>p.src);
+  if(!list.length){ toast('먼저 1단계에서 사진을 올려주세요'); return; }
+  const old=document.getElementById('flowPhotoOv'); if(old)old.remove();
+  const ov=document.createElement('div'); ov.id='flowPhotoOv'; ov.className='flow-photo-ov';
+  const cells=list.map(p=>`<button type="button" class="flow-pick${node.photoIdx===p.idx?' on':''}" data-idx="${p.idx}"><img src="${esc(p.src)}" alt=""><span class="flow-pick-no">${p.idx+1}번째</span></button>`).join('');
+  ov.innerHTML=`<div class="flow-photo-box">
+    <div class="flow-photo-hd">점에 넣을 사진 고르기<button type="button" class="flow-photo-x" aria-label="닫기">✕</button></div>
+    <div class="flow-photo-sub">이 글에 올린 사진 중에서 골라요. 고르면 점 대신 사진이 보여요.</div>
+    <div class="flow-pick-grid">${cells}</div>
+    <button type="button" class="flow-pick none${node.photoIdx==null?' on':''}" data-idx="">사진 없이 점으로 두기</button>
+  </div>`;
+  document.body.appendChild(ov);
+  const close=()=>ov.remove();
+  ov.addEventListener('click',e=>{ if(e.target===ov)close(); });
+  ov.querySelector('.flow-photo-x').onclick=close;
+  ov.querySelectorAll('.flow-pick').forEach(b=>b.onclick=()=>{
+    const v=b.dataset.idx;
+    if(v===''){ delete node.photoIdx; }
+    else { node.photoIdx=+v; node.refId=''; node.db=false; node.postId=null; }   // 사진 넣기 ↔ 다른 글 연결은 둘 중 하나
+    close(); renderFlowEditor(); markDirty&&markDirty();
+  });
+}
 function buildFlowTagStr(){
   if(!_flow.type) return '';
   syncSelfTitles();
-  const nodes=(_flow.nodes||[]).map(n=>({title:String(n.title||'').trim(), refId:n.refId||'', db:!!n.db, postId:n.postId||null, self:!!n.self, autoTitle:!!n.autoTitle})).filter(n=>n.title||n.refId);
+  const nodes=(_flow.nodes||[]).map(n=>{ const o={title:String(n.title||'').trim(), refId:n.refId||'', db:!!n.db, postId:n.postId||null, self:!!n.self, autoTitle:!!n.autoTitle}; if(n.photoIdx!=null)o.photoIdx=n.photoIdx; return o; }).filter(n=>n.title||n.refId||n.photoIdx!=null);
   if(!nodes.length) return '';
   return `\n⟦flow⟧${JSON.stringify({type:_flow.type,nodes})}⟦/flow⟧`;
 }
@@ -6404,7 +6472,9 @@ function folderFlow(posts){ for(const p of (posts||[])){ const f=parseFlow(p.des
 function folderFlows(posts){ const out=[]; for(const p of (posts||[])){ const f=parseFlow(p.desc||'').flow; if(f&&f.type&&(f.nodes||[]).length) out.push({flow:f, host:p}); } return out; }
 function coverOf(p){ try{ const im=imagesOf(p); return (im[0]&&im[0].img)||p.img||''; }catch(e){ return (p&&p.img)||''; } }
 function folderNodePost(n, host){ if(n.self) return host; if(n.refId) return allPosts().find(x=>postRefId(x)===n.refId)||null; return null; }
-function folderPhotoOf(n, host){ const p=folderNodePost(n,host); return p?coverOf(p):''; }
+function folderPhotoOf(n, host){
+  if(n && n.photoIdx!=null && host){ try{ const ims=imagesOf(host); const im=ims[n.photoIdx]; if(im&&im.img)return im.img; }catch(e){} }
+  const p=folderNodePost(n,host); return p?coverOf(p):''; }
 function fillFolderFlowOrList(posts, listFiller){
   const g=$('#folderPosts'); if(!g)return; g.innerHTML='';
   const flows=folderFlows(posts);
@@ -6974,7 +7044,7 @@ async function publishPost(){
   }));
   const coverI=coverIndexOf(photos);              // 대표사진 위치(지정 안 하면 첫 사진)
   images.forEach((im,k)=>im.cover=(k===coverI));  // 순서는 그대로 두고 대표사진만 표시
-  const topDesc = (body || `${sel.age!=='선택 안함'?'['+sel.age+'] ':''}${[...sel.nuri].join(', ')||'새로 올린 놀이예요.'}`) + buildTripTag() + buildFlowTag();
+  const topDesc = (body || `${sel.age!=='선택 안함'?'['+String(sel.age).replace(/,/g,'·')+'] ':''}${[...sel.nuri].join(', ')||'새로 올린 놀이예요.'}`) + buildTripTag() + buildFlowTag();
 
   // ── 실제 저장(Supabase) ─────────────────────────────
   if(SB && authUser){
