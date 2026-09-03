@@ -1488,7 +1488,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816d</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816e</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4521,7 +4521,7 @@ function renderCatDrawer(){
     html+=`<div class="cat-group"><div class="cgl">${groupIco(grp)} ${grp.g}</div><div class="cg-grid">`+
       grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
       `</div></div>`;
-    if(gi===0) html+=`<button type="button" class="cat-env-btn" onclick="openEnv()">🖼️ 환경구성 모아보기</button>`; // '놀이 주제'와 '놀이 유형' 사이
+    if(gi===0) html+=`<button type="button" class="cat-env-btn" onclick="openEnv()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성 모아보기</button>`; // '놀이 주제'와 '놀이 유형' 사이
   });
   box.innerHTML=html;
 }
@@ -5250,6 +5250,12 @@ function productsHTML(p){
     return `<div class="prod-item"><div class="prod-info"><b>${esc(s.name||'상품')}</b>${mall}</div>${link}</div>`;
   }).join('');
   return `<div class="pd-sec"><h4>🛒 상품 태그 <span class="hint">이 놀이에 쓴 재료·교구예요</span></h4><div class="prod-list">${cards}</div></div>`;
+}
+/* 놀이흐름 점에 넣은 '이 글 사진' 클릭 → 그 사진을 설명과 함께 크게 (사진 라이트박스) */
+function openFlowPhoto(hostRef, idx){
+  const p=allPosts().find(x=>postRefId(x)===hostRef);
+  if(!p){ toast('사진을 찾을 수 없어요'); return; }
+  _openDetail(p, +idx||0);
 }
 function openRefTarget(refId){
   if(!refId)return;
@@ -6399,7 +6405,9 @@ function flowDiagramFromData(type,nodes,interactive,opts){
   const isCur=n=> curRefId ? (!!navRef(n) && navRef(n)===curRefId) : !!n.self;
   // 클릭 불가: '지금 보고 있는 바로 그 글'만. 폴더처럼 보는 글이 없으면 원글도 클릭 가능(그 글로 이동)
   const isCurrent=n=> curRefId ? (!!navRef(n) && navRef(n)===curRefId) : false;
-  const clickAttr=n=>{ const r=navRef(n); return (interactive && r && !isCurrent(n)) ? ` style="cursor:pointer" onclick="openRefTarget('${_escJs(r)}')"` : ''; };
+  const clickAttr=n=>{
+    if(interactive && n && n.photoIdx!=null && host){ return ` style="cursor:zoom-in" onclick="openFlowPhoto('${_escJs(postRefId(host))}',${n.photoIdx})"`; }
+    const r=navRef(n); return (interactive && r && !isCurrent(n)) ? ` style="cursor:pointer" onclick="openRefTarget('${_escJs(r)}')"` : ''; };
   const labCls=n=> 'fd-label'+(isCur(n)?' fd-self':'');
   const per=big?10:8, lh=big?21:17;   // 줄당 글자수 · 줄 높이(행간)
   // 여러 줄 라벨. above=true면 블록의 '아래끝'이 ly에 오도록 위로 쌓음
@@ -6436,7 +6444,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
     return `<div class="flow-diagram"><svg viewBox="0 ${vbY} ${W} ${vbH}" class="${svgCls}" preserveAspectRatio="xMidYMid meet"><path d="${path}" class="fd-path"/>${dots}</svg></div>`;
   }
   if(type==='radial'){
-    const RR=big?192:98, cR=big?100:30, rN=big?52:7, cGap=big?28:16;
+    const RR=big?224:110, cR=big?100:30, rN=big?52:7, cGap=big?30:16;
     const center=nodes[0], spokes=nodes.slice(1);
     const m=spokes.length, baseAng=(m===2)?180:-90;   // 점 2개면 좌우로, 그 외엔 위부터
     const cx=0, cy=0;   // 중심을 원점에 두고, 실제 내용 크기(bbox)로 viewBox를 잡아 박스에 꽉 차게
@@ -6445,13 +6453,13 @@ function flowDiagramFromData(type,nodes,interactive,opts){
     const acc=(x,y,r,nd,below,gap)=>{ const ln=_wrapLabel(nd.title,per).length;
       minX=Math.min(minX,x-Math.max(r,lw)); maxX=Math.max(maxX,x+Math.max(r,lw));
       if(below){ minY=Math.min(minY,y-r); maxY=Math.max(maxY,y+(gap||r)+ln*lh); }
-      else { minY=Math.min(minY,y-r-8-(ln-1)*lh); maxY=Math.max(maxY,y+r); } };
+      else { minY=Math.min(minY,y-r-16-(ln-1)*lh); maxY=Math.max(maxY,y+r); } };
     let lines='',pts='';
     spokes.forEach((nd,i)=>{ const ang=(baseAng + i*360/Math.max(1,m))*Math.PI/180; const x=cx+RR*Math.cos(ang), y=cy+RR*Math.sin(ang);
       lines+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" class="fd-spoke"/>`;
-      const below=Math.sin(ang)>=0; const ly=y+ (below?(rN+13):-(rN+6));
+      const below=Math.sin(ang)>=0; const ly=y+ (below?(rN+22):-(rN+15));
       pts+=`<g${clickAttr(nd)}>${mark(nd,x,y,rN,i+1)}${labelAt(nd,x,ly,!below)}</g>`;
-      acc(x,y,rN,nd,below);
+      acc(x,y,rN,nd,below,below?rN+12:undefined);
     });
     const curl=photoOf?photoOf(center):'';
     let centerMark;
