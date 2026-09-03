@@ -304,7 +304,7 @@
   .flow-node-row button:disabled{opacity:.4;cursor:default}
   .flow-node-row .fnr-del{background:#f5eceb;color:#c0554e}
   .flow-node-row .fnr-in{flex:1;min-width:0;font-size:13px;border:1px solid #e6ddd6;border-radius:8px;padding:6px 8px;font-family:inherit}
-  .flow-node-row .fnr-link{width:auto;padding:0 9px;height:28px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .flow-node-row .fnr-link{width:auto;padding:0 9px;height:28px;font-size:11.5px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
   .flow-node-row .fnr-link.on{background:#e6efe6;color:#3f7a4a}
   .flow-node-row .fnr-photo{width:auto;padding:0 9px;height:28px;font-size:11.5px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
   .flow-node-row .fnr-photo.on{background:#fbe7ef;color:#c04c78}
@@ -1495,7 +1495,7 @@
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816g</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816i</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2135,6 +2135,10 @@ let _commPublishing=false;
 const CHK_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.3 12.4l2.5 2.5 4.9-5.4"/></svg>';
 /* 흑백 선 카메라 아이콘 (놀이흐름 점에 이 글 사진 넣기) */
 const FNR_CAM='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+/* 흑백 깔끔 아이콘 — 순서변경(위아래 화살표) / 이미지(콜라주) */
+const ICO_REORDER='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M7 4v16M4 7l3-3 3 3M17 20V4M14 17l3 3 3-3"/></svg>';
+const ICO_IMG='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+const ICO_LINK='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>';
 function showUploading(on,msg){
   const m=$('#uploadingOverlay');
   if(m){ if(msg){const t=$('#uploadingMsg'); if(t)t.textContent=msg;} m.classList.toggle('on',!!on); }
@@ -5809,7 +5813,7 @@ function mergeCollage(ph){
   a.parts=aParts.concat(bParts);
   if(b.el)b.el.remove(); photos.splice(i+1,1);
   compositeCollage(a); updatePhotoOrder(); buildCollageStrip(a);
-  if(a.status)a.status.textContent='🖼️ 콜라주 완성 · 아래 사진을 드래그하면 순서 변경, 누르면 모자이크 수정';
+  if(a.status)a.status.innerHTML=ICO_IMG+' 콜라주 완성 · 아래 사진을 드래그하면 순서 변경, 누르면 모자이크 수정';
   toast(`사진 ${a.parts.length}장을 콜라주로 합쳤어요`);
 }
 /* 콜라주 조각 썸네일 줄 (드래그로 순서 변경 · 클릭으로 개별 편집) */
@@ -5821,7 +5825,7 @@ function buildCollageStrip(ph){
     const anchor=ph.el.querySelector('.up-photo');
     anchor.parentNode.insertBefore(strip, anchor.nextSibling);
   }
-  strip.innerHTML='<div class="cp-label"><span>🔀 드래그로 순서 변경 · 누르면 모자이크 수정</span><button type="button" class="cp-split">✂ 콜라주 해제</button></div><div class="cp-row"></div>';
+  strip.innerHTML='<div class="cp-label"><span>'+ICO_REORDER+' 드래그로 순서 변경 · 누르면 모자이크 수정</span><button type="button" class="cp-split">✂ 콜라주 해제</button></div><div class="cp-row"></div>';
   { const sb=strip.querySelector('.cp-split'); if(sb)sb.onclick=()=>splitCollage(ph); }
   const row=strip.querySelector('.cp-row');
   ph.parts.forEach((p,idx)=>{
@@ -6306,7 +6310,7 @@ function renderFlowEditor(){
       <input class="fnr-in" data-i="${i}" value="${esc(n.title||'')}" placeholder="점 이름 (예: 물감 탐색)">
       ${isMe?'<span class="fnr-selfbadge">지금 이 글</span>':''}
       <button type="button" class="fnr-photo${hasPhoto?' on':''}" data-i="${i}" title="이 글에 올린 사진을 점에 넣기">${FNR_CAM} ${hasPhoto?'사진 넣음':'사진'}</button>
-      <button type="button" class="fnr-link${linked?' on':''}" data-i="${i}" title="${linked?'연결된 놀이글 바꾸기':'이 점에 내 놀이글 연결'}">${linked?'🔗 연결됨':'🔗 연결'}</button>
+      <button type="button" class="fnr-link${linked?' on':''}" data-i="${i}" title="${linked?'연결된 놀이글 바꾸기':'이 점에 내가 쓴 다른 놀이글 연결'}">${ICO_LINK} ${linked?'연결됨':'다른 글'}</button>
       <button type="button" class="fnr-up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
       <button type="button" class="fnr-down" data-i="${i}" ${i===(_flow.nodes.length-1)?'disabled':''}>▼</button>
       <button type="button" class="fnr-del" data-i="${i}">✕</button>
@@ -6352,7 +6356,8 @@ function _flowPartSrc(part){
 function curFlowPhotos(){
   const withParts=(idx, src, rawParts)=>({ idx, src,
     parts:(rawParts && rawParts.length>1) ? rawParts.map((pt,pi)=>({partIdx:pi, src:_flowPartSrc(pt)})).filter(pp=>pp.src) : [] });
-  if(_editImages && _editImages.length) return _editImages.map((im,i)=>withParts(i, im.img||'', im.parts));
+  // 글 수정 중이면 그 글의 사진(_editImages), 새 글 작성 중이면 1단계에서 올린 사진(photos)
+  if(_editPost && _editImages && _editImages.length) return _editImages.map((im,i)=>withParts(i, im.img||'', im.parts));
   return (photos||[]).map((ph,i)=>{ let src='';
     try{ src=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,0.6):((ph.img&&ph.img.src)||''); }
     catch(e){ src=(ph.img&&ph.img.src)||''; }
@@ -6426,6 +6431,15 @@ function flowDiagramHTML(desc){ const {flow}=parseFlow(desc); return flowDiagram
 function flowCardHTML(desc){ const d=flowDiagramHTML(desc); return d?`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span></div>${d}</div>`:''; }
 /* 글 상세: 이 글의 흐름 — 이 글이 직접 만든 흐름이 있으면 그걸, 없으면 이 글을 연결한 다른 글의 흐름을 찾아서 표시.
    보고 있는 글에 해당하는 점이 굵게(갈색) 강조되고, 나머지 점은 대표사진+클릭 이동. */
+/* 흐름 안에 '다른 놀이글로 이동'하는 점이 하나라도 있으면 안내 문구, 이 글 사진만 넣었으면 문구 없음 */
+function flowNavHint(flow, host, curRefId){
+  const hasNav=(flow&&flow.nodes||[]).some(n=>{
+    if(n.photoIdx!=null) return false;              // 이 글 사진을 넣은 점 → 눌러도 이동이 아니라 사진 확대라 제외
+    const r = n.self ? (host?postRefId(host):'') : (n.refId||'');
+    return !!r && r!==(curRefId||'');
+  });
+  return hasNav ? ' <span class="hint" style="font-weight:500">· 사진을 누르면 해당 놀이로 이동해요</span>' : '';
+}
 function postFlowCardHTML(post){
   if(!post) return '';
   let host=post, flow=parseFlow(post.desc||'').flow;
@@ -6435,7 +6449,7 @@ function postFlowCardHTML(post){
     if(owner){ host=owner; flow=parseFlow(owner.desc||'').flow; } else { return ''; }
   }
   const dia=flowDiagramFromData(flow.type, flow.nodes, true, {big:true, host, curRefId:postRefId(post)});
-  return dia?`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span> <span class="hint" style="font-weight:500">· 사진을 누르면 그 놀이로 이동해요</span></div>${dia}</div>`:'';
+  return dia?`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${flowNavHint(flow, host, postRefId(post))}</div>${dia}</div>`:'';
 }
 let _fdSeq=0;
 function flowDiagramFromData(type,nodes,interactive,opts){
@@ -6543,7 +6557,7 @@ function fillFolderFlowOrList(posts, listFiller){
       const card=document.createElement('div'); card.className='folder-flow-card';
       const dia=flowDiagramFromData(ff.flow.type, ff.flow.nodes, true, {big:true, host:ff.host});
       const cnt = flows.length>1 ? ` <span class="hint" style="font-weight:500">· ${idx+1}/${flows.length}</span>` : '';
-      card.innerHTML=`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${cnt} <span class="hint" style="font-weight:500">· 사진을 누르면 그 놀이로 이동해요</span></div>${dia}</div>`;
+      card.innerHTML=`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${cnt}${flowNavHint(ff.flow, ff.host, '')}</div>${dia}</div>`;
       g.appendChild(card);
     });
     // 2) 어떤 흐름에도 없는 나머지 글 → 타일로 함께 표시
