@@ -1419,6 +1419,42 @@
       </div>
     </section>
 
+    <!-- 서비스 이용약관 -->
+    <section class="view" id="v-terms">
+      <div class="main-head"><div><h1>서비스 이용약관</h1><p>놀이모아 서비스 이용에 관한 약관입니다</p></div></div>
+      <div class="about-wrap">
+        <div class="about-card">
+          <h3>1. 목적</h3>
+          <p>본 약관은 놀이모아(이하 "서비스")가 제공하는 놀이 아이디어 공유 서비스의 이용 조건과 절차, 이용자와 운영팀의 권리·의무를 규정하는 것을 목적으로 합니다.</p>
+        </div>
+        <div class="about-card">
+          <h3>2. 회원가입 및 계정</h3>
+          <p>이용자는 이메일 또는 구글 계정으로 가입할 수 있습니다. 이용자는 본인의 계정 정보를 안전하게 관리할 책임이 있으며, 타인의 정보를 도용해서는 안 됩니다.</p>
+        </div>
+        <div class="about-card">
+          <h3>3. 게시물과 저작권</h3>
+          <p>이용자가 올린 놀이 사진·글의 저작권은 작성자 본인에게 있습니다. 이용자는 본인이 직접 만들었거나 공유 권한이 있는 자료만 올려야 하며, 타인의 저작물을 무단으로 게시해서는 안 됩니다.</p>
+        </div>
+        <div class="about-card highlight">
+          <h3>4. 유아 사진 보호 의무</h3>
+          <p>서비스는 사진 업로드 시 AI로 유아의 얼굴을 자동 모자이크 처리합니다. 다만 이용자는 업로드 전 유아의 얼굴·이름표 등 개인정보가 노출되지 않도록 직접 확인할 책임이 있으며, 이를 소홀히 하여 발생한 문제에 대한 책임은 게시한 이용자에게 있습니다.</p>
+        </div>
+        <div class="about-card">
+          <h3>5. 금지 행위</h3>
+          <p>이용자는 타인을 비방하거나, 허위·불법 정보를 올리거나, 서비스 운영을 방해하는 행위를 해서는 안 됩니다. 위반 시 게시물이 삭제되거나 이용이 제한될 수 있습니다.</p>
+        </div>
+        <div class="about-card">
+          <h3>6. 책임의 한계</h3>
+          <p>놀이모아는 이용자 간 공유되는 정보의 정확성을 보증하지 않으며, 이용자가 게시한 내용으로 인해 발생한 문제에 대해 책임지지 않습니다. 서비스는 안정적 운영을 위해 노력하나, 점검·장애 등으로 일시 중단될 수 있습니다.</p>
+        </div>
+        <div class="about-card">
+          <h3>7. 문의처</h3>
+          <p>서비스 이용 관련 문의: <b><a href="mailto:tweecys@naver.com" style="color:var(--coral-tx)">tweecys@naver.com</a></b><br>운영: 놀이모아 운영팀</p>
+        </div>
+        <div class="about-foot"><span>본 약관은 서비스 개선에 따라 변경될 수 있으며, 변경 시 이 페이지에 공지합니다.</span></div>
+      </div>
+    </section>
+
     <!-- 마이페이지 -->
     <section class="view" id="v-my">
       <div class="main-head">
@@ -1451,6 +1487,7 @@
       <div class="my-foot">
         <a onclick="go('about')">놀이모아 소개</a><span>·</span>
         <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
+        <a onclick="go('terms')">이용약관</a><span>·</span>
         <a href="mailto:tweecys@naver.com">문의</a>
       </div>
     </section>
@@ -1493,9 +1530,10 @@
   <div class="foot-links">
     <a onclick="go('about')">놀이모아 소개</a><span>·</span>
     <a onclick="go('privacy')">개인정보처리방침</a><span>·</span>
+    <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816k</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816l</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -3043,7 +3081,7 @@ function openPost(p){
   // 주소창에 이 글의 링크 표시 (실제 저장된 글만) — replaceState라 뒤로가기 가드에는 영향 없음
   try{ history.replaceState(history.state||null, '', location.pathname + ((p.db&&p.id)?('#play='+p.id):'')); }catch(e){}
 }
-function viewLabel(v){ return ({browse:'둘러보기',sub:'팔로잉',my:'마이페이지',comm:'행정 자료실',env:'환경구성',about:'놀이모아 소개',privacy:'개인정보처리방침'})[v]||'둘러보기'; }
+function viewLabel(v){ return ({browse:'둘러보기',sub:'팔로잉',my:'마이페이지',comm:'행정 자료실',env:'환경구성',about:'놀이모아 소개',privacy:'개인정보처리방침',terms:'서비스 이용약관'})[v]||'둘러보기'; }
 function postBack(fromPop){
   if(!fromPop) backGuardConsume();
   const to=_postBack, y=_scrollPos[to]||0;
@@ -5312,8 +5350,11 @@ function go(v){
   if(v==='comm' && isGuest()){ toast('회원가입하면 행정 자료실을 볼 수 있어요'); openAuth('signup'); return; }
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   $('#v-'+v).classList.add('on');
-  // 목록·다른 화면으로 가면 주소창의 글 링크(#play=)를 지워 norimoa.com으로 되돌림
-  try{ if(location.hash) history.replaceState(history.state||null, '', location.pathname); }catch(e){}
+  // 소개·개인정보·약관 페이지는 주소(#about/#privacy/#terms)를 남겨 공유·검증용 링크로 쓰고, 그 외 화면은 글 링크(#play=) 등을 지워 norimoa.com으로 되돌림
+  try{
+    if(['about','privacy','terms'].includes(v)) history.replaceState(history.state||null, '', location.pathname+'#'+v);
+    else if(location.hash) history.replaceState(history.state||null, '', location.pathname);
+  }catch(e){}
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   document.body.classList.toggle('nav-browse', v==='browse'); // 카테고리·알림 버튼은 둘러보기에서만
   window.scrollTo(0,0);
@@ -5324,12 +5365,19 @@ function go(v){
   if(v==='comm'){ renderCommunity(); loadCommunity().then(renderCommunity); }
   if(v==='env')renderEnv();
   // 새로고침 시 복원할 수 있게 현재 페이지 기억 (상세/프로필처럼 대상이 필요한 화면은 제외)
-  try{ if(['browse','sub','my','comm','env','about','privacy'].includes(v)) localStorage.setItem('nolimoa_view', v); }catch(e){}
+  try{ if(['browse','sub','my','comm','env','about','privacy','terms'].includes(v)) localStorage.setItem('nolimoa_view', v); }catch(e){}
 }
+/* 주소에 #about / #privacy / #terms 로 들어오면 바로 그 페이지를 연다 (구글 OAuth 검증·공유 링크용) */
+function openHashView(){
+  const h=(location.hash||'').replace(/^#/,'');
+  if(['about','privacy','terms'].includes(h)){ go(h); return true; }
+  return false;
+}
+window.addEventListener('hashchange',()=>{ openHashView(); });
 function restoreLastView(){
   let v=null; try{ v=localStorage.getItem('nolimoa_view'); }catch(e){}
   if(!v || v==='browse') return;
-  if(!['sub','my','comm','env','about','privacy'].includes(v)) return;
+  if(!['sub','my','comm','env','about','privacy','terms'].includes(v)) return;
   if(v==='comm' && isGuest()) return; // 커뮤니티는 로그인 상태에서만
   go(v);
 }
@@ -7220,10 +7268,10 @@ if(SB){
   loadCategories();   // 로그인 전에도 관리자가 편집한 카테고리를 모두에게 반영
   loadCaptions();     // 사진 밑 캡션도 모두에게 반영
   loadCommCats();     // 커뮤니티 카테고리도 모두에게 반영
-  refreshSession().then(()=>{ if(!openSharedPost()) restoreLastView(); }); // 공유 링크로 왔으면 그 글, 아니면 마지막 페이지
+  refreshSession().then(()=>{ if(!openSharedPost() && !openHashView()) restoreLastView(); }); // 공유 링크로 왔으면 그 글, #about/#privacy/#terms면 그 페이지, 아니면 마지막 페이지
   SB.auth.onAuthStateChange(()=>refreshSession());
 } else {
-  if(!openSharedPost()) restoreLastView(); // 데모 모드
+  if(!openSharedPost() && !openHashView()) restoreLastView(); // 데모 모드
 }
 </script>
 </body>
