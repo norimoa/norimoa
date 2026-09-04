@@ -617,6 +617,7 @@
   #newFolderOverlay,#pickerOverlay{z-index:85}
   #editOverlay{z-index:88}
   #imgEditOverlay{z-index:95}
+  #detailOverlay{z-index:100}   /* 사진 크게보기(라이트박스)는 폴더·상세 등 어떤 창 위에서 열려도 맨 앞에 오도록 */
   .edit-img{border:1px solid #efe7e2;border-radius:12px;padding:12px;margin-bottom:14px}
   .edit-img>img{width:100%;max-height:200px;object-fit:cover;border-radius:10px;display:block}
   .edit-img .ecap{margin-top:10px}
@@ -1533,7 +1534,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816m</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816o</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -6520,7 +6521,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
     if(interactive && n && n.photoIdx!=null && host){ return ` style="cursor:zoom-in" onclick="openFlowPhoto('${_escJs(postRefId(host))}',${n.photoIdx}${n.partIdx!=null?','+n.partIdx:''})"`; }
     const r=navRef(n); return (interactive && r && !isCurrent(n)) ? ` style="cursor:pointer" onclick="openRefTarget('${_escJs(r)}')"` : ''; };
   const labCls=n=> 'fd-label'+(isCur(n)?' fd-self':'');
-  const per=big?10:8, lh=big?21:17;   // 줄당 글자수 · 줄 높이(행간)
+  const per=big?12:8, lh=big?21:17;   // 줄당 글자수 · 줄 높이(행간) — 큰 도식은 한 줄에 더 많이 담아 줄 수를 줄임(2줄로)
   // 여러 줄 라벨. above=true면 블록의 '아래끝'이 ly에 오도록 위로 쌓음
   const labelAt=(nd,x,ly,above)=>{ const lines=_wrapLabel(nd.title, per); const startY=above?ly-(lines.length-1)*lh:ly;
     const tspans=lines.map((l,k)=>`<tspan x="${x}" dy="${k===0?0:lh}">${esc(l)}</tspan>`).join('');
@@ -6559,7 +6560,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
     const center=nodes[0], spokes=nodes.slice(1);
     const m=spokes.length, baseAng=(m===2)?180:-90;   // 점 2개면 좌우로, 그 외엔 위부터
     const cx=0, cy=0;   // 중심을 원점에 두고, 실제 내용 크기(bbox)로 viewBox를 잡아 박스에 꽉 차게
-    const lw=big?76:52; // 라벨 대략 반폭(넘침 방지용 여백)
+    const lw=big?92:52; // 라벨 대략 반폭(넘침 방지용 여백) — 한 줄이 길어진 만큼 여유폭도 늘림
     let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
     const acc=(x,y,r,nd,below,gap)=>{ const ln=_wrapLabel(nd.title,per).length;
       minX=Math.min(minX,x-Math.max(r,lw)); maxX=Math.max(maxX,x+Math.max(r,lw));
