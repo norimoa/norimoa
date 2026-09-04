@@ -1533,7 +1533,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816l</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816m</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -6676,7 +6676,37 @@ function markDirty(){ _draftDirty=true; }
 function lsGet(k){ try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;} }
 function lsSet(k,v){ try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;} }
 function loadDrafts(){ const d=lsGet(DRAFT_KEY); return Array.isArray(d)?d:[]; }
-function saveDraft(){
+/* 작은 썸네일 dataURL (임시저장 목록·기기 저장용 — 원본 사진은 계정(서버)에 보관) */
+function draftThumb(src){
+  return new Promise(res=>{
+    if(!src){ res(''); return; }
+    const im=new Image();
+    im.onload=()=>{ try{
+      const maxW=180, sc=Math.min(1, maxW/(im.width||maxW));
+      const c=document.createElement('canvas');
+      c.width=Math.max(1,Math.round((im.width||maxW)*sc)); c.height=Math.max(1,Math.round((im.height||maxW)*sc));
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      res(c.toDataURL('image/jpeg',0.5));
+    }catch(e){ res(''); } };
+    im.onerror=()=>res('');
+    im.src=src;
+  });
+}
+/* 무거운 사진을 뺀 '가벼운' 임시저장본(기기 저장용). 원본 사진은 서버 drafts 에 보관 → 기기 저장공간 초과 방지 */
+async function draftToLight(full){
+  const thumb=await draftThumb((full.photos&&full.photos[0]&&full.photos[0].img)||'');
+  const light={}; Object.keys(full).forEach(k=>{ if(k!=='photos') light[k]=full[k]; });
+  light.photoCount=(full.photos||[]).length; light.thumb=thumb; light.server=true;
+  return light;
+}
+/* 기기 저장이 용량 초과로 실패하면, 오래된 것부터 덜어내며 재시도 (원본은 서버에 있으니 안전) */
+function lsSetDraftsSafe(list){
+  let arr=list.slice(0,12);
+  while(arr.length){ if(lsSet(DRAFT_KEY, arr)) return true; arr=arr.slice(0, arr.length-1); }
+  try{ localStorage.removeItem(DRAFT_KEY); }catch(e){}
+  return false;
+}
+async function saveDraft(){
   const title=($('#pTitle').value||'').trim();
   const body=richToMarks($('#pBody')) + buildTripTag() + buildFlowTag();
   // 사진: 현재 화면(모자이크 반영본) + 설명 + 구매표시 저장
@@ -6693,14 +6723,21 @@ function saveDraft(){
     photos:photoData,
     preview:(stripFmt(body)||title||'(내용 없음)').slice(0,50)
   };
-  const drafts=loadDrafts();
-  // 이미 이 글의 임시저장이 있으면 '덮어쓰기'(중복 저장 방지), 없으면 새로 추가
-  const idx=drafts.findIndex(d=>d.id===draft.id);
-  if(idx>=0) drafts[idx]=draft; else drafts.unshift(draft);
   _currentDraftId=draft.id; _draftDirty=false;   // 저장했으니 '변경 없음' 상태
-  const trimmed=drafts.slice(0,12);
-  const ok=lsSet(DRAFT_KEY, trimmed);
-  saveDraftServer(draft);   // 로그인 상태면 계정에도 저장 → 다른 기기에서도 보임
+  const drafts=loadDrafts();
+  const idx=drafts.findIndex(d=>d.id===draft.id);
+  const loggedIn=!!(SB && authUser);
+  let ok;
+  if(loggedIn){
+    saveDraftServer(draft);                     // 원본 사진은 계정(서버)에 저장 → 용량 걱정 없음, 다른 기기에서도 보임
+    const light=await draftToLight(draft);      // 기기에는 가벼운 사본(썸네일)만 → 저장공간 초과 방지
+    if(idx>=0) drafts[idx]=light; else drafts.unshift(light);
+    lsSetDraftsSafe(drafts);
+    ok=true;                                    // 서버에 저장되므로 기기 저장이 빡빡해도 성공 처리
+  } else {
+    if(idx>=0) drafts[idx]=draft; else drafts.unshift(draft);   // 게스트/데모: 기기에만 저장
+    ok=lsSetDraftsSafe(drafts);
+  }
   toast(ok?'✅ 임시저장되었어요':'임시저장 공간이 부족해요. 사진을 줄여보세요.');
   if(ok){ const btn=$('#writeDraftBtn'); if(btn){ const orig=btn.innerHTML; btn.innerHTML='✓ 저장됨'; btn.disabled=true;
     setTimeout(()=>{ btn.innerHTML=orig; btn.disabled=false; }, 1500); } }
@@ -6717,9 +6754,9 @@ async function saveDraftServer(draft){
   if(!(SB && authUser))return;
   try{
     await SB.from('drafts').upsert({id:draft.id, user_id:authUser.id, data:draft, updated_at:new Date().toISOString()}, {onConflict:'user_id,id'});
-    // 서버에는 최근 5개만 유지 (사진이 커서 용량 절약)
+    // 계정에는 최근 20개까지 보관 (원본 사진 포함)
     const {data}=await SB.from('drafts').select('id,updated_at').eq('user_id',authUser.id).order('updated_at',{ascending:false});
-    if(data && data.length>5){ const old=data.slice(5).map(r=>r.id); if(old.length) await SB.from('drafts').delete().eq('user_id',authUser.id).in('id',old); }
+    if(data && data.length>20){ const old=data.slice(20).map(r=>r.id); if(old.length) await SB.from('drafts').delete().eq('user_id',authUser.id).in('id',old); }
   }catch(e){ /* 실패해도 기기 저장은 이미 됐으니 조용히 넘어감 */ }
 }
 async function deleteDraftServer(id){ if(!(SB && authUser))return; try{ await SB.from('drafts').delete().eq('user_id',authUser.id).eq('id',id); }catch(e){} }
@@ -6729,23 +6766,26 @@ async function syncDraftsIn(){   // 로그인 시: 계정에 저장된 임시저
     const {data}=await SB.from('drafts').select('data,updated_at').eq('user_id',authUser.id).order('updated_at',{ascending:false});
     const server=(data||[]).map(r=>r.data).filter(d=>d&&d.id);
     if(!server.length)return;
+    // 서버 원본은 무거우니 기기에는 가벼운 사본(썸네일)만 저장 → 저장공간 초과 방지
+    const serverLight=await Promise.all(server.map(d=>(d.photos&&d.photos.length)?draftToLight(d):Promise.resolve(d)));
     const map={};
-    [...loadDrafts(), ...server].forEach(d=>{ if(!d||!d.id)return; const ex=map[d.id]; if(!ex || (d.ts||0)>(ex.ts||0)) map[d.id]=d; });
+    [...loadDrafts(), ...serverLight].forEach(d=>{ if(!d||!d.id)return; const ex=map[d.id]; if(!ex || (d.ts||0)>(ex.ts||0)) map[d.id]=d; });
     const merged=Object.values(map).sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,12);
-    lsSet(DRAFT_KEY, merged);
+    lsSetDraftsSafe(merged);
   }catch(e){}
 }
 function whenDraft(ts){ try{const d=new Date(ts);return `${d.getMonth()+1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}catch(e){return '';} }
 function renderDraftList(drafts){
   const box=$('#draftList'); if(!box)return; box.innerHTML='';
   drafts.forEach(d=>{
-    const thumb=(d.photos&&d.photos[0]&&d.photos[0].img)||'';
+    const thumb=d.thumb || (d.photos&&d.photos[0]&&d.photos[0].img)||'';
+    const pcount=(d.photoCount!=null)?d.photoCount:(d.photos?d.photos.length:0);
     const el=document.createElement('div'); el.className='draft-item';
     el.innerHTML=`${thumb?`<img class="dth" src="${thumb}" alt="">`:'<div class="dth"></div>'}
       <div class="dbody">
         <div class="dtitle">${esc(d.title||'제목 없음')}</div>
         <div class="dprev">${esc(d.preview||'')}</div>
-        <div class="dtime">🕒 ${whenDraft(d.ts)} · 사진 ${d.photos?d.photos.length:0}장</div>
+        <div class="dtime">🕒 ${whenDraft(d.ts)} · 사진 ${pcount}장</div>
       </div>
       <div class="dact">
         <button class="dgo">이어쓰기</button>
@@ -6757,8 +6797,13 @@ function renderDraftList(drafts){
   });
 }
 async function resumeDraft(id){
-  const d=loadDrafts().find(x=>x.id===id); if(!d)return;
+  let d=loadDrafts().find(x=>x.id===id); if(!d)return;
   if(SB && !authUser){toast('로그인 후 이어쓸 수 있어요');close_('draftOverlay');openAuth('login');return;}
+  // 기기엔 가벼운 사본만 있으면(썸네일) 원본 사진은 계정(서버)에서 가져온다
+  if((!d.photos || !d.photos.length) && SB && authUser){
+    try{ const {data}=await SB.from('drafts').select('data').eq('user_id',authUser.id).eq('id',id).maybeSingle();
+      if(data && data.data && (data.data.photos||[]).length) d=data.data; }catch(e){}
+  }
   _currentDraftId=id; _draftDirty=false;   // 불러온 직후엔 저장된 상태와 같음
   close_('draftOverlay');
   // 상태 초기화 후 드래프트 값 채우기
