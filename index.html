@@ -367,6 +367,23 @@
   .fd-clabel{fill:#fff;font-size:12px;font-weight:700;font-family:inherit}
   .fd-svg g[onclick]:hover .fd-dot{fill:var(--coral-tx)}
   .fd-svg g[onclick]:hover .fd-label{fill:var(--coral-tx);text-decoration:underline}
+  /* 놀이 흐름: 사진으로 자동 만들기 버튼 */
+  .flow-auto-btn{display:inline-flex;align-items:center;gap:6px;margin:2px 0 4px;border:1px dashed #dcc7bd;background:#fdf8f5;color:#8a6f60;border-radius:14px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer}
+  .flow-auto-btn:hover{background:#f7ede6;border-color:#c9a996}
+  .flow-auto-btn svg{width:16px;height:16px}
+  /* 놀이 흐름: 상세에서 클릭하면 크게 보기 */
+  .flow-card-detail .flow-diagram{cursor:zoom-in}
+  .flow-card-detail .flow-card-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .flow-zoom-btn{margin-left:auto;border:1px solid #e7dcd6;background:#fff;color:#8a7d76;border-radius:16px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .flow-zoom-btn:hover{background:#faf6f3}
+  .flow-zoom-btn .flow-ico{width:14px;height:14px}
+  .flowzoom-modal{max-width:96vw;width:96vw}
+  .flowzoom-hint{text-align:center;font-size:12px;color:#b0a29a;margin:2px 0 8px}
+  .flowzoom-body{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:6px 2px 16px}
+  .flowzoom-body .flow-diagram{display:block;width:max-content;min-width:100%}
+  .flowzoom-body .fd-svg,.flowzoom-body .fd-svg.fd-lg{height:min(70vh,540px);max-height:none;display:block;margin:0 auto}
+  .flowzoom-body .flow-arrow-wrap{white-space:normal;font-size:16px;justify-content:center}
+  .flowzoom-body .flow-chip{white-space:normal;font-size:15px;padding:9px 15px}
   .flow-arrow-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:4px 0}
   .flow-chip{border:1px solid #eec6c9;background:var(--pink-bg);color:var(--coral-tx);border-radius:14px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .flow-chip:disabled{cursor:default;opacity:.9}
@@ -1573,7 +1590,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817b</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817f</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1709,6 +1726,15 @@
   </div>
 </div>
 
+<!-- ============ 놀이 흐름 크게 보기 모달 ============ -->
+<div class="overlay" id="flowZoomOverlay" onclick="if(event.target===this)close_('flowZoomOverlay')">
+  <div class="modal flowzoom-modal">
+    <div class="modal-head"><b>놀이 흐름 크게 보기</b><button class="x" onclick="close_('flowZoomOverlay')">×</button></div>
+    <div class="flowzoom-hint" id="flowZoomHint">← 좌우로 넘겨서 전체 흐름을 볼 수 있어요 →</div>
+    <div class="flowzoom-body" id="flowZoomBody"></div>
+  </div>
+</div>
+
 <!-- ============ 선생님 프로필 모달 ============ -->
 <div class="overlay" id="teacherOverlay" onclick="if(event.target===this)close_('teacherOverlay')">
   <div class="modal teacher-modal">
@@ -1827,6 +1853,7 @@
       <div class="sec">
         <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.7 7.2 10.6 16"/><path d="M17.3 7.2 13.4 16"/></svg><span class="sl-t">놀이 흐름</span> <span class="hint" style="color:#b0a29a">선택</span> <span class="help-wrap"><button type="button" class="help-btn" onclick="toggleHelp(this)" aria-label="놀이 흐름 도움말">?</button><span class="help-pop">놀이의 흐름을 <b>도식(그림)</b>으로 보여줘요. 도식 모양을 고르고 <b>‘＋ 내 놀이 추가’</b>로 점을 하나씩 넣은 뒤 제목을 적어요.<br><br>각 점에는 <b>📷 사진</b>(지금 이 글에 올린 사진)을 넣거나, <b>🔗 다른 글</b>(내가 올린 다른 놀이글)을 연결할 수 있어요. 글과 연결한 점을 누르면 그 글로 바로 이동해요. (선택 사항이에요.)</span></span></div>
         <div class="flow-types" id="flowTypes"></div>
+        <button type="button" class="flow-auto-btn" id="flowAutoBtn" onclick="autoFlowFromPhotos()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v4"/><path d="M3 5h4"/><path d="M17 15v4"/><path d="M15 17h4"/><path d="M11 4l2 4 4 2-4 2-2 4-2-4-4-2 4-2z"/></svg> 사진으로 흐름 자동 만들기</button>
         <div id="flowEditor" style="display:none"></div>
       </div>
 
@@ -6351,6 +6378,7 @@ function _wrapLabel(t, per){
 }
 /* 놀이 흐름 카드 아이콘 (흑백·깔끔) */
 const FLOW_ICO='<svg class="flow-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.7 7.2 10.6 16"/><path d="M17.3 7.2 13.4 16"/></svg>';
+const EXPAND_ICO='<svg class="flow-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
 /* 폴더 아이콘 (흑백·깔끔) */
 const FOLDER_ICO='<svg class="folder-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.4.6l1.4 1.4H19a2 2 0 0 1 2 2v6.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
 function _escJs(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
@@ -6451,6 +6479,40 @@ function curFlowPhotos(){
     catch(e){ src=(ph.img&&ph.img.src)||''; }
     return withParts(i, src, ph.parts); });
 }
+/* 사진 idx의 설명(캡션) 원본 가져오기 (수정 중이면 _editImages, 새 글이면 photos) */
+function _flowPhotoDesc(i){ const im=(_editPost && _editImages && _editImages.length) ? _editImages[i] : (photos||[])[i]; return (im && im.desc) || ''; }
+/* 사진으로 놀이 흐름 자동 만들기 (AI 없이·즉시): 사진 순서대로 점 생성, 제목은 각 사진 설명 첫 줄 */
+function autoFlowFromPhotos(){
+  const list=curFlowPhotos().filter(p=>p.src);
+  if(!list.length){ toast('먼저 사진을 올려주세요. 사진 순서대로 흐름을 만들어드려요.'); return; }
+  const hasExisting=(_flow.nodes||[]).some(n=> (n.title&&String(n.title).trim()) || n.refId || n.photoIdx!=null);
+  if(hasExisting && !confirm('이미 만들어둔 놀이 흐름이 있어요.\n사진 순서대로 새로 만들까요? (기존 흐름은 지워져요)')) return;
+  if(!_flow.type) _flow.type='curve';
+  _flow.nodes=list.map(p=>({ title:_flowAutoTitle(_flowPhotoDesc(p.idx)), refId:'', db:false, postId:null, self:false, photoIdx:p.idx, autoTitle:true }));
+  renderFlowTypes(); renderFlowEditor(); markDirty&&markDirty();
+  if(typeof hookFlowTitleSync==='function') hookFlowTitleSync();
+  toast('사진 순서대로 흐름을 만들었어요! 각 점의 제목은 자유롭게 고칠 수 있어요.');
+}
+/* 캡션 첫 줄만 깔끔히 (서식 마커·해시태그 기호 제거, 18자 이내) */
+function _flowFirstLine(s){ let t=String(s||'').replace(/⟦\/?[^⟧]*⟧/g,'').replace(/[⟦⟧]/g,'').replace(/\*\*/g,'').replace(/__/g,'').replace(/#/g,''); const ln=(t.split(/\n/)[0]||'').trim(); return _flowTrunc(ln,18); }
+/* 사진 설명에서 '놀이 제목'으로 쓸 문구를 똑똑하게 추출.
+   우선순위: ①번호/단계로 시작하는 줄 → ②진하게(**…**) 표시된 문구 → ③첫 줄
+   (지금까지 올라온 글들의 캡션 스타일 — 짧은 제목형·번호 목록·강조 문구 — 을 반영) */
+function _flowCleanTxt(s){ return String(s||'').replace(/⟦\/?[^⟧]*⟧/g,'').replace(/[⟦⟧]/g,'').replace(/\*\*/g,'').replace(/__/g,'').replace(/#/g,'').trim(); }
+function _flowAutoTitle(desc){
+  const raw=String(desc||'');
+  // ① 번호/단계 머리표로 시작하는 줄: "1. ~", "2) ~", "3-~", "①~", "3단계 ~", "STEP 2 ~"
+  const plain=raw.replace(/⟦\/?[^⟧]*⟧/g,'').replace(/[⟦⟧]/g,'').replace(/\*\*/g,'').replace(/__/g,'');
+  const numHead=/^\s*(?:\d{1,2}\s*(?:단계|번째|째)?\s*[.)\-:、．]\s*|\d{1,2}\s*단계\s+|[①-⑳㉑-㉟❶-❿]\s*|step\s*\d{1,2}\s*[.)\-:]?\s*)/i;
+  for(const ln of plain.split(/\n/).map(x=>x.trim()).filter(Boolean)){
+    if(numHead.test(ln)){ const t=ln.replace(numHead,'').replace(/#/g,'').trim(); if(t) return _flowTrunc(t,18); }
+  }
+  // ② 진하게 표시된 첫 문구
+  const bm=raw.match(/\*\*([^*\n]{1,40})\*\*/);
+  if(bm){ const t=_flowCleanTxt(bm[1]); if(t) return _flowTrunc(t,18); }
+  // ③ 그 외 첫 줄
+  return _flowFirstLine(desc);
+}
 function curFlowPhotoSrc(idx, partIdx){ if(idx==null)return'';
   const f=curFlowPhotos().find(p=>p.idx===idx); if(!f)return'';
   if(partIdx!=null){ const pp=(f.parts||[]).find(x=>x.partIdx===partIdx); return pp?pp.src:f.src; }
@@ -6537,7 +6599,29 @@ function postFlowCardHTML(post){
     if(owner){ host=owner; flow=parseFlow(owner.desc||'').flow; } else { return ''; }
   }
   const dia=flowDiagramFromData(flow.type, flow.nodes, true, {big:true, host, curRefId:postRefId(post)});
-  return dia?`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${flowNavHint(flow, host, postRefId(post))}</div>${dia}</div>`:'';
+  return dia?`<div class="flow-card flow-card-detail" onclick="if(!event.target.closest('g[onclick],button,a,.flow-chip'))openFlowZoomCur()"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${flowNavHint(flow, host, postRefId(post))}<button type="button" class="flow-zoom-btn" onclick="event.stopPropagation();openFlowZoomCur()" title="크게 보기">${EXPAND_ICO}크게 보기</button></div>${dia}</div>`:'';
+}
+/* 놀이 흐름 크게 보기: 지금 보고 있는 글의 흐름을 큰 화면(가로 스크롤)으로 */
+function openFlowZoomCur(){
+  const post=_currentPost; if(!post) return;
+  let host=post, flow=parseFlow(post.desc||'').flow;
+  if(!(flow&&flow.type&&(flow.nodes||[]).length)){
+    const meRef=postRefId(post);
+    const owner=allPosts().find(p=>{ const f=parseFlow(p.desc||'').flow; return f&&f.type&&(f.nodes||[]).some(n=>n.refId===meRef); });
+    if(owner){ host=owner; flow=parseFlow(owner.desc||'').flow; } else return;
+  }
+  const dia=flowDiagramFromData(flow.type, flow.nodes, true, {big:true, host, curRefId:postRefId(post)});
+  const body=$('#flowZoomBody'); if(!body||!dia) return;
+  body.innerHTML=dia;
+  // SVG를 viewBox 비율대로 '실제 픽셀 크기'로 키워서 가로 스크롤이 확실히 되도록
+  const svg=body.querySelector('.fd-svg');
+  if(svg){ const vb=(svg.getAttribute('viewBox')||'').split(/\s+/).map(Number);
+    const H=Math.min(Math.round((window.innerHeight||700)*0.7),540);
+    if(vb.length===4 && vb[3]>0){ const W=Math.round(H*(vb[2]/vb[3]));
+      svg.style.height=H+'px'; svg.style.width=W+'px'; svg.style.maxHeight='none'; svg.style.maxWidth='none'; } }
+  const hint=$('#flowZoomHint'); if(hint){ const nav=flowNavHint(flow, host, postRefId(post)); hint.innerHTML='← 좌우로 넘겨서 전체 흐름을 볼 수 있어요 →'+(nav?'<br>사진을 누르면 해당 놀이로 이동해요':''); }
+  open_('flowZoomOverlay');
+  body.scrollLeft=0;
 }
 let _fdSeq=0;
 function flowDiagramFromData(type,nodes,interactive,opts){
@@ -6580,20 +6664,39 @@ function flowDiagramFromData(type,nodes,interactive,opts){
     return `<div class="flow-diagram flow-arrow-wrap">${chips}</div>`;
   }
   if(type==='curve'){
-    const n=nodes.length, step=big?155:140, mx=big?96:48, W=Math.max(big?520:300,(n-1)*step+2*mx), top=big?150:80, amp=big?32:26;
-    const xs=n===1?[W/2]:nodes.map((_,i)=>mx+i*(W-2*mx)/(n-1));
-    const ys=nodes.map((_,i)=>top+ (n===1?0: amp*Math.sin(i*1.15+0.4)));
-    let path='';
-    for(let i=0;i<n-1;i++){ const dx=(xs[i+1]-xs[i])/2; path+=(i===0?`M${xs[i]},${ys[i]} `:'')+`C${xs[i]+dx},${ys[i]} ${xs[i+1]-dx},${ys[i+1]} ${xs[i+1]},${ys[i+1]} `; }
-    // 세로 범위(제목 포함)를 계산해 viewBox에 담아 위/아래 제목이 잘리지 않게 함 (가로는 고정폭 유지 → 점 크기 일정)
+    const perRow=5, n=nodes.length, step=big?155:120, mx=big?96:48, amp=big?32:26;
+    if(n<=perRow){
+      // 짧은 흐름 — 기존 단일 줄 (물결 곡선, 라벨 위·아래 번갈아)
+      const W=Math.max(big?520:300,(n-1)*step+2*mx), top=big?150:80;
+      const xs=n===1?[W/2]:nodes.map((_,i)=>mx+i*(W-2*mx)/(n-1));
+      const ys=nodes.map((_,i)=>top+ (n===1?0: amp*Math.sin(i*1.15+0.4)));
+      let path='';
+      for(let i=0;i<n-1;i++){ const dx=(xs[i+1]-xs[i])/2; path+=(i===0?`M${xs[i]},${ys[i]} `:'')+`C${xs[i]+dx},${ys[i]} ${xs[i+1]-dx},${ys[i+1]} ${xs[i+1]},${ys[i+1]} `; }
+      let minY=1e9,maxY=-1e9;
+      const dots=nodes.map((nd,i)=>{ const above=i%2===0; const ly=above?ys[i]-(R+(big?12:11)):ys[i]+(R+(big?22:16));
+        const ln=_wrapLabel(nd.title,per).length;
+        const topExt = above ? (ly-(ln-1)*lh-15) : (ys[i]-R);
+        const botExt = above ? (ys[i]+R) : (ly+(ln-1)*lh+6);
+        minY=Math.min(minY,topExt); maxY=Math.max(maxY,botExt);
+        return `<g${clickAttr(nd)}>${mark(nd,xs[i],ys[i],R,i)}${labelAt(nd,xs[i],ly,above)}</g>`; }).join('');
+      const pad=6, vbY=minY-pad, vbH=(maxY-minY)+2*pad;
+      return `<div class="flow-diagram"><svg viewBox="0 ${vbY} ${W} ${vbH}" class="${svgCls}" preserveAspectRatio="xMidYMid meet"><path d="${path}" class="fd-path"/>${dots}</svg></div>`;
+    }
+    // 긴 흐름 — 5개씩 끊어서 다음 줄로 (뱀처럼 지그재그로 이어짐, 라벨은 점 아래로 통일)
+    const colStep=step, labSpace=(big?22:16)+2*lh+(big?10:6), rowGap=2*R+labSpace+(big?24:12), topPad=R+(big?14:10);
+    const W=Math.max(big?520:300,(perRow-1)*colStep+2*mx);
+    const P=nodes.map((_,i)=>{ const row=Math.floor(i/perRow); let col=i%perRow; if(row%2===1) col=perRow-1-col;
+      return {x:mx+col*colStep, y:topPad+row*rowGap, row}; });
+    let path='M'+P[0].x+','+P[0].y+' ';
+    for(let i=0;i<n-1;i++){ const a=P[i], b=P[i+1];
+      if(a.row===b.row){ const dx=(b.x-a.x)/2; path+=`C${a.x+dx},${a.y} ${b.x-dx},${b.y} ${b.x},${b.y} `; }
+      else { const side=(a.row%2===0)?1:-1, bulge=(big?64:36)*side, dy=b.y-a.y;
+        path+=`C${a.x+bulge},${a.y+dy*0.35} ${b.x+bulge},${b.y-dy*0.35} ${b.x},${b.y} `; } }
     let minY=1e9,maxY=-1e9;
-    const dots=nodes.map((nd,i)=>{ const above=i%2===0; const ly=above?ys[i]-(R+(big?12:11)):ys[i]+(R+(big?22:16));
-      const ln=_wrapLabel(nd.title,per).length;
-      const topExt = above ? (ly-(ln-1)*lh-15) : (ys[i]-R);
-      const botExt = above ? (ys[i]+R) : (ly+(ln-1)*lh+6);
-      minY=Math.min(minY,topExt); maxY=Math.max(maxY,botExt);
-      return `<g${clickAttr(nd)}>${mark(nd,xs[i],ys[i],R,i)}${labelAt(nd,xs[i],ly,above)}</g>`; }).join('');
-    const pad=6, vbY=minY-pad, vbH=(maxY-minY)+2*pad;
+    const dots=nodes.map((nd,i)=>{ const p=P[i], ly=p.y+R+(big?22:16), ln=_wrapLabel(nd.title,per).length;
+      minY=Math.min(minY,p.y-R-4); maxY=Math.max(maxY,ly+(ln-1)*lh+6);
+      return `<g${clickAttr(nd)}>${mark(nd,p.x,p.y,R,i)}${labelAt(nd,p.x,ly,false)}</g>`; }).join('');
+    const pad=8, vbY=minY-pad, vbH=(maxY-minY)+2*pad;
     return `<div class="flow-diagram"><svg viewBox="0 ${vbY} ${W} ${vbH}" class="${svgCls}" preserveAspectRatio="xMidYMid meet"><path d="${path}" class="fd-path"/>${dots}</svg></div>`;
   }
   if(type==='radial'){
@@ -7085,10 +7188,13 @@ function composeBody(){return richToMarks($('#pBody'));}
 /* 글 내용에 쓴 #해시태그를 맨 아래 해시태그 칸으로 자동 수집 (인스타처럼) */
 function extractHashtags(text, includeLast){
   // includeLast=false: 뒤에 띄어쓰기/#/줄바꿈이 온 '완성된' 해시태그만 (타이핑 중인 마지막 건 제외)
+  // 서식 마커(⟦c=#hex⟧…⟦/c⟧, ⟦s=px⟧…⟦/s⟧, **진하게**, __밑줄__)를 먼저 제거 →
+  // 색상코드(#e23b3b)가 해시태그로 오인되거나 마커가 태그 뒤에 붙는 문제 방지
+  text=String(text||'').replace(/⟦\/?[^⟧]*⟧/g,'').replace(/\*\*/g,'').replace(/__/g,'');
   const out=[];
   const re = includeLast ? /#([^\s#<>.,!?~*]+)/g : /#([^\s#<>.,!?~*]+)(?=[\s#])/g;
   let m;
-  while((m=re.exec(text||''))){ if(m[1]&&!out.includes(m[1])) out.push(m[1]); }
+  while((m=re.exec(text))){ if(m[1]&&!out.includes(m[1])) out.push(m[1]); }
   return out;
 }
 let _bodyTagSet=new Set();  // 본문에서 뽑은 태그들 (조합 중 조각은 다음 동기화에서 자동 제거)
