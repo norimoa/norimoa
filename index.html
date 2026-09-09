@@ -1038,6 +1038,14 @@
   .ph-hash .htag{color:var(--coral-tx);font-weight:600}
   .ph-hash-in{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:15px}   /* 글 내용 박스 안 해시태그 */
   .engage-box{background:var(--pink-bg);border-radius:14px 14px 0 0;padding:12px 18px;margin:4px 0 0}  /* 연분홍 참여 박스 — 아래 글내용 박스와 붙음 */
+  .engage-box.engage-box-solo{border-radius:14px;margin:6px 0 14px}   /* 댓글창 위 참여 박스: 독립형(위아래 모서리 둥글게) */
+  /* ? 도움말 버튼 + 말풍선 */
+  .help-wrap{position:relative;display:inline-block;vertical-align:middle}
+  .help-btn{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--coral-tx);background:#fff;color:var(--coral-tx);font-size:12px;font-weight:800;line-height:1;cursor:pointer;padding:0;display:inline-grid;place-items:center}
+  .help-btn:hover{background:#fbe9ec}
+  .help-pop{position:absolute;left:0;top:calc(100% + 9px);z-index:70;width:min(270px,74vw);background:#fff;border:1px solid #eadfd8;border-radius:12px;box-shadow:0 8px 26px rgba(0,0,0,.18);padding:12px 14px;font-size:12.5px;line-height:1.65;color:#5a4a42;font-weight:400;text-align:left;white-space:normal;display:none}
+  .help-pop.on{display:block}
+  .help-pop::before{content:'';position:absolute;left:15px;top:-7px;width:12px;height:12px;background:#fff;border-left:1px solid #eadfd8;border-top:1px solid #eadfd8;transform:rotate(45deg)}
   .ph-cats{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
   .cat-chip{display:inline-flex;align-items:center;background:var(--line);color:var(--ink);border:1px solid #e2dcd6;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700}   /* 크림색 + 검정 글씨 */
   .cat-chip .cc-par{font-weight:600;color:var(--sub)}
@@ -1097,6 +1105,8 @@
   .pf-photo img{display:block;max-width:100%;width:100%;height:auto;max-height:none;margin:0 auto;border-radius:12px;background:#f3efec}
   .pf-photo .pcount{background:#dd5b8d;color:#fff;left:8px;right:auto;bottom:8px;top:auto}
   .pf-photo.collage{cursor:zoom-in}
+  .pf-photo.has-spot img{border:3px solid #dd5b8d;box-sizing:border-box}   /* 상품 태그 있는 사진: 핫핑크 테두리 */
+  .detail-photo.has-spot img{border:3px solid #dd5b8d;box-sizing:border-box}
   .pf-collage-hint{position:absolute;right:8px;bottom:8px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.58);color:#fff;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:8px;pointer-events:none}
   .pf-desc{font-size:14.5px;line-height:1.7;color:#4a3f39;margin-top:10px;white-space:pre-wrap;word-break:break-word;text-align:left;max-width:100%;margin-left:auto;margin-right:auto}
   /* 웹(데스크톱, 981px 이상): 원래대로 — 사진 높이 제한(꽉 안 참), 설명글은 그 사진 너비에 맞춤(JS). 모바일(≤980px)은 사진·설명 꽉 차게 */
@@ -1174,6 +1184,7 @@
     .br-topbar.search-open .br-search{display:flex;flex:0 0 100%}   /* 펼치면 한 줄 전체 폭 */
   }
   .br-topbar .br-search{flex:1;margin-bottom:0;min-width:0}
+  @media(min-width:981px){ .br-topbar.topbar-moved{display:none} }   /* 데스크톱: 둘러보기 외 탭에서는 상단바 숨김(사이드바 사용) */
   .bt-cat,.bt-bell,.bt-search{display:none;flex:0 0 auto;width:42px;height:42px;border-radius:50%;border:1px solid #eee;background:#fff;box-shadow:var(--shadow);align-items:center;justify-content:center;color:var(--coral-tx);cursor:pointer;position:relative;font-size:19px}
   .bt-bell{display:inline-flex}  /* 알림은 데스크톱·모바일 모두 검색창 옆에 */
   @media(max-width:980px){
@@ -1301,8 +1312,8 @@
 
     <!-- 둘러보기 -->
     <section class="view on" id="v-browse">
-      <div class="br-topbar">
-      <div class="mob-brand"><img alt="놀이모아" width="24" height="24" style="border-radius:6px;display:block" src="data:image/png;base64,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"><img class="wordmark" alt="놀이모아"></div>
+      <div class="br-topbar" id="mobTopbar">
+      <div class="mob-brand" onclick="go('browse')" style="cursor:pointer" title="둘러보기로 이동"><img alt="놀이모아" width="24" height="24" style="border-radius:6px;display:block" src="data:image/png;base64,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"><img class="wordmark" alt="놀이모아"></div>
         <button class="bt-cat" onclick="openCat()" aria-label="카테고리" title="카테고리"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <button class="bt-search" onclick="toggleMobSearch()" aria-label="검색" title="검색"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
         <div class="br-search"><span class="search-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input id="brSearch" type="search" name="nolimoa-search-field" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="놀이 주제·유형, 닉네임으로 검색" oninput="renderBrowseFeed()"></div>
@@ -1542,7 +1553,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816t</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816u</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1760,8 +1771,8 @@
         <div id="photoList"></div>
         <button class="add-photo" onclick="document.getElementById('file').click()">＋ 사진 더 추가</button>
         <div class="sec" style="color:var(--sub);font-size:12.5px;line-height:1.5;margin-top:14px">
-          🛒 구매 링크가 있으면 사진의 <b>＋ 구매 링크 추가</b>를 눌러 <b style="color:#dd5b8d">핑크 동그라미</b>로 표시할 수 있어요. (없으면 그냥 두면 돼요.)<br>
-          <svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> <b>회전</b> · <svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg> <b>자르기</b>로 사진을 다듬을 수 있어요.
+          <span class="help-wrap"><button type="button" class="help-btn" onclick="toggleHelp(this)" aria-label="상품 태그 · 사진 다듬기 도움말">?</button><span class="help-pop">🛒 <b>상품 태그</b> — 구매 링크가 있으면 사진의 <b>＋ 구매 링크 추가</b>를 눌러 <b style="color:#dd5b8d">핑크 동그라미</b>로 표시할 수 있어요. (없으면 그냥 두면 돼요.)<br><br>✏️ <b>사진 다듬기</b> — 사진을 <b>회전</b>하거나 <b>자르기</b>로 정리할 수 있어요.</span></span>
+          <span style="margin-left:4px">🛒 상품 태그 · ✏️ 사진 다듬기 안내</span>
         </div>
       </div>
     </div>
@@ -1794,7 +1805,7 @@
 
       <!-- 놀이 흐름 도식 (선택) -->
       <div class="sec">
-        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.7 7.2 10.6 16"/><path d="M17.3 7.2 13.4 16"/></svg><span class="sl-t">놀이 흐름</span> <span class="hint">놀이의 흐름을 도식으로 보여줘요 · 각 점은 놀이글로 연결돼요 · 선택</span></div>
+        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.7 7.2 10.6 16"/><path d="M17.3 7.2 13.4 16"/></svg><span class="sl-t">놀이 흐름</span> <span class="hint" style="color:#b0a29a">선택</span> <span class="help-wrap"><button type="button" class="help-btn" onclick="toggleHelp(this)" aria-label="놀이 흐름 도움말">?</button><span class="help-pop">놀이의 흐름을 <b>도식(그림)</b>으로 보여줘요. 도식 모양을 고르고 <b>‘＋ 내 놀이 추가’</b>로 점을 하나씩 넣은 뒤 제목을 적어요.<br><br>각 점에는 <b>📷 사진</b>(지금 이 글에 올린 사진)을 넣거나, <b>🔗 다른 글</b>(내가 올린 다른 놀이글)을 연결할 수 있어요. 글과 연결한 점을 누르면 그 글로 바로 이동해요. (선택 사항이에요.)</span></span></div>
         <div class="flow-types" id="flowTypes"></div>
         <div id="flowEditor" style="display:none"></div>
       </div>
@@ -2942,7 +2953,7 @@ async function recordView(p){
   if(!(SB && authUser && p && p.db))return;
   try{ await SB.from('post_views').upsert({post_id:p.id,user_id:authUser.id});
     const {count}=await SB.from('post_views').select('*',{count:'exact',head:true}).eq('post_id',p.id);
-    if(count!=null){ p.views=String(count); const e=$('#phViews'); if(e)e.textContent=count; }
+    if(count!=null){ p.views=String(count); document.querySelectorAll('.ph-views').forEach(e=>e.textContent=count); }
   }catch(e){}
 }
 
@@ -3124,7 +3135,8 @@ function renderPostPage(p){
     const markers=(im.spots||[]).map((s,si)=>`<button type="button" class="marker filled pulse" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%" onclick="event.stopPropagation();spotPopAt(this,${idx},${si})">＋</button>`).join('');
     const desc=(im.desc&&im.desc.trim())?`<div class="pf-desc">${linkifyTags(im.desc,p.tags)}</div>`:'';
     const collageHint=(im.parts&&im.parts.length>1)?`<span class="pf-collage-hint"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> 눌러서 낱장 보기 · ${im.parts.length}장</span>`:'';
-    return `<div class="pf-item"><div class="pf-photo${(im.parts&&im.parts.length>1)?' collage':''}" onclick="pfPhotoClick(${idx})"><img src="${im.img}" alt="">${spot}${markers}${collageHint}</div>${desc}</div>`;
+    const hasSpot=(im.spots&&im.spots.length)?' has-spot':'';   // 상품 태그 있는 사진 → 핫핑크 테두리
+    return `<div class="pf-item"><div class="pf-photo${(im.parts&&im.parts.length>1)?' collage':''}${hasSpot}" onclick="pfPhotoClick(${idx})"><img src="${im.img}" alt="">${spot}${markers}${collageHint}</div>${desc}</div>`;
   }).join('');
   $('#ptMini').textContent=viewLabel(_postBack);   // '뒤로' 옆에 돌아갈 이전 페이지 이름
   const hashLine=(p.tags||[]).map(x=>'#'+noSpace(x)).join(' ');
@@ -3146,23 +3158,24 @@ function renderPostPage(p){
         <button class="pa-ico del" onclick="deletePost()" title="삭제">${ICO.trash}</button>
       </div>`:''}
     </div>
-    <div class="engage-box"><div class="ph-meta"><span class="pa-btn stat" title="조회"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> <b id="phViews">${p.views||'0'}</b></span><span class="ph-engage" id="phEngage"></span></div></div>
+    <div class="engage-box"><div class="ph-meta"><span class="pa-btn stat" title="조회"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> <b class="ph-views">${p.views||'0'}</b></span><span class="ph-engage"></span></div></div>
     ${tripTableHTML(p.desc)}
     ${postFlowCardHTML(p)}
     <div class="card post-detail-body">${linkifyTags(parseTrip(p.desc).body,p.tags)}${hashLine?`<div class="ph-hash ph-hash-in">${linkifyTags(hashLine,p.tags)}</div>`:''}</div>
     <div class="pd-sec">
       <div class="pf-stack">${photos}</div>
     </div>
-    ${(p.attachments&&p.attachments.length)?`<div class="pd-sec"><h4>📎 첨부파일</h4><div class="attach-list">${p.attachments.map((a,ai)=>`<a class="attach-chip" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name)}" onclick="recordDownload('${(a.url||'').replace(/'/g,"\\'")}','${p.id||''}',${ai})">📄 <b>${esc(a.name)}</b><span>${fmtSize(a.size)} · ⬇ <b id="dln-${ai}">${(window._dlCounts&&window._dlCounts[a.url])||0}</b>명</span></a>`).join('')}</div></div>`:''}
+    ${(p.attachments&&p.attachments.length)?`<div class="pd-sec"><h4><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>첨부파일</h4><div class="attach-list">${p.attachments.map((a,ai)=>`<a class="attach-chip" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name)}" onclick="recordDownload('${(a.url||'').replace(/'/g,"\\'")}','${p.id||''}',${ai})"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;flex:0 0 auto"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><b>${esc(a.name)}</b><span>${fmtSize(a.size)} · ⬇ <b id="dln-${ai}">${(window._dlCounts&&window._dlCounts[a.url])||0}</b>명</span></a>`).join('')}</div></div>`:''}
     ${refsHTML(p)}
     ${productsHTML(p)}
+    <div class="engage-box engage-box-solo"><div class="ph-meta"><span class="pa-btn stat" title="조회"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> <b class="ph-views">${p.views||'0'}</b></span><span class="ph-engage"></span></div></div>
     <div class="pd-sec">
       <div id="cmtList"></div>
       <div class="cmt-input"><div class="av sm" style="${avStyle(myAv())}">${avInner(myAv())}</div>
         <input id="cmtInput" type="text" name="nolimoa-comment-field" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="댓글 달기…" onkeydown="if(event.key==='Enter')addComment()"><button onclick="addComment()">등록</button></div>
     </div>
-    <div class="pd-sec"><h4>🎨 ${a?a.name:'글쓴이'}의 관련 놀이</h4><div class="rel-grid" id="authorRel"></div></div>
-    <div class="pd-sec"><h4>📌 다른 선생님들의 관련 글</h4><div class="rel-grid" id="otherRel"></div></div>`;
+    <div class="pd-sec"><h4><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><rect x="3" y="13" width="7" height="7" rx="1.5"/><rect x="14" y="13" width="7" height="7" rx="1.5"/><rect x="8.5" y="3.5" width="7" height="7" rx="1.5"/></svg>${a?a.name:'글쓴이'}의 관련 놀이</h4><div class="rel-grid" id="authorRel"></div></div>
+    <div class="pd-sec"><h4><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>다른 선생님들의 관련 글</h4><div class="rel-grid" id="otherRel"></div></div>`;
   renderPostEngage();
   renderComments(p);
   renderRelGrid('#authorRel', authorRelated(p), '아직 관련 놀이가 없어요');
@@ -3199,13 +3212,15 @@ function renderPostActions(){
 }
 // 글 내용 아래 참여 지표: 하트-하트수-댓글-댓글수-저장-저장수
 function renderPostEngage(){
-  const p=_currentPost, box=$('#phEngage'); if(!p||!box)return;
+  const p=_currentPost; if(!p)return;
   const saved=isSaved(p);
-  box.innerHTML=`
+  const html=`
     <button class="pa-btn like ${p.liked?'on':''}" onclick="togglePostLike()" title="좋아요"><span class="hi">${ICO.heart(p.liked)}</span> <b>${(p.like||0).toLocaleString()}</b></button>
     <span class="pa-btn stat" title="댓글">${ICO.comment} <b>${(p.cmt||0).toLocaleString()}</b></span>
     <button class="pa-btn save ${saved?'on':''}" onclick="togglePostSave()" title="${saved?'저장됨':'저장'}">${ICO.bookmark(saved)} <b>${(p.saves||0).toLocaleString()}</b></button>
     <button class="pa-btn share" onclick="sharePost()" title="공유">${ICO.share}</button>`;
+  document.querySelectorAll('.ph-engage').forEach(box=>box.innerHTML=html);   // 위·아래 참여 박스 모두 채움
+  document.querySelectorAll('.ph-views').forEach(el=>el.textContent=(p.views||'0'));
 }
 async function togglePostLike(){
   const p=_currentPost;if(!p)return;
@@ -4061,6 +4076,7 @@ function renderDetail(){
   $('#detailTitle').textContent=_dTitle+(_dImgs.length>1?`  (${_dIdx+1}/${_dImgs.length})`:'');
   $('#detailDesc').innerHTML=(im.desc&&im.desc.trim())?linkifyTags(im.desc):'';
   const ph=$('#detailPhoto');
+  ph.classList.toggle('has-spot', !!(im.spots&&im.spots.length));   // 상품 태그 있는 사진: 핫핑크 테두리
   ph.querySelectorAll('.marker,.spot-pop').forEach(el=>el.remove());
   (im.spots||[]).forEach(s=>{
     const m=document.createElement('div');m.className='marker filled pulse';
@@ -5329,7 +5345,7 @@ function productsHTML(p){
     const link=s.url?`<a class="prod-buy" href="${esc(s.url&&!/^https?:\/\//i.test(s.url)?'https://'+s.url:s.url)}" target="_blank" rel="noopener noreferrer">구매하기 ↗</a>`:'<span class="prod-nolink">링크 준비중</span>';
     return `<div class="prod-item"><div class="prod-info"><b>${esc(s.name||'상품')}</b>${mall}</div>${link}</div>`;
   }).join('');
-  return `<div class="pd-sec"><h4>🛒 상품 태그 <span class="hint">이 놀이에 쓴 재료·교구예요</span></h4><div class="prod-list">${cards}</div></div>`;
+  return `<div class="pd-sec"><h4><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.3" fill="currentColor" stroke="none"/></svg>상품 태그 <span class="hint">이 놀이에 쓴 재료·교구예요</span></h4><div class="prod-list">${cards}</div></div>`;
 }
 /* 놀이흐름 점에 넣은 '이 글 사진' 클릭 → 그 사진을 설명과 함께 크게 (사진 라이트박스) */
 function openFlowPhoto(hostRef, idx, partIdx){
@@ -5357,6 +5373,16 @@ function openRefTarget(refId){
 }
 
 /* ---------------- nav ---------------- */
+/* 모바일 상단바(카테고리·로고·검색·알림)를 지금 보는 메인 탭 위로 옮겨 항상 고정 표시 */
+function relocateTopbar(v){
+  const tb=document.getElementById('mobTopbar'); if(!tb)return;
+  if(['browse','sub','comm','my'].includes(v)){
+    const host=document.getElementById('v-'+v);
+    if(host && tb.parentNode!==host) host.insertBefore(tb, host.firstChild);
+    tb.classList.toggle('topbar-moved', v!=='browse');   // 데스크톱에선 둘러보기 외 탭의 상단바 숨김(사이드바가 있으므로)
+    if(v!=='browse') tb.classList.remove('search-open');
+  }
+}
 function go(v){
   // 커뮤니티는 로그인/회원가입 후에만 볼 수 있음
   if(v==='comm' && isGuest()){ toast('회원가입하면 행정 자료실을 볼 수 있어요'); openAuth('signup'); return; }
@@ -5369,6 +5395,7 @@ function go(v){
   }catch(e){}
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   document.body.classList.toggle('nav-browse', v==='browse'); // 카테고리·알림 버튼은 둘러보기에서만
+  relocateTopbar(v);   // 상단바(카테고리·로고·검색·알림)를 팔로잉·행정자료실·마이페이지에도 고정 표시
   window.scrollTo(0,0);
   // 둘러보기로 오면 카테고리·해시태그 필터와 검색어를 지워 메인(첫 화면)으로 되돌림
   if(v==='browse'){ browseFilter=''; const bs=$('#brSearch'); if(bs)bs.value=''; renderBrowse(); }
@@ -7327,8 +7354,19 @@ syncStats();
 /* 모바일에선 검색창이 좁아지므로 안내문구를 짧게 (긴 문장이 잘리지 않게) */
 function syncSearchPlaceholder(){ const bs=$('#brSearch'); if(!bs)return; bs.placeholder='놀이 주제·유형, 닉네임으로 검색'; }
 syncSearchPlaceholder(); window.addEventListener('resize', syncSearchPlaceholder);
+/* ? 도움말 버튼: 누르면 옆에 말풍선으로 설명 표시 (바깥 누르면 닫힘) */
+function toggleHelp(btn){
+  const pop=btn.parentNode.querySelector('.help-pop'); if(!pop)return;
+  const willOpen=!pop.classList.contains('on');
+  document.querySelectorAll('.help-pop.on').forEach(p=>p.classList.remove('on'));
+  if(willOpen){ pop.classList.add('on');
+    setTimeout(()=>{ const h=(e)=>{ if(!pop.parentNode.contains(e.target)){ pop.classList.remove('on'); document.removeEventListener('click',h); } }; document.addEventListener('click',h); }, 10);
+  }
+}
 /* 모바일: 검색(돋보기) 버튼 → 아래에 검색창 펼치기/접기 */
 function toggleMobSearch(){
+  const cur=document.querySelector('.view.on');
+  if(cur && cur.id!=='v-browse'){ go('browse'); }   // 다른 탭에서 검색하면 둘러보기로 이동해 검색
   const tb=document.querySelector('.br-topbar'); if(!tb)return;
   const open=tb.classList.toggle('search-open');
   const bs=$('#brSearch');
