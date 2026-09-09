@@ -1039,7 +1039,8 @@
   .ph-hash-in{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:15px}   /* 글 내용 박스 안 해시태그 */
   .engage-box{background:var(--pink-bg);border-radius:14px 14px 0 0;padding:12px 18px;margin:4px 0 0}  /* 연분홍 참여 박스 — 아래 글내용 박스와 붙음 */
   .engage-box.engage-box-solo{border-radius:14px 14px 0 0;margin:12px 0 0}   /* 댓글창 위 참여 박스: 아래 댓글창과 붙도록 (아래 모서리 각지게, 아래 여백 0) */
-  .engage-box-solo + .pd-sec{margin-top:0}   /* 참여 박스 바로 아래 댓글 영역 간격 제거 → 붙어보이게 */
+  /* 참여 박스(핑크) 바로 아래 댓글 영역: 본문처럼 흰 테두리 박스로 만들어 핑크박스에 붙임 */
+  .engage-box-solo + .pd-sec{margin:0 0 18px;background:var(--card);border:1px solid var(--line);border-top:none;border-radius:0 0 14px 14px;padding:14px 18px 16px;box-shadow:var(--shadow);box-sizing:border-box}
   /* ? 도움말 버튼 + 말풍선 */
   .help-wrap{position:relative;display:inline-block;vertical-align:middle}
   .help-btn{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--coral-tx);background:#fff;color:var(--coral-tx);font-size:12px;font-weight:800;line-height:1;cursor:pointer;padding:0;display:inline-grid;place-items:center}
@@ -1364,7 +1365,7 @@
     <!-- 환경구성 갤러리 -->
     <section class="view" id="v-env">
       <div class="post-topbar"><button class="back-btn" onclick="envBack()">‹ 뒤로</button><span class="pt-mini">환경구성</span></div>
-      <div class="main-head"><div><h1>🖼️ 환경구성</h1><p>게시판 · 교실 환경구성 사진을 모아봤어요</p></div></div>
+      <div class="main-head"><div><h1><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:6px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성</h1><p>게시판 · 교실 환경구성 사진을 모아봤어요</p></div></div>
       <div class="br-search"><span>🔍</span><input id="envSearch" type="search" name="nolimoa-env-search" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="주제로 검색 (예: 여름)" oninput="renderEnv()"></div>
       <div class="env-grid" id="envGrid"></div>
     </section>
@@ -1553,7 +1554,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816w</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816x</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -5051,7 +5052,8 @@ function openEnv(){
 function envBack(fromPop){ if(!fromPop) backGuardConsume(); go(_envBack||'browse'); }
 function envTiles(){
   const out=[];
-  allPosts().forEach(p=>{
+  // 인기순: 각 사진이 속한 글의 인기 점수(좋아요·저장·조회) 높은 순으로 정렬
+  allPosts().slice().sort((a,b)=>popScore(b)-popScore(a)).forEach(p=>{
     imagesOf(p).forEach(im=>{ if(im && im.env){ out.push({img:im.img, title:(p.title||'놀이').replace(/^#/,''), post:p}); } });
   });
   return out;
