@@ -1573,7 +1573,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817a</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817b</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4113,10 +4113,12 @@ function showSpotPop(ph,s){
 }
 
 /* ===== 상품 = 같은 이름/링크를 태그한 놀이 모음 (오늘의집 스타일) ===== */
-function productKey(s){return (s.name&&s.name.trim())?s.name.trim().toLowerCase():String(s.url||'').toLowerCase();}
+function normProdUrl(u){u=String(u||'').trim().toLowerCase();if(!u)return '';u=u.replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/^m\./,'');u=u.split('#')[0];u=u.replace(/\/+$/,'');return u;}
+function productKey(s){const u=normProdUrl(s&&s.url);if(u)return 'u:'+u;const n=(s&&s.name||'').trim().toLowerCase();return n?'n:'+n:'';}
 function allSpotEntries(){const out=[];allPosts().forEach(p=>{imagesOf(p).forEach(im=>(im.spots||[]).forEach(s=>out.push({p,s})));});return out;}
 function playsWithProduct(s){
   const key=productKey(s), seen=new Set(), res=[];
+  if(!key)return res;
   allSpotEntries().forEach(({p,s:sp})=>{if(productKey(sp)===key&&!seen.has(p)){seen.add(p);res.push(p);}});
   return res;
 }
