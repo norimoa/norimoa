@@ -374,9 +374,9 @@
   /* 놀이 흐름: 상세에서 클릭하면 크게 보기 */
   .flow-card-detail .flow-diagram{cursor:zoom-in}
   .flow-card-detail .flow-card-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  .flow-zoom-btn{margin-left:auto;border:1px solid #e7dcd6;background:#fff;color:#8a7d76;border-radius:16px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
-  .flow-zoom-btn:hover{background:#faf6f3}
-  .flow-zoom-btn .flow-ico{width:14px;height:14px}
+  .flow-zoom-btn{margin-left:auto;border:1px solid #e7dcd6;background:#fff;color:#8a7d76;border-radius:50%;width:30px;height:30px;padding:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .flow-zoom-btn:hover{background:#faf6f3;color:#6a5d56}
+  .flow-zoom-btn .flow-ico{width:15px;height:15px}
   .flowzoom-modal{max-width:96vw;width:96vw}
   .flowzoom-hint{text-align:center;font-size:12px;color:#b0a29a;margin:2px 0 8px}
   .flowzoom-body{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:6px 2px 16px}
@@ -1590,7 +1590,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817f</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817g</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -6599,7 +6599,7 @@ function postFlowCardHTML(post){
     if(owner){ host=owner; flow=parseFlow(owner.desc||'').flow; } else { return ''; }
   }
   const dia=flowDiagramFromData(flow.type, flow.nodes, true, {big:true, host, curRefId:postRefId(post)});
-  return dia?`<div class="flow-card flow-card-detail" onclick="if(!event.target.closest('g[onclick],button,a,.flow-chip'))openFlowZoomCur()"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${flowNavHint(flow, host, postRefId(post))}<button type="button" class="flow-zoom-btn" onclick="event.stopPropagation();openFlowZoomCur()" title="크게 보기">${EXPAND_ICO}크게 보기</button></div>${dia}</div>`:'';
+  return dia?`<div class="flow-card flow-card-detail" onclick="if(!event.target.closest('g[onclick],button,a,.flow-chip'))openFlowZoomCur()"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${flowNavHint(flow, host, postRefId(post))}<button type="button" class="flow-zoom-btn" onclick="event.stopPropagation();openFlowZoomCur()" title="크게 보기" aria-label="크게 보기">${EXPAND_ICO}</button></div>${dia}</div>`:'';
 }
 /* 놀이 흐름 크게 보기: 지금 보고 있는 글의 흐름을 큰 화면(가로 스크롤)으로 */
 function openFlowZoomCur(){
@@ -6610,7 +6610,8 @@ function openFlowZoomCur(){
     const owner=allPosts().find(p=>{ const f=parseFlow(p.desc||'').flow; return f&&f.type&&(f.nodes||[]).some(n=>n.refId===meRef); });
     if(owner){ host=owner; flow=parseFlow(owner.desc||'').flow; } else return;
   }
-  const dia=flowDiagramFromData(flow.type, flow.nodes, true, {big:true, host, curRefId:postRefId(post)});
+  // 크게 보기 = 한 줄로 쭉 펼쳐서(줄바꿈 없이) 각 단계를 큼직하게 → 좌우로 넘겨서 보기 (웹·모바일 공통으로 확실히 커짐)
+  const dia=flowDiagramFromData(flow.type, flow.nodes, true, {big:true, host, curRefId:postRefId(post), noWrap:true});
   const body=$('#flowZoomBody'); if(!body||!dia) return;
   body.innerHTML=dia;
   // SVG를 viewBox 비율대로 '실제 픽셀 크기'로 키워서 가로 스크롤이 확실히 되도록
@@ -6664,7 +6665,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
     return `<div class="flow-diagram flow-arrow-wrap">${chips}</div>`;
   }
   if(type==='curve'){
-    const perRow=5, n=nodes.length, step=big?155:120, mx=big?96:48, amp=big?32:26;
+    const perRow=opts.noWrap?1e9:5, n=nodes.length, step=big?155:120, mx=big?96:48, amp=big?32:26;
     if(n<=perRow){
       // 짧은 흐름 — 기존 단일 줄 (물결 곡선, 라벨 위·아래 번갈아)
       const W=Math.max(big?520:300,(n-1)*step+2*mx), top=big?150:80;
