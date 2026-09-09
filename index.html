@@ -1038,7 +1038,8 @@
   .ph-hash .htag{color:var(--coral-tx);font-weight:600}
   .ph-hash-in{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:15px}   /* 글 내용 박스 안 해시태그 */
   .engage-box{background:var(--pink-bg);border-radius:14px 14px 0 0;padding:12px 18px;margin:4px 0 0}  /* 연분홍 참여 박스 — 아래 글내용 박스와 붙음 */
-  .engage-box.engage-box-solo{border-radius:14px;margin:6px 0 14px}   /* 댓글창 위 참여 박스: 독립형(위아래 모서리 둥글게) */
+  .engage-box.engage-box-solo{border-radius:14px 14px 0 0;margin:12px 0 0}   /* 댓글창 위 참여 박스: 아래 댓글창과 붙도록 (아래 모서리 각지게, 아래 여백 0) */
+  .engage-box-solo + .pd-sec{margin-top:0}   /* 참여 박스 바로 아래 댓글 영역 간격 제거 → 붙어보이게 */
   /* ? 도움말 버튼 + 말풍선 */
   .help-wrap{position:relative;display:inline-block;vertical-align:middle}
   .help-btn{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--coral-tx);background:#fff;color:var(--coral-tx);font-size:12px;font-weight:800;line-height:1;cursor:pointer;padding:0;display:inline-grid;place-items:center}
@@ -1553,7 +1554,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816u</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0816v</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1897,9 +1898,9 @@
         <button type="button" class="fa-btn" onclick="document.getElementById('editAddPhoto').click()">＋ 사진 추가</button>
       </div>
     </div>
-    <label class="priv-row"><input type="checkbox" id="postPrivChk" onchange="_postPriv=this.checked"><span class="pr-t">🔒 나만 보기</span><span class="pr-h">다른 사람에겐 안 보이고, 나만 볼 수 있어요 (나중에 언제든 바꿀 수 있어요)</span></label>
+    <label class="priv-row"><input type="checkbox" id="postPrivChk" onchange="_postPriv=this.checked"><span class="pr-t"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>나만 보기</span><span class="pr-h">다른 사람에겐 안 보이고, 나만 볼 수 있어요 (나중에 언제든 바꿀 수 있어요)</span></label>
     <div class="up-foot" style="display:flex;gap:10px">
-      <button id="writeDraftBtn" class="btn g" style="flex:0 0 auto;width:auto;padding:12px 16px" onclick="saveDraft()">💾 임시저장</button>
+      <button id="writeDraftBtn" class="btn g" style="flex:0 0 auto;width:auto;padding:12px 16px" onclick="saveDraft()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>임시저장</button>
       <button id="writeSubmit" style="flex:1 1 auto;width:auto" onclick="submitWrite()">✓ 업로드 완료</button>
     </div>
   </div>
@@ -1962,7 +1963,7 @@
     <div class="modal-head"><b id="ccTitle">작성 중인 글이 있어요</b><button class="x" onclick="keepWriting()">×</button></div>
     <div class="up-body"><p id="ccMsg" style="margin:0;color:var(--sub);font-size:14px;line-height:1.6">임시저장하면 나중에 업로드에서 이어서 쓸 수 있어요.</p></div>
     <div class="up-foot" style="display:flex;flex-direction:column;gap:8px">
-      <button id="ccSave" onclick="closeConfirmSave()">💾 임시저장하고 닫기</button>
+      <button id="ccSave" onclick="closeConfirmSave()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>임시저장하고 닫기</button>
       <button class="btn g" id="ccDiscard" onclick="closeConfirmDiscard()" style="padding:11px">저장 안 하고 닫기</button>
       <button class="btn g" onclick="keepWriting()" style="padding:11px">← 계속 쓰기</button>
     </div>
@@ -3142,7 +3143,7 @@ function renderPostPage(p){
   const hashLine=(p.tags||[]).map(x=>'#'+noSpace(x)).join(' ');
   $('#postBody').innerHTML=`
     <div class="post-hero">
-      ${(isMinePost(p)&&p.priv)?`<div style="margin-bottom:8px"><span class="priv-badge">🔒 나만 보기</span></div>`:''}
+      ${(isMinePost(p)&&p.priv)?`<div style="margin-bottom:8px"><span class="priv-badge"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>나만 보기</span></div>`:''}
       <h1 class="ph-title">${esc((p.title||'놀이').replace(/^#/,''))}</h1>
       ${catChips?`<div class="ph-cats">${catChips}</div>`:''}
       ${nuriChips?`<div class="ph-nuri">${nuriChips}</div>`:''}
