@@ -281,7 +281,7 @@
   .up-modal{max-width:540px;display:flex;flex-direction:column;max-height:88vh}
   .up-modal.big-modal{max-width:760px;max-height:94vh}
   .up-modal.big-modal .big-write{min-height:280px}
-  .up-body{padding:2px 20px 8px;overflow:auto}
+  .up-body{padding:2px 20px 8px;overflow:auto;flex:1 1 auto;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
   .up-photo{position:relative;border-radius:12px;overflow:hidden;background:#e9e9ee;margin:14px 0 0}
   .up-photo canvas{width:100%;display:block;cursor:crosshair}
   .sec{margin-top:20px}
@@ -368,9 +368,6 @@
   .fd-svg g[onclick]:hover .fd-dot{fill:var(--coral-tx)}
   .fd-svg g[onclick]:hover .fd-label{fill:var(--coral-tx);text-decoration:underline}
   /* 놀이 흐름: 사진으로 자동 만들기 버튼 */
-  .flow-auto-btn{display:inline-flex;align-items:center;gap:6px;margin:2px 0 4px;border:1px dashed #dcc7bd;background:#fdf8f5;color:#8a6f60;border-radius:14px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer}
-  .flow-auto-btn:hover{background:#f7ede6;border-color:#c9a996}
-  .flow-auto-btn svg{width:16px;height:16px}
   /* 놀이 흐름: 상세에서 클릭하면 크게 보기 */
   .flow-card-detail .flow-diagram{cursor:zoom-in}
   .flow-card-detail .flow-card-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -634,6 +631,24 @@
   #newFolderOverlay,#pickerOverlay{z-index:85}
   #editOverlay{z-index:88}
   #imgEditOverlay{z-index:95}
+  /* 모바일 확대 모자이크 편집 */
+  .mz-overlay{z-index:9500;padding:0;background:rgba(15,12,12,.72)}
+  .mz-shell{display:flex;flex-direction:column;width:100%;height:100%;background:#1b1717}
+  .mz-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;background:#241f1f;color:#fff}
+  .mz-title{font-size:15px;font-weight:700;color:#fff}
+  .mz-btn{border:none;border-radius:10px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer}
+  .mz-cancel{background:rgba(255,255,255,.14);color:#fff}
+  .mz-apply{background:var(--coral,#e8739a);color:#fff}
+  .mz-hint{color:#e8dede;font-size:12.5px;text-align:center;padding:8px 14px;background:#241f1f;line-height:1.5}
+  .mz-hint b{color:#fff}
+  .mz-viewport{flex:1;position:relative;overflow:hidden;touch-action:none;background:#0e0b0b}
+  #mzCanvas{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;touch-action:none}
+  .mz-tools{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));background:#241f1f}
+  .mz-tool{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;border-radius:12px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  .mz-tool.on{background:var(--coral,#e8739a);border-color:var(--coral,#e8739a)}
+  .mz-switch{gap:8px}
+  .mz-switch input{width:16px;height:16px}
+  .mz-taphint{font-size:12px;color:var(--coral-tx,#c04c78);background:#fdeef4;border:1px dashed #f0c2d4;border-radius:9px;padding:7px 10px;margin:8px 0 2px;text-align:center;font-weight:600}
   #detailOverlay{z-index:100}   /* 사진 크게보기(라이트박스)는 폴더·상세 등 어떤 창 위에서 열려도 맨 앞에 오도록 */
   .edit-img{border:1px solid #efe7e2;border-radius:12px;padding:12px;margin-bottom:14px}
   .edit-img>img{width:100%;max-height:200px;object-fit:cover;border-radius:10px;display:block}
@@ -837,7 +852,7 @@
   .ph-left{display:flex;align-items:center;gap:8px}
   .drag-handle{cursor:grab;touch-action:none;color:#bfb2a8;font-size:19px;line-height:1;padding:4px 7px;border-radius:7px;user-select:none;-webkit-user-select:none}
   .drag-handle:active{cursor:grabbing;background:#f3ece7}
-  @media(max-width:980px){ .drag-handle{display:none} }   /* 모바일: 드래그 재정렬 미동작 → 숨겨 공간 확보 (순서는 ▲▼로) */
+  @media(max-width:980px){ .drag-handle{font-size:23px;padding:6px 10px;color:#a89c92} }   /* 모바일: 손끝으로 끌기 쉽게 크게 (순서는 ▲▼로도 가능) */
   .photo-card.dragging{opacity:.55;box-shadow:0 10px 26px rgba(0,0,0,.18);position:relative;z-index:3}
   .pmove .delphoto{padding:0 12px}
   .photo-desc{width:100%;margin-top:10px;border:1px solid #e7dcd6;border-radius:10px;padding:11px;
@@ -1077,6 +1092,7 @@
   .engage-box.engage-box-solo{border-radius:14px 14px 0 0;margin:12px 0 0}   /* 댓글창 위 참여 박스: 아래 댓글창과 붙도록 (아래 모서리 각지게, 아래 여백 0) */
   /* 참여 박스(핑크) 바로 아래 댓글 영역: 본문처럼 흰 테두리 박스로 만들어 핑크박스에 붙임 */
   .engage-box-solo + .pd-sec{margin:0 0 18px;background:var(--card);border:1px solid var(--line);border-top:none;border-radius:0 0 14px 14px;padding:14px 18px 16px;box-shadow:var(--shadow);box-sizing:border-box}
+  .cmt-sec{margin:12px 0 18px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px 16px;box-shadow:var(--shadow);box-sizing:border-box}   /* 댓글창: 흰색 테두리 카드 (독립) */
   /* ? 도움말 버튼 + 말풍선 */
   .help-wrap{position:relative;display:inline-block;vertical-align:middle}
   .help-btn{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--coral-tx);background:#fff;color:var(--coral-tx);font-size:12px;font-weight:800;line-height:1;cursor:pointer;padding:0;display:inline-grid;place-items:center}
@@ -1102,6 +1118,17 @@
   .ac-date{margin-left:auto;align-self:center;color:var(--sub);font-size:13px;font-weight:400;white-space:nowrap}   /* 이름/직업 가운데 높이, 오른쪽 */
   .ph-engage{display:inline-flex;align-items:center;gap:16px}
   .ph-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:14px;padding-bottom:2px;flex-wrap:wrap}
+  /* 자세히보기 하단 고정 공감/댓글 바 (네이버 블로그 스타일) — 하단 네비게이션 바 바로 위에 뜸 */
+  #detailDock{display:none;position:fixed;left:0;right:0;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:39;pointer-events:none}
+  #v-post.on ~ #detailDock{display:block}
+  #detailDock .dock-inner{pointer-events:auto;max-width:760px;margin:0 auto;width:calc(100% - 24px);background:#fff;border:1px solid #eadfd8;border-radius:16px;box-shadow:0 6px 24px rgba(30,30,50,.16);padding:8px 16px;display:flex;align-items:center;gap:14px;box-sizing:border-box}
+  #detailDock .dock-inner .ph-engage{display:flex;align-items:center;gap:14px;flex:1;justify-content:flex-end}
+  #detailDock .dock-views{color:var(--sub);font-size:13px}
+  #detailDock .pa-btn{font-size:14px}
+  #detailDock .pa-btn svg{width:20px;height:20px}
+  #v-post{padding-bottom:150px}   /* 콘텐츠가 하단 고정바·네비 뒤에 가리지 않도록 */
+  @media(max-width:520px){ #detailDock{bottom:calc(80px + env(safe-area-inset-bottom,0px))} #detailDock .dock-inner{gap:9px;padding:7px 13px} }
+  @media(max-width:360px){ #detailDock{bottom:calc(74px + env(safe-area-inset-bottom,0px))} }
   .pa-btn{border:none;background:none;color:#4a4a52;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 2px}
   .pa-btn:hover{color:var(--coral-tx)}
   .pa-btn.like .hi{display:inline-flex}
@@ -1557,6 +1584,12 @@
       </div>
       <div class="prof-body" id="profBody" style="margin-top:16px"></div>
     </section>
+
+    <!-- 자세히보기 하단 고정 공감/댓글 바 (네이버 블로그 스타일) — v-post일 때만 보임 -->
+    <div id="detailDock"><div class="dock-inner">
+      <span class="pa-btn stat dock-views" title="조회수"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> <b class="ph-views">0</b></span>
+      <span class="ph-engage"></span>
+    </div></div>
   </main>
 
   <!-- ============ RIGHT ============ -->
@@ -1590,7 +1623,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817g</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817l</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1817,8 +1850,8 @@
         <div id="photoList"></div>
         <button class="add-photo" onclick="document.getElementById('file').click()">＋ 사진 더 추가</button>
         <div class="sec" style="color:var(--sub);font-size:12.5px;line-height:1.5;margin-top:14px">
-          <span class="help-wrap"><button type="button" class="help-btn" onclick="toggleHelp(this)" aria-label="상품 태그 · 사진 다듬기 도움말">?</button><span class="help-pop">🛒 <b>상품 태그</b> — 구매 링크가 있으면 사진의 <b>＋ 구매 링크 추가</b>를 눌러 <b style="color:#dd5b8d">핑크 동그라미</b>로 표시할 수 있어요. (없으면 그냥 두면 돼요.)<br><br>✏️ <b>사진 다듬기</b> — 사진을 <b>회전</b>하거나 <b>자르기</b>로 정리할 수 있어요.</span></span>
-          <span style="margin-left:4px">🛒 상품 태그 · ✏️ 사진 다듬기 안내</span>
+          <span class="help-wrap"><button type="button" class="help-btn" onclick="toggleHelp(this)" aria-label="상품 태그 · 사진 다듬기 도움말">?</button><span class="help-pop"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7" cy="7" r="1.4"/></svg> <b>상품 태그</b> — 구매 링크가 있으면 사진의 <b>＋ 구매 링크 추가</b>를 눌러 <b style="color:#dd5b8d">핑크 동그라미</b>로 표시할 수 있어요. (없으면 그냥 두면 돼요.)<br><br><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> <b>사진 다듬기</b> — 사진을 <b>회전</b>하거나 <b>자르기</b>로 정리할 수 있어요.</span></span>
+          <span style="margin-left:4px;display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7" cy="7" r="1.4"/></svg> 상품 태그 · <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> 사진 다듬기 안내</span>
         </div>
       </div>
     </div>
@@ -1851,9 +1884,8 @@
 
       <!-- 놀이 흐름 도식 (선택) -->
       <div class="sec">
-        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.7 7.2 10.6 16"/><path d="M17.3 7.2 13.4 16"/></svg><span class="sl-t">놀이 흐름</span> <span class="hint" style="color:#b0a29a">선택</span> <span class="help-wrap"><button type="button" class="help-btn" onclick="toggleHelp(this)" aria-label="놀이 흐름 도움말">?</button><span class="help-pop">놀이의 흐름을 <b>도식(그림)</b>으로 보여줘요. 도식 모양을 고르고 <b>‘＋ 내 놀이 추가’</b>로 점을 하나씩 넣은 뒤 제목을 적어요.<br><br>각 점에는 <b>📷 사진</b>(지금 이 글에 올린 사진)을 넣거나, <b>🔗 다른 글</b>(내가 올린 다른 놀이글)을 연결할 수 있어요. 글과 연결한 점을 누르면 그 글로 바로 이동해요. (선택 사항이에요.)</span></span></div>
+        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.7 7.2 10.6 16"/><path d="M17.3 7.2 13.4 16"/></svg><span class="sl-t">놀이 흐름</span> <span class="hint" style="color:#b0a29a">선택</span> <span class="help-wrap"><button type="button" class="help-btn" onclick="toggleHelp(this)" aria-label="놀이 흐름 도움말">?</button><span class="help-pop">놀이의 흐름을 <b>도식(그림)</b>으로 보여줘요. 도식 모양을 고르고 <b>‘＋ 내 놀이 추가’</b>로 점을 하나씩 넣은 뒤 제목을 적어요.<br><br>각 점에는 <b><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> 사진</b>(지금 이 글에 올린 사진)을 넣거나, <b><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg> 다른 글</b>(내가 올린 다른 놀이글)을 연결할 수 있어요. 글과 연결한 점을 누르면 그 글로 바로 이동해요. (선택 사항이에요.)</span></span></div>
         <div class="flow-types" id="flowTypes"></div>
-        <button type="button" class="flow-auto-btn" id="flowAutoBtn" onclick="autoFlowFromPhotos()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v4"/><path d="M3 5h4"/><path d="M17 15v4"/><path d="M15 17h4"/><path d="M11 4l2 4 4 2-4 2-2 4-2-4-4-2 4-2z"/></svg> 사진으로 흐름 자동 만들기</button>
         <div id="flowEditor" style="display:none"></div>
       </div>
 
@@ -2044,6 +2076,24 @@
       <div style="font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5">✏️ 빈 곳을 <b>드래그</b>하면 가릴 부분을 추가하고, 지우고 싶은 모자이크를 <b>누르면</b> 하나씩 지워져요. 회전·자르기로 사진도 다듬을 수 있어요.</div>
     </div>
     <div class="up-foot"><button onclick="ieApply()">✓ 적용</button></div>
+  </div>
+</div>
+
+<!-- ============ 모바일 전용: 확대 모자이크 편집 (핀치 줌 + 드래그) ============ -->
+<div class="overlay mz-overlay" id="mzOverlay">
+  <div class="mz-shell">
+    <div class="mz-top">
+      <button class="mz-btn mz-cancel" onclick="closeMobileMosaic()">취소</button>
+      <div class="mz-title">모자이크 편집</div>
+      <button class="mz-btn mz-apply" onclick="applyMobileMosaic()">적용</button>
+    </div>
+    <div class="mz-hint" id="mzHint">손가락 두 개로 <b>확대·이동</b>, 한 손가락으로 가릴 곳을 <b>드래그</b>하세요</div>
+    <div class="mz-viewport" id="mzViewport"><canvas id="mzCanvas"></canvas></div>
+    <div class="mz-tools">
+      <button class="mz-tool" id="mzResetBtn" onclick="mzResetView()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg> 화면맞춤</button>
+      <button class="mz-tool" id="mzDelBtn" onclick="mzToggleDel()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 지우기</button>
+      <label class="mz-tool mz-switch"><input type="checkbox" id="mzMz" checked onchange="mzToggleMosaic(this.checked)"> 모자이크 미리보기</label>
+    </div>
   </div>
 </div>
 
@@ -3157,7 +3207,7 @@ function renderPostPage(p){
     const spot=(im.spots&&im.spots.length)?'<span class="pcount">🏷️ 상품 태그</span>':'';
     const markers=(im.spots||[]).map((s,si)=>`<button type="button" class="marker filled pulse" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%" onclick="event.stopPropagation();spotPopAt(this,${idx},${si})">＋</button>`).join('');
     const desc=(im.desc&&im.desc.trim())?`<div class="pf-desc">${linkifyTags(im.desc,p.tags)}</div>`:'';
-    const collageHint=(im.parts&&im.parts.length>1)?`<span class="pf-collage-hint"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> 눌러서 낱장 보기 · ${im.parts.length}장</span>`:'';
+    const collageHint='';   // '눌러서 낱장 보기' 배지 제거 (기능은 유지 — 사진을 누르면 그대로 낱장으로 열려요)
     const hasSpot=(im.spots&&im.spots.length)?' has-spot':'';   // 상품 태그 있는 사진 → 핫핑크 테두리
     return `<div class="pf-item"><div class="pf-photo${(im.parts&&im.parts.length>1)?' collage':''}${hasSpot}" onclick="pfPhotoClick(${idx})"><img src="${im.img}" alt="">${spot}${markers}${collageHint}</div>${desc}</div>`;
   }).join('');
@@ -3181,7 +3231,6 @@ function renderPostPage(p){
         <button class="pa-ico del" onclick="deletePost()" title="삭제">${ICO.trash}</button>
       </div>`:''}
     </div>
-    <div class="engage-box"><div class="ph-meta"><span class="pa-btn stat" title="조회"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> <b class="ph-views">${p.views||'0'}</b></span><span class="ph-engage"></span></div></div>
     ${tripTableHTML(p.desc)}
     ${postFlowCardHTML(p)}
     <div class="card post-detail-body">${linkifyTags(parseTrip(p.desc).body,p.tags)}${hashLine?`<div class="ph-hash ph-hash-in">${linkifyTags(hashLine,p.tags)}</div>`:''}</div>
@@ -3191,8 +3240,7 @@ function renderPostPage(p){
     ${(p.attachments&&p.attachments.length)?`<div class="pd-sec"><h4><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>첨부파일</h4><div class="attach-list">${p.attachments.map((a,ai)=>`<a class="attach-chip" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name)}" onclick="recordDownload('${(a.url||'').replace(/'/g,"\\'")}','${p.id||''}',${ai})"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;flex:0 0 auto"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><b>${esc(a.name)}</b><span>${fmtSize(a.size)} · ⬇ <b id="dln-${ai}">${(window._dlCounts&&window._dlCounts[a.url])||0}</b>명</span></a>`).join('')}</div></div>`:''}
     ${refsHTML(p)}
     ${productsHTML(p)}
-    <div class="engage-box engage-box-solo"><div class="ph-meta"><span class="pa-btn stat" title="조회"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> <b class="ph-views">${p.views||'0'}</b></span><span class="ph-engage"></span></div></div>
-    <div class="pd-sec">
+    <div class="pd-sec cmt-sec">
       <div id="cmtList"></div>
       <div class="cmt-input"><div class="av sm" style="${avStyle(myAv())}">${avInner(myAv())}</div>
         <input id="cmtInput" type="text" name="nolimoa-comment-field" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="댓글 달기…" onkeydown="if(event.key==='Enter')addComment()"><button onclick="addComment()">등록</button></div>
@@ -3239,7 +3287,7 @@ function renderPostEngage(){
   const saved=isSaved(p);
   const html=`
     <button class="pa-btn like ${p.liked?'on':''}" onclick="togglePostLike()" title="좋아요"><span class="hi">${ICO.heart(p.liked)}</span> <b>${(p.like||0).toLocaleString()}</b></button>
-    <span class="pa-btn stat" title="댓글">${ICO.comment} <b>${(p.cmt||0).toLocaleString()}</b></span>
+    <button class="pa-btn stat" title="댓글 보기" onclick="var c=document.getElementById('cmtList');if(c)c.scrollIntoView({behavior:'smooth',block:'center'})">${ICO.comment} <b>${(p.cmt||0).toLocaleString()}</b></button>
     <button class="pa-btn save ${saved?'on':''}" onclick="togglePostSave()" title="${saved?'저장됨':'저장'}">${ICO.bookmark(saved)} <b>${(p.saves||0).toLocaleString()}</b></button>
     <button class="pa-btn share" onclick="sharePost()" title="공유">${ICO.share}</button>`;
   document.querySelectorAll('.ph-engage').forEach(box=>box.innerHTML=html);   // 위·아래 참여 박스 모두 채움
@@ -5587,7 +5635,15 @@ function buildPhotoCard(ph, skipDetect){
   card.querySelector('.cropcancel').onclick=()=>cancelCrop(ph);
   // 얼굴 박스: 눌러서 켜고 끄기 + 빈 곳 드래그로 추가 (자르기 모드면 자르기 영역 지정)
   ph.cv.style.touchAction='none'; // 터치로 캔버스를 드래그해도 화면이 스크롤되지 않게
+  // 모바일: 사진을 탭하면 '확대 모자이크 편집'을 크게 열어 정밀하게 (자르기/삭제/구매표시 모드는 제외)
+  if(isPhoneDevice()){
+    ph.cv.style.cursor='zoom-in';
+    ph.cv.addEventListener('click',()=>{ if(!ph.cropMode && !ph.delMode && !ph.addSpotMode) openMobileMosaic(ph); });
+    const th=document.createElement('div'); th.className='mz-taphint'; th.textContent='사진을 탭하면 크게 열려요 — 확대해서 가릴 곳을 손가락으로 드래그하세요';
+    if(ph.cv.parentNode) ph.cv.parentNode.parentNode.insertBefore(th, ph.cv.parentNode.nextSibling);
+  }
   ph.cv.addEventListener('pointerdown',e=>{const p=posP(ph,e);
+    if(isPhoneDevice() && !ph.cropMode && !ph.delMode && !ph.addSpotMode) return; // 모바일 일반모드: 탭→확대편집 (아래 인라인 드래그 건너뜀)
     if(ph.cropMode){ph.cropRect={x0:p.x,y0:p.y,x1:p.x,y1:p.y};ph.cropping=true;return;}
     if(ph.delMode){ const idx=ph.boxes.findIndex(b=>hitBadge(ph,b,p));
       if(idx>=0){ph.boxes.splice(idx,1); if(!ph.boxes.length){ph.delMode=false;ph.cv.style.cursor='';} renderCanvasP(ph); if(ph.status)ph.status.textContent=ph.boxes.length?`✕를 눌러 모자이크를 지워요 · ${ph.boxes.length}개 남음`:'모자이크를 모두 지웠어요';}
@@ -5657,6 +5713,88 @@ function addOrGrowCircle(ph,d){
     ph.boxes.push({x,y,w:2*r,h:2*r,on:true,shape:'circle'});
   }
 }
+/* ===== 모바일 전용: 확대(핀치 줌·이동) + 드래그 모자이크 편집 =====
+   손가락 1개 = 가릴 곳 드래그/탭, 손가락 2개 = 확대·이동. 적용하면 원래 사진 카드에 반영. */
+let _mz=null;
+function openMobileMosaic(ph){
+  if(!ph||!ph.img) return;
+  const cv=document.getElementById('mzCanvas'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const sc=Math.min(1, PHOTO_MAXW/ph.img.width);
+  cv.width=Math.round(ph.img.width*sc); cv.height=Math.round(ph.img.height*sc);
+  cv.style.width=cv.width+'px'; cv.style.height=cv.height+'px';
+  _mz={ cv, ctx, img:ph.img, boxes:(ph.boxes||[]).map(b=>({...b})), mosaicOn:ph.mosaicOn!==false,
+        delMode:false, scale:1, baseScale:1, tx:0, ty:0, pointers:new Map(), drag:null, pinch:null, src:ph };
+  const mz=document.getElementById('mzMz'); if(mz)mz.checked=_mz.mosaicOn;
+  const db=document.getElementById('mzDelBtn'); if(db)db.classList.remove('on');
+  const hint=document.getElementById('mzHint'); if(hint)hint.innerHTML='손가락 두 개로 <b>확대·이동</b>, 한 손가락으로 가릴 곳을 <b>드래그</b>하세요';
+  mzWire();
+  open_('mzOverlay');
+  requestAnimationFrame(()=>{ mzFit(); renderCanvasP(_mz); mzApplyTransform(); });
+}
+function mzFit(){ if(!_mz)return; const vp=document.getElementById('mzViewport'); const vw=vp.clientWidth, vh=vp.clientHeight, cv=_mz.cv;
+  _mz.baseScale=Math.min(vw/cv.width, vh/cv.height)||1; _mz.scale=_mz.baseScale;
+  _mz.tx=Math.round((vw-cv.width*_mz.scale)/2); _mz.ty=Math.round((vh-cv.height*_mz.scale)/2); }
+function mzApplyTransform(){ if(!_mz)return; _mz.cv.style.transform=`translate(${_mz.tx}px,${_mz.ty}px) scale(${_mz.scale})`; }
+function mzResetView(){ if(!_mz)return; mzFit(); mzApplyTransform(); }
+function mzWire(){ const cv=document.getElementById('mzCanvas'); if(!cv||cv._mzWired)return; cv._mzWired=true;
+  cv.addEventListener('pointerdown', mzDown);
+  cv.addEventListener('pointermove', mzMove);
+  cv.addEventListener('pointerup', mzUp);
+  cv.addEventListener('pointercancel', mzUp);
+}
+function _mzMid(){ const vr=document.getElementById('mzViewport').getBoundingClientRect(); const pts=[..._mz.pointers.values()];
+  const p1=pts[0], p2=pts[1]; return { mid:{x:(p1.x+p2.x)/2-vr.left, y:(p1.y+p2.y)/2-vr.top}, dist:Math.hypot(p1.x-p2.x,p1.y-p2.y) }; }
+function mzDown(e){ if(!_mz)return; e.preventDefault();
+  try{_mz.cv.setPointerCapture(e.pointerId);}catch(_){}
+  _mz.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(_mz.pointers.size===2){ _mz.drag=null; const m=_mzMid(); _mz.pinch={dist:m.dist, mid:m.mid, scale:_mz.scale, tx:_mz.tx, ty:_mz.ty}; return; }
+  if(_mz.pointers.size===1){
+    const p=posP(_mz,e);
+    if(_mz.delMode){ const idx=_mz.boxes.findIndex(b=>hitBadge(_mz,b,p)); if(idx>=0){ _mz.boxes.splice(idx,1); renderCanvasP(_mz); } _mz.drag=null; return; }
+    const hit=_mz.boxes.find(b=>boxHit(b,p));
+    _mz.drag={x:p.x,y:p.y,cur:p,moved:false,grow:(hit&&hit.shape==='circle')?hit:null, rectHit:!!(hit&&hit.shape!=='circle')};
+  }
+}
+function mzMove(e){ if(!_mz||!_mz.pointers.has(e.pointerId))return; _mz.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(_mz.pointers.size>=2){
+    if(!_mz.pinch){ const m0=_mzMid(); _mz.pinch={dist:m0.dist,mid:m0.mid,scale:_mz.scale,tx:_mz.tx,ty:_mz.ty}; }
+    const m=_mzMid(), pin=_mz.pinch;
+    let ns=pin.scale*(m.dist/(pin.dist||1)); ns=Math.max(_mz.baseScale*0.9, Math.min(_mz.baseScale*8, ns));
+    const cx=(pin.mid.x-pin.tx)/pin.scale, cy=(pin.mid.y-pin.ty)/pin.scale;
+    _mz.scale=ns; _mz.tx=m.mid.x-cx*ns; _mz.ty=m.mid.y-cy*ns; mzApplyTransform(); return;
+  }
+  if(!_mz.drag)return;
+  _mz.drag.cur=posP(_mz,e);
+  if(Math.abs(_mz.drag.cur.x-_mz.drag.x)>6||Math.abs(_mz.drag.cur.y-_mz.drag.y)>6)_mz.drag.moved=true;
+  renderCanvasP(_mz);
+  const c=_mz.ctx; c.strokeStyle='#ff5c8a'; c.lineWidth=Math.max(2, 2/_mz.scale); c.setLineDash([6/_mz.scale,4/_mz.scale]);
+  c.strokeRect(_mz.drag.x,_mz.drag.y,_mz.drag.cur.x-_mz.drag.x,_mz.drag.cur.y-_mz.drag.y); c.setLineDash([]);
+}
+function mzUp(e){ if(!_mz)return; _mz.pointers.delete(e.pointerId);
+  if(_mz.pointers.size<2)_mz.pinch=null;
+  if(_mz.pointers.size===0 && _mz.drag){
+    const d=_mz.drag; _mz.drag=null;
+    if(!d.moved){ if(!d.rectHit) addOrGrowCircle(_mz,d); }
+    else { const x=Math.min(d.x,d.cur.x),y=Math.min(d.y,d.cur.y),w=Math.abs(d.cur.x-d.x),h=Math.abs(d.cur.y-d.y);
+      if(w>10&&h>10)_mz.boxes.push({x,y,w,h,on:true}); }
+    renderCanvasP(_mz);
+  }
+}
+function mzToggleDel(){ if(!_mz)return; _mz.delMode=!_mz.delMode;
+  const b=document.getElementById('mzDelBtn'); if(b)b.classList.toggle('on',_mz.delMode);
+  const hint=document.getElementById('mzHint'); if(hint)hint.innerHTML=_mz.delMode?'지울 모자이크의 <b>✕</b>를 누르세요':'손가락 두 개로 <b>확대·이동</b>, 한 손가락으로 가릴 곳을 <b>드래그</b>하세요';
+  renderCanvasP(_mz); }
+function mzToggleMosaic(on){ if(!_mz)return; _mz.mosaicOn=on; renderCanvasP(_mz); }
+function applyMobileMosaic(){ if(!_mz)return; const ph=_mz.src;
+  ph.boxes=_mz.boxes.map(b=>({...b})); ph.mosaicOn=_mz.mosaicOn; ph.delMode=false;
+  if(ph.cv){ try{renderCanvasP(ph);}catch(_){}}
+  const mzc=ph.el&&ph.el.querySelector('.mzon'); if(mzc)mzc.checked=ph.mosaicOn;
+  if(ph.status)ph.status.textContent=ph.boxes.length?`모자이크 ${ph.boxes.length}곳 · 사진을 탭하면 다시 편집`:'가린 곳이 없어요 · 사진을 탭해 편집';
+  markDirty&&markDirty();
+  closeMobileMosaic();
+}
+function closeMobileMosaic(){ close_('mzOverlay'); _mz=null; }
 function movePhoto(ph,dir){
   const i=photos.indexOf(ph), j=i+dir;
   if(i<0||j<0||j>=photos.length)return;
@@ -5674,9 +5812,16 @@ function movePhotoTop(ph){
 function enableDragSort(listEl, cardSel, onDrop){
   if(!listEl || listEl._dragSort) return; listEl._dragSort=true;
   let drag=null;
+  const scroller=listEl.closest('.up-body') || listEl.parentElement;
+  function autoScroll(y){   // 손끝이 위/아래 끝에 가면 목록을 스크롤 (긴 목록도 끌어서 재정렬 가능)
+    if(!scroller) return; const r=scroller.getBoundingClientRect(), edge=52;
+    if(y < r.top+edge) scroller.scrollTop -= Math.ceil((r.top+edge-y)/3);
+    else if(y > r.bottom-edge) scroller.scrollTop += Math.ceil((y-(r.bottom-edge))/3);
+  }
   function onMove(e){
     if(!drag)return;
     const y=e.clientY;
+    autoScroll(y);
     const others=[...listEl.querySelectorAll(cardSel)].filter(c=>c!==drag.card);
     let ref=null;
     for(const c of others){ const r=c.getBoundingClientRect(); if(y < r.top + r.height/2){ ref=c; break; } }
@@ -6413,7 +6558,7 @@ function renderFlowEditor(){
         <span class="fnr-no self">✎</span>
         <span class="fnr-title self">${esc(n.title||'(이 글 · 제목을 적어주세요)')}</span>
         <span class="fnr-selfbadge">${_flowHost?'원글':'이 글'}</span>
-        <button type="button" class="fnr-photo${hasPhoto?' on':''}" data-i="${i}" title="이 글에 올린 사진을 점에 넣기">${FNR_CAM} ${hasPhoto?'사진 넣음':'사진'}</button>
+        <button type="button" class="fnr-photo${hasPhoto?' on':''}" data-i="${i}" title="이 글에 올린 사진을 점에 넣기">${FNR_CAM}</button>
         <button type="button" class="fnr-up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
         <button type="button" class="fnr-down" data-i="${i}" ${i===(_flow.nodes.length-1)?'disabled':''}>▼</button>
         <button type="button" class="fnr-del" data-i="${i}" title="흐름에서 빼기">✕</button>
@@ -6425,8 +6570,8 @@ function renderFlowEditor(){
       <span class="fnr-no${isMe?' self':''}">${i+1}</span>
       <input class="fnr-in" data-i="${i}" value="${esc(n.title||'')}" placeholder="점 이름 (예: 물감 탐색)">
       ${isMe?'<span class="fnr-selfbadge">지금 이 글</span>':''}
-      <button type="button" class="fnr-photo${hasPhoto?' on':''}" data-i="${i}" title="이 글에 올린 사진을 점에 넣기">${FNR_CAM} ${hasPhoto?'사진 넣음':'사진'}</button>
-      <button type="button" class="fnr-link${linked?' on':''}" data-i="${i}" title="${linked?'연결된 놀이글 바꾸기':'이 점에 내가 쓴 다른 놀이글 연결'}">${ICO_LINK} ${linked?'연결됨':'다른 글'}</button>
+      <button type="button" class="fnr-photo${hasPhoto?' on':''}" data-i="${i}" title="이 글에 올린 사진을 점에 넣기">${FNR_CAM}</button>
+      <button type="button" class="fnr-link${linked?' on':''}" data-i="${i}" title="${linked?'연결된 놀이글 바꾸기':'이 점에 내가 쓴 다른 놀이글 연결'}">${ICO_LINK}</button>
       <button type="button" class="fnr-up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
       <button type="button" class="fnr-down" data-i="${i}" ${i===(_flow.nodes.length-1)?'disabled':''}>▼</button>
       <button type="button" class="fnr-del" data-i="${i}">✕</button>
@@ -6434,7 +6579,7 @@ function renderFlowEditor(){
   }).join('');
   const hostBanner = _flowHost ? `<div class="flow-host-banner">✎ 이 놀이흐름은 '<b>${esc((_flowHost.title||'놀이').replace(/^#/,''))}</b>' 글에 있어요. 여기서 고치면 <b>연결된 모든 글</b>에 함께 반영돼요.</div>` : '';
   const hint = _flow.type==='radial' ? '첫 번째 점이 <b>가운데</b>, 나머지가 주변에 배치돼요.' : '점을 추가한 순서대로 이어져요.';
-  box.innerHTML=`${hostBanner}<div class="flow-ed-hint">${hint}<br>점 이름을 자유롭게 적고, <b>📷 사진</b>을 누르면 <b>이 글에 올린 사진</b>을 점에 넣을 수 있어요. (다른 놀이글과 잇고 싶으면 <b>🔗 연결</b>)</div>
+  box.innerHTML=`${hostBanner}<div class="flow-ed-hint">${hint}<br>점 이름을 자유롭게 적고, <b>${FNR_CAM} 사진</b>을 누르면 <b>이 글에 올린 사진</b>을 점에 넣을 수 있어요. (다른 놀이글과 잇고 싶으면 <b>${ICO_LINK} 연결</b>)</div>
     <div class="flow-node-list">${rows||'<div class="flow-empty">아직 점이 없어요. 아래에서 추가해요.</div>'}</div>
     <button type="button" class="fa-btn" id="flowAddBtn">＋ 내 놀이 추가</button>
     <div class="flow-preview-wrap"><div class="flow-preview-label">미리보기</div><div id="flowPreview" class="flow-preview"></div></div>`;
@@ -6478,40 +6623,6 @@ function curFlowPhotos(){
     try{ src=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,0.6):((ph.img&&ph.img.src)||''); }
     catch(e){ src=(ph.img&&ph.img.src)||''; }
     return withParts(i, src, ph.parts); });
-}
-/* 사진 idx의 설명(캡션) 원본 가져오기 (수정 중이면 _editImages, 새 글이면 photos) */
-function _flowPhotoDesc(i){ const im=(_editPost && _editImages && _editImages.length) ? _editImages[i] : (photos||[])[i]; return (im && im.desc) || ''; }
-/* 사진으로 놀이 흐름 자동 만들기 (AI 없이·즉시): 사진 순서대로 점 생성, 제목은 각 사진 설명 첫 줄 */
-function autoFlowFromPhotos(){
-  const list=curFlowPhotos().filter(p=>p.src);
-  if(!list.length){ toast('먼저 사진을 올려주세요. 사진 순서대로 흐름을 만들어드려요.'); return; }
-  const hasExisting=(_flow.nodes||[]).some(n=> (n.title&&String(n.title).trim()) || n.refId || n.photoIdx!=null);
-  if(hasExisting && !confirm('이미 만들어둔 놀이 흐름이 있어요.\n사진 순서대로 새로 만들까요? (기존 흐름은 지워져요)')) return;
-  if(!_flow.type) _flow.type='curve';
-  _flow.nodes=list.map(p=>({ title:_flowAutoTitle(_flowPhotoDesc(p.idx)), refId:'', db:false, postId:null, self:false, photoIdx:p.idx, autoTitle:true }));
-  renderFlowTypes(); renderFlowEditor(); markDirty&&markDirty();
-  if(typeof hookFlowTitleSync==='function') hookFlowTitleSync();
-  toast('사진 순서대로 흐름을 만들었어요! 각 점의 제목은 자유롭게 고칠 수 있어요.');
-}
-/* 캡션 첫 줄만 깔끔히 (서식 마커·해시태그 기호 제거, 18자 이내) */
-function _flowFirstLine(s){ let t=String(s||'').replace(/⟦\/?[^⟧]*⟧/g,'').replace(/[⟦⟧]/g,'').replace(/\*\*/g,'').replace(/__/g,'').replace(/#/g,''); const ln=(t.split(/\n/)[0]||'').trim(); return _flowTrunc(ln,18); }
-/* 사진 설명에서 '놀이 제목'으로 쓸 문구를 똑똑하게 추출.
-   우선순위: ①번호/단계로 시작하는 줄 → ②진하게(**…**) 표시된 문구 → ③첫 줄
-   (지금까지 올라온 글들의 캡션 스타일 — 짧은 제목형·번호 목록·강조 문구 — 을 반영) */
-function _flowCleanTxt(s){ return String(s||'').replace(/⟦\/?[^⟧]*⟧/g,'').replace(/[⟦⟧]/g,'').replace(/\*\*/g,'').replace(/__/g,'').replace(/#/g,'').trim(); }
-function _flowAutoTitle(desc){
-  const raw=String(desc||'');
-  // ① 번호/단계 머리표로 시작하는 줄: "1. ~", "2) ~", "3-~", "①~", "3단계 ~", "STEP 2 ~"
-  const plain=raw.replace(/⟦\/?[^⟧]*⟧/g,'').replace(/[⟦⟧]/g,'').replace(/\*\*/g,'').replace(/__/g,'');
-  const numHead=/^\s*(?:\d{1,2}\s*(?:단계|번째|째)?\s*[.)\-:、．]\s*|\d{1,2}\s*단계\s+|[①-⑳㉑-㉟❶-❿]\s*|step\s*\d{1,2}\s*[.)\-:]?\s*)/i;
-  for(const ln of plain.split(/\n/).map(x=>x.trim()).filter(Boolean)){
-    if(numHead.test(ln)){ const t=ln.replace(numHead,'').replace(/#/g,'').trim(); if(t) return _flowTrunc(t,18); }
-  }
-  // ② 진하게 표시된 첫 문구
-  const bm=raw.match(/\*\*([^*\n]{1,40})\*\*/);
-  if(bm){ const t=_flowCleanTxt(bm[1]); if(t) return _flowTrunc(t,18); }
-  // ③ 그 외 첫 줄
-  return _flowFirstLine(desc);
 }
 function curFlowPhotoSrc(idx, partIdx){ if(idx==null)return'';
   const f=curFlowPhotos().find(p=>p.idx===idx); if(!f)return'';
@@ -6599,7 +6710,7 @@ function postFlowCardHTML(post){
     if(owner){ host=owner; flow=parseFlow(owner.desc||'').flow; } else { return ''; }
   }
   const dia=flowDiagramFromData(flow.type, flow.nodes, true, {big:true, host, curRefId:postRefId(post)});
-  return dia?`<div class="flow-card flow-card-detail" onclick="if(!event.target.closest('g[onclick],button,a,.flow-chip'))openFlowZoomCur()"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${flowNavHint(flow, host, postRefId(post))}<button type="button" class="flow-zoom-btn" onclick="event.stopPropagation();openFlowZoomCur()" title="크게 보기" aria-label="크게 보기">${EXPAND_ICO}</button></div>${dia}</div>`:'';
+  return dia?`<div class="flow-card flow-card-detail" onclick="if(!event.target.closest('g[onclick],button,a,.flow-chip'))openFlowZoomCur()"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${flowNavHint(flow, host, postRefId(post))}</div>${dia}</div>`:'';
 }
 /* 놀이 흐름 크게 보기: 지금 보고 있는 글의 흐름을 큰 화면(가로 스크롤)으로 */
 function openFlowZoomCur(){
