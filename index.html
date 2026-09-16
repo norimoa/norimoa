@@ -624,7 +624,7 @@
   .spot-pop a{color:var(--coral-tx);font-weight:700;font-size:13px}
   .spot-pop .nolink{color:var(--sub);font-size:12px}
   .spot-pop .pop-more{display:block;width:100%;margin-top:8px;border:none;border-top:1px solid var(--line);
-    background:none;color:#555;font-size:12px;font-weight:600;padding:8px 0 2px;cursor:pointer}
+    background:none;color:#555;font-size:12px;font-weight:600;padding:8px 4px 2px;cursor:pointer;white-space:nowrap}
   .spot-pop .pop-more:hover{color:var(--coral-tx)}
   #productOverlay{z-index:75}
   #folderOverlay{z-index:80}
@@ -1198,7 +1198,7 @@
   .cmt-head .pa-btn.save svg{width:19px;height:19px;display:block}
   .cmt-input{display:flex;gap:10px;align-items:center;margin-top:14px}
   .cmt-input .av.sm{width:34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 auto}
-  .cmt-input input{flex:1;border:1px solid #e7dcd6;border-radius:20px;padding:11px 15px;font-size:13.5px;background:#fafafb;font-family:inherit}
+  .cmt-input input{flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:20px;padding:11px 15px;font-size:13.5px;background:#fafafb;font-family:inherit}
   .cmt-input button{border:none;background:var(--coral);color:#fff;border-radius:18px;padding:11px 16px;font-weight:700;font-size:13px;white-space:nowrap;flex:0 0 auto}
   .rel-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
   .rel-card{border:1px solid #eee;background:#fff;border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;box-shadow:var(--shadow)}
@@ -1625,7 +1625,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817n</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817o</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4203,7 +4203,7 @@ function showSpotPop(ph,s){
   pop.style.left=s.x+'%';pop.style.top=s.y+'%';
   pop.innerHTML=`<b>${esc(s.name||'상품')}</b><small>${esc(s.mall||'')}</small>`+
     (s.url?`<a href="${s.url}" target="_blank" rel="noopener">구매하기 ↗</a>`:`<span class="nolink">링크 준비중</span>`)+
-    `<button class="pop-more">🖼️ 이 상품 쓴 놀이 ${n}개 ›</button>`;
+    `<button class="pop-more">이 상품 쓴 놀이 ${n}개 ›</button>`;
   pop.onclick=e=>e.stopPropagation();
   pop.querySelector('.pop-more').onclick=()=>openProduct(s);
   ph.appendChild(pop);
