@@ -1625,7 +1625,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817o</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817p</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2841,42 +2841,72 @@ function applyAuthUI(){
   renderProfile();
 }
 
-/* DB에서 실제 글 불러오기 */
+/* DB에서 실제 글 불러오기 — 목록은 '대표사진만' 가볍게 받아 먼저 그리고,
+   전체 사진·첨부는 백그라운드로 채운다 (첫 화면이 빨리 뜨도록). */
+const _POST_LIGHT_COLS='id,user_id,is_private,title,created_at,description,image_url,tags,age,nuri,categories,refs,spots,author_name,author_role,author_icon,author_avatar';
+function _mapDbRow(row){
+  const imgs=[{img:row.image_url,desc:row.description||'',spots:row.spots||[]}];   // 목록용: 대표사진만
+  return {
+    db:true, _full:false, id:row.id, user_id:row.user_id, emoji:'🎨', priv:!!row.is_private,
+    title:row.title||'놀이', date:fmtDate(row.created_at),
+    desc:row.description||'', img:row.image_url, images:imgs, video:'',
+    tags:row.tags||[], views:'0', like:0, cmt:0, liked:false, comments:[],
+    age:row.age, nuri:row.nuri||[], categories:row.categories||[], attachments:[], refs:row.refs||[],
+    spots:imgs[0].spots||[], author:{name:row.author_name||'선생님',org:row.author_role||'',
+      init:(row.author_name||'선')[0], color:'#86736b',
+      icon:row.author_icon||((authUser&&row.user_id===authUser.id)?profile.icon:'')||'',
+      photo:row.author_avatar||((authUser&&row.user_id===authUser.id)?profile.photo:'')||''}
+  };
+}
 async function loadDbPosts(){
   if(!SB){window._dbPosts=[];return;}
-  const {data,error}=await SB.from('posts').select('*').order('created_at',{ascending:false}).limit(2000);
-  if(error){console.warn('놀이 목록 불러오기 건너뜀:', error.message||error);return;}
-  window._dbPosts=(data||[]).map(row=>{
-    const imgs=(row.images&&row.images.length)?row.images
-      :[{img:row.image_url,desc:row.description||'',spots:row.spots||[]}];
-    return {
-      db:true, id:row.id, user_id:row.user_id, emoji:'🎨', priv:!!row.is_private,
-      title:row.title||'놀이', date:fmtDate(row.created_at),
-      desc:row.description||'', img:row.image_url, images:imgs, video:row.video_url||'',
-      tags:row.tags||[], views:'0', like:0, cmt:0, liked:false, comments:[],
-      age:row.age, nuri:row.nuri||[], categories:row.categories||[], attachments:row.attachments||[], refs:row.refs||[],
-      spots:imgs[0].spots||[], author:{name:row.author_name||'선생님',org:row.author_role||'',
-        init:(row.author_name||'선')[0], color:'#86736b',
-        icon:row.author_icon||((authUser&&row.user_id===authUser.id)?profile.icon:'')||'',
-        photo:row.author_avatar||((authUser&&row.user_id===authUser.id)?profile.photo:'')||''}
-    };
-  });
-  await loadEngagement(); // 좋아요·댓글·조회수 집계
-  await reconcileMyPosts();   // 예전 글 저자 표시가 현재 프로필과 다르면 자동 보정
-  await loadUserData();   // 폴더·저장한 놀이 복원 (새 글 로드 후 참조 갱신)
-  await syncDraftsIn();   // 계정에 저장된 임시저장을 이 기기로 합쳐오기
-  await loadFollows();    // 내 팔로잉 목록 복원
-  await loadNotifs();     // 알림 불러오기
-  await loadNotices();    // 공지 불러오기
-  await loadFeaturedIssues(); // 관리자 큐레이션 이슈
-  await loadCategories();  // 관리자가 편집한 카테고리 목록
-  await loadCaptions();    // 관리자가 지정한 사진 밑 캡션
-  await loadCommCats();    // 커뮤니티 카테고리
-  await loadCommunity();  // 커뮤니티 글
+  let light=true;
+  let res=await SB.from('posts').select(_POST_LIGHT_COLS).order('created_at',{ascending:false}).limit(2000);
+  if(res.error){ light=false; res=await SB.from('posts').select('*').order('created_at',{ascending:false}).limit(2000); }  // 컬럼 구성이 달라 가벼운 조회 실패 시 전체 조회로 안전 대체
+  if(res.error){console.warn('놀이 목록 불러오기 건너뜀:', res.error.message||res.error);return;}
+  window._dbPosts=(res.data||[]).map(row=>{ const p=_mapDbRow(row); if(!light)_fillFull(p,row); return p; });
+  await loadEngagement();      // 좋아요·댓글·조회수 집계 (작아서 빠름)
+  // ① 여기서 바로 첫 화면을 그린다 — 나머지 부가 데이터를 기다리지 않음
+  if($('#v-browse').classList.contains('on'))renderBrowse();
+  if($('#v-my').classList.contains('on'))renderMyPage();
+  // ② 나머지 부가 데이터는 병렬로 받아온다 (순서대로 기다리지 않음)
+  await Promise.allSettled([
+    loadUserData(), syncDraftsIn(), loadFollows(), loadNotifs(), loadNotices(),
+    loadFeaturedIssues(), loadCategories(), loadCaptions(), loadCommCats(), loadCommunity()
+  ]);
+  reconcileMyPosts();   // 예전 글 저자 표시가 현재 프로필과 다르면 자동 보정
   if($('#v-comm').classList.contains('on'))renderCommunity();
   syncStats();
   if($('#v-browse').classList.contains('on'))renderBrowse();
   if($('#v-my').classList.contains('on'))renderMyPage();
+  // ③ 전체 사진·첨부는 백그라운드로 받아 채운다 (자세히보기·환경구성·상품 집계용). 전체 조회로 이미 다 받았으면 생략.
+  if(light) hydrateFullPosts();
+}
+/* 전체 사진·첨부를 백그라운드로 받아 목록 글에 합친다 */
+async function hydrateFullPosts(){
+  if(!SB) return;
+  try{
+    const {data}=await SB.from('posts').select('id,images,attachments,video_url,spots').order('created_at',{ascending:false}).limit(2000);
+    const byId={}; (window._dbPosts||[]).forEach(p=>{ if(p.id)byId[p.id]=p; });
+    (data||[]).forEach(row=>{ const p=byId[row.id]; if(!p)return; _fillFull(p,row); });
+    const on=id=>{ const e=document.getElementById(id); return e&&e.classList.contains('on'); };
+    if(on('v-env'))renderEnv();
+    if(on('v-browse'))renderBrowse();
+    if(on('v-sub'))renderFeed();
+    if(on('v-my'))renderMyPage();
+    if(_currentPost && on('v-post')){ const f=byId[_currentPost.id]; if(f){_currentPost=f;renderPostPage(f);} }
+  }catch(e){}
+}
+function _fillFull(p,row){
+  const imgs=(row.images&&row.images.length)?row.images:[{img:p.img,desc:p.desc||'',spots:row.spots||[]}];
+  p.images=imgs; p.attachments=row.attachments||[]; p.video=row.video_url||''; p.spots=(imgs[0]&&imgs[0].spots)||[]; p._full=true;
+}
+/* 자세히보기를 열 때 그 글의 전체 사진이 아직 없으면 즉시 받아온다 */
+async function ensureFullPost(p){
+  if(!p||!p.db||p._full||!SB) return p;
+  try{ const {data}=await SB.from('posts').select('images,attachments,video_url,spots').eq('id',p.id).maybeSingle();
+    if(data)_fillFull(p,data); }catch(e){}
+  return p;
 }
 /* ===== 마이페이지 저장(폴더·저장한 놀이) — Supabase 계정별 동기화 ===== */
 async function saveUserData(){
@@ -3170,7 +3200,9 @@ function openPost(p){
   if(cur && cur.id!=='v-post'){ _postBack=cur.id.replace('v-',''); _scrollPos[_postBack]=window.scrollY||window.pageYOffset||0; } // 방금 읽던 위치 기억
   close_('teacherOverlay');
   renderPostPage(p);
-  if(SB && p.db){ loadComments(p).then(()=>{if(_currentPost===p)renderComments(p);}); recordView(p); }
+  if(SB && p.db){ loadComments(p).then(()=>{if(_currentPost===p)renderComments(p);}); recordView(p);
+    if(!p._full) ensureFullPost(p).then(()=>{ if(_currentPost===p)renderPostPage(p); });   // 전체 사진 아직 없으면 받아와서 다시 그림
+  }
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   $('#v-post').classList.add('on');window.scrollTo(0,0);
   if(!fromDetail && !_reuseGuard) backGuardPush();   // 뒤로가기로 목록으로 돌아올 수 있게 (_reuseGuard: 폴더 가드를 물려받음)
@@ -3510,8 +3542,9 @@ function keepWriting(){ close_('closeConfirmOverlay'); }
 function closeConfirmSave(){ close_('closeConfirmOverlay'); saveDraft(); reallyCloseWrite(); }
 function closeConfirmDiscard(){ close_('closeConfirmOverlay'); reallyCloseWrite(); }
 /* 수정: 업로드(글 작성) 창과 '완전히 동일한' 창을 열어요 */
-function openEdit(){
+async function openEdit(){
   const p=_currentPost;if(!p||!canEdit(p))return;
+  if(p.db && !p._full){ await ensureFullPost(p); }   // 전체 사진을 확보한 뒤 편집 (저장 시 사진이 사라지지 않게)
   _editPost=p;
   _editImages=imagesOf(p).map(im=>({img:im.img,desc:im.desc||'',env:im.env===true,cover:im.cover===true,spots:(im.spots||[]).map(s=>({...s})),parts:(im.parts&&im.parts.length>1)?im.parts.slice():undefined}));
   $('#pTitle').value=(p.title||'').replace(/^#/,'');
