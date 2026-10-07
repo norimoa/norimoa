@@ -275,6 +275,10 @@
   .placeholder{background:#fff;border-radius:16px;box-shadow:var(--shadow);
     padding:60px 20px;text-align:center;color:var(--sub)}
   .placeholder .big{font-size:40px;margin-bottom:10px}
+  .placeholder.loading-ph{color:var(--coral-tx,#8d5a44);font-weight:600;font-size:15.5px;line-height:1.7}
+  .placeholder.loading-ph .ld-sub{font-size:13px;color:var(--sub);font-weight:400}
+  .ld-spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--coral-tx,#8d5a44);border-radius:50%;margin:0 auto 14px;animation:ldspin .8s linear infinite}
+  @keyframes ldspin{to{transform:rotate(360deg)}}
 
   /* ---------- upload modal ---------- */
   .up-modal{max-width:540px;display:flex;flex-direction:column;max-height:88vh}
@@ -1622,7 +1626,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817t</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817u</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2168,6 +2172,7 @@ try{
 }catch(e){ console.error('Supabase 초기화 오류:', e); SB=null; }
 let authUser=null;   // 로그인된 Supabase 유저
 window._dbPosts=[];  // DB에서 불러온 실제 글
+let _postsLoading = !!SB;   // 첫 로딩 중? (SB 있으면 글을 불러오는 중 → '불러오는 중' 표시)
 
 /* ---------------- data ---------------- */
 const teachers = [
@@ -2841,9 +2846,10 @@ function applyAuthUI(){
 /* DB에서 실제 글 불러오기 — 사진은 예전처럼 전부 함께 받아온다.
    속도 개선: 글이 오면 곧바로 목록을 그리고(부가 데이터를 기다리지 않음), 나머지는 병렬로 받는다. */
 async function loadDbPosts(){
-  if(!SB){window._dbPosts=[];return;}
+  if(!SB){window._dbPosts=[];_postsLoading=false;return;}
+  _postsLoading=true;
   const {data,error}=await SB.from('posts').select('*').order('created_at',{ascending:false}).limit(2000);
-  if(error){console.warn('놀이 목록 불러오기 건너뜀:', error.message||error);return;}
+  if(error){console.warn('놀이 목록 불러오기 건너뜀:', error.message||error);_postsLoading=false;if($('#v-browse').classList.contains('on'))renderBrowse();return;}
   window._dbPosts=(data||[]).map(row=>{
     const imgs=(row.images&&row.images.length)?row.images
       :[{img:row.image_url,desc:row.description||'',spots:row.spots||[]}];
@@ -2859,6 +2865,7 @@ async function loadDbPosts(){
         photo:row.author_avatar||((authUser&&row.user_id===authUser.id)?profile.photo:'')||''}
     };
   });
+  _postsLoading=false;         // 글 도착 → '불러오는 중' 해제
   await loadEngagement();      // 좋아요·댓글·조회수 집계 (작아서 빠름)
   // ① 글이 준비되면 바로 목록을 그린다 — 아래 부가 데이터를 순서대로 기다리지 않음
   if($('#v-browse').classList.contains('on'))renderBrowse();
@@ -4313,7 +4320,9 @@ function renderBrowse(){
   if(SB){
     const top=(window._dbPosts||[]).slice().sort((a,b)=>(b.like||0)-(a.like||0)).slice(0,6);   // 2줄 = 6장까지
     if(top.length) top.forEach(p=>pop.appendChild(miniCardPost(p)));
-    else pop.innerHTML='<div class="empty" style="grid-column:1/-1">아직 인기 놀이가 없어요</div>';
+    else pop.innerHTML = _postsLoading
+      ? '<div class="empty" style="grid-column:1/-1">불러오는 중…</div>'
+      : '<div class="empty" style="grid-column:1/-1">아직 인기 놀이가 없어요</div>';
     const dl=document.querySelector('#popularSec .br-date'); if(dl){const d=new Date();dl.textContent=`${d.getMonth()+1}월 ${d.getDate()}일 기준`;}
   } else {
     brPopular.slice(0,6).forEach(c=>pop.appendChild(miniCard(c)));
@@ -4625,7 +4634,9 @@ function renderBrowseFeed(keep){
   // 검색·필터가 켜져 있으면 추천 섹션을 숨겨 결과가 맨 위에 오게 한다
   const searching=!!(browseFilter||q);
   ['issueSec','popularSec','brTags'].forEach(id=>{const s=$('#'+id);if(s)s.style.display=searching?'none':'';});
-  if(!list.length){box.innerHTML=(browseFilter||q)
+  if(!list.length){
+    if(_postsLoading && !(browseFilter||q)){ box.innerHTML='<div class="placeholder loading-ph"><div class="ld-spin"></div>놀이를 불러오는 중이에요…<br><span class="ld-sub">잠시만 기다려 주세요 🌿</span></div>'; return; }
+    box.innerHTML=(browseFilter||q)
     ?'<div class="placeholder"><div class="big">🔍</div>조건에 맞는 놀이가 없어요</div>'
     :'<div class="placeholder"><div class="big">🌱</div>아직 올라온 놀이가 없어요.<br>업로드에서 첫 놀이를 올려보세요!</div>';return;}
   const shown=Math.min(_browseShown, list.length);
