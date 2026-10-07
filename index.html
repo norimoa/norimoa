@@ -1626,7 +1626,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817u</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817v</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4368,6 +4368,8 @@ function renderIssues(){
   const rec=$('#brRecommend');rec.innerHTML='';
   if(matches.length){
     matches.slice(0,6).forEach(p=>rec.appendChild(miniCardPost(p)));   // 최대 6장(2줄)까지 준비
+  }else if(_postsLoading){
+    rec.innerHTML='<div class="placeholder loading-ph" style="grid-column:1/-1"><div class="ld-spin"></div>놀이를 불러오는 중이에요…<br><span class="ld-sub">잠시만 기다려 주세요 🌿</span></div>';
   }else{
     const emptyMsg = iss.admin
       ? (isAdmin() ? `'${esc(iss.label)}'에 넣은 글이 아직 없어요. 이슈 관리에서 글을 골라주세요.` : `곧 놀이가 채워질 예정이에요 🙂`)
