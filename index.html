@@ -143,7 +143,8 @@
   .rank .n{color:var(--coral-tx);font-weight:700;width:14px}
   .rank .ic{width:22px;text-align:center}
   .rank .t{flex:1;font-weight:600}
-  .rank .h{color:var(--coral-tx);font-size:12px;white-space:nowrap}
+  .rank .h{color:var(--coral-tx);font-size:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+  .rank .h svg{width:13px;height:13px;flex:0 0 auto}
   .rank .tr-av{width:26px;height:26px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-size:13px;color:#fff;overflow:hidden}
   .rank .tr-av img{width:100%;height:100%;object-fit:cover}
   .teacher-rank .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -181,6 +182,21 @@
   .overlay{position:fixed;inset:0;background:rgba(20,20,30,.45);z-index:60;
     display:none;align-items:center;justify-content:center;padding:18px}
   .overlay.on{display:flex}
+  /* 비공개(출시 전) 잠금 화면 */
+  #gateOverlay{position:fixed;inset:0;z-index:55;display:none;flex-direction:column;
+    align-items:center;justify-content:center;padding:24px;
+    background:linear-gradient(180deg,#faf7f4 0%,#f3ece6 100%)}
+  body.gated{overflow:hidden}
+  body.gated #gateOverlay{display:flex}
+  .gate-card{width:min(360px,92vw);background:#fff;border:1px solid #efe4dc;border-radius:22px;
+    box-shadow:0 16px 44px rgba(120,90,70,.15);padding:36px 26px 30px;text-align:center;
+    display:flex;flex-direction:column;align-items:center}
+  .gate-logo{height:48px;width:auto;margin-bottom:8px}
+  .gate-tagline{font-size:13px;color:var(--sub);margin-bottom:20px}
+  .gate-msg{font-size:14.5px;line-height:1.75;color:#6b5546;margin-bottom:24px}
+  .gate-msg b{color:var(--coral-tx)}
+  .gate-btns{display:flex;flex-direction:column;gap:10px;width:100%}
+  .gate-btns .wide{width:100%}
   /* 업로드/수정 진행 중 로딩 창 */
   .upload-mask{position:fixed;inset:0;z-index:130;display:none;align-items:center;justify-content:center;background:rgba(20,20,30,.5)}
   .upload-mask.on{display:flex}
@@ -1347,6 +1363,18 @@
 </style>
 </head>
 <body class="nav-browse">
+<!-- ============ 비공개(출시 전) 잠금 화면 — 로그인/회원가입한 사람만 통과 ============ -->
+<div id="gateOverlay">
+  <div class="gate-card">
+    <img class="wordmark gate-logo" alt="놀이모아">
+    <div class="gate-tagline">유아교사들의 놀이 아이디어 공간</div>
+    <div class="gate-msg">지금은 <b>오픈 준비 중</b>이에요.<br>로그인하거나 회원가입하면<br>놀이모아를 둘러볼 수 있어요.</div>
+    <div class="gate-btns">
+      <button class="btn-fill wide" onclick="openAuth('signup')">회원가입하고 시작하기</button>
+      <button class="btn-line wide" onclick="openAuth('login')">이미 계정이 있어요 · 로그인</button>
+    </div>
+  </div>
+</div>
 <div class="app">
   <!-- ============ SIDEBAR ============ -->
   <aside class="side">
@@ -1626,7 +1654,7 @@
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817v</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0817x</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2171,6 +2199,15 @@ try{
   }
 }catch(e){ console.error('Supabase 초기화 오류:', e); SB=null; }
 let authUser=null;   // 로그인된 Supabase 유저
+/* ============================================================
+   🔒 비공개(출시 전) 모드
+   true  → 로그인/회원가입한 사람만 사이트를 볼 수 있어요 (메인화면까지 전부 잠금)
+   false → 누구나 볼 수 있는 일반 공개 모드
+   정식 출시 때 이 값을 false 로만 바꾸면 전체 공개로 전환돼요.
+   ============================================================ */
+const PRIVATE_MODE = true;
+// 로그인 안 한 상태로 처음 들어오면 곧바로 잠금화면을 띄워, 내용이 잠깐이라도 비치지 않게 함
+try{ if(PRIVATE_MODE && SB && document.body){ document.body.classList.add('gated'); } }catch(e){}
 window._dbPosts=[];  // DB에서 불러온 실제 글
 let _postsLoading = !!SB;   // 첫 로딩 중? (SB 있으면 글을 불러오는 중 → '불러오는 중' 표시)
 
@@ -2841,12 +2878,20 @@ function applyAuthUI(){
   const box=$('#authBtns');if(box)box.innerHTML=authBtnsHTML();
   renderBrowseAuth();
   renderProfile();
+  applyGate();
+}
+/* 비공개 모드: 로그인 안 한 사람에게는 잠금화면만 보이고, 나머지 화면은 완전히 가려요 */
+function applyGate(){
+  const locked = PRIVATE_MODE && isGuest();
+  document.body.classList.toggle('gated', locked);
 }
 
 /* DB에서 실제 글 불러오기 — 사진은 예전처럼 전부 함께 받아온다.
    속도 개선: 글이 오면 곧바로 목록을 그리고(부가 데이터를 기다리지 않음), 나머지는 병렬로 받는다. */
 async function loadDbPosts(){
   if(!SB){window._dbPosts=[];_postsLoading=false;return;}
+  // 비공개 모드에서 로그인 안 한 사람은 글을 아예 불러오지 않음 (잠금화면만 보임 → 내용 유출 방지)
+  if(PRIVATE_MODE && isGuest()){window._dbPosts=[];_postsLoading=false;return;}
   _postsLoading=true;
   const {data,error}=await SB.from('posts').select('*').order('created_at',{ascending:false}).limit(2000);
   if(error){console.warn('놀이 목록 불러오기 건너뜀:', error.message||error);_postsLoading=false;if($('#v-browse').classList.contains('on'))renderBrowse();return;}
@@ -4289,6 +4334,7 @@ function renderTopTeachers(){
   });
   const top=Object.values(map).sort((a,b)=>b.score-a.score).slice(0,5);
   window.__topT={}; top.forEach(t=>window.__topT[t.key]=t.post);
+  const TEYE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   let html='<h4>🏆 이 달의 인기 선생님</h4>';
   if(!top.length || top[0].score===0){ html+='<div class="empty" style="padding:8px 0;font-size:12.5px">아직 순위가 모이는 중이에요</div>'; }
   else top.forEach((t,i)=>{
@@ -4297,7 +4343,7 @@ function renderTopTeachers(){
       `<span class="n">${i+1}</span>`+
       `<span class="tr-av" style="${avStyle(a)}">${avInner(a)}</span>`+
       `<span class="t">${esc(t.name)}</span>`+
-      `<span class="h">👁 ${t.score.toLocaleString()}</span></div>`;
+      `<span class="h">${TEYE}${t.score.toLocaleString()}</span></div>`;
   });
   panel.innerHTML=html;
 }
