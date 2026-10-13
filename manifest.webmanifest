@@ -1,0 +1,17 @@
+{
+  "name": "놀이모아",
+  "short_name": "놀이모아",
+  "description": "선생님들의 놀이 아이디어를 모으고 나누는 공간",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6efeb",
+  "theme_color": "#86736b",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
