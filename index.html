@@ -101,6 +101,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .post .desc.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .more-link{border:none;background:none;color:var(--coral-tx);font-size:13px;font-weight:700;padding:0 0 12px;cursor:pointer}
   .post .photo{border-radius:12px;overflow:hidden;background:#e9e9ee}
+  .post .photo.single{min-height:150px}   /* lazy 로딩이 잘 되도록 사진 자리 미리 잡기 */
   .post .photo img{width:100%;height:auto}
   .tags{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 8px}
   .tag{background:var(--pink-bg);color:var(--pink-tx);font-size:12.5px;padding:5px 11px;border-radius:16px}
@@ -1641,7 +1642,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818e</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818f</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -3924,7 +3925,7 @@ function folderDrop(ctx,targetId,container){
 function renderMyFolders(){renderFolderRow('upload',true);renderFolderRow('saved',true);}
 function tpostEl(p, removeFn){
   const el=document.createElement('div');el.className='tpost';
-  el.innerHTML=`<img src="${p.img}" alt="">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}</span>`:''}
+  el.innerHTML=`<img src="${p.img}" alt="" loading="lazy" decoding="async">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}</span>`:''}
     ${removeFn?'<button class="tp-x">✕</button>':''}<div class="tt">${p.title}</div>`;
   el.onclick=()=>{close_('folderOverlay');openPost(p);};
   if(removeFn){el.querySelector('.tp-x').onclick=e=>{e.stopPropagation();removeFn();};}
@@ -4033,7 +4034,7 @@ function renderPicker(){
   if(!list.length){box.innerHTML='<div class="empty">담을 놀이가 없어요.</div>';return;}
   list.forEach(p=>{const inF=f.posts.includes(p);const a=authorOf(p);
     const row=document.createElement('div');row.className='pick-row'+(inF?' on':'');
-    row.innerHTML=`<img src="${p.img}" alt=""><div class="pk"><b>${p.title}</b><small>${a?esc(a.name):''}</small></div><span class="chk">${inF?'✓':''}</span>`;
+    row.innerHTML=`<img src="${p.img}" alt="" loading="lazy" decoding="async"><div class="pk"><b>${p.title}</b><small>${a?esc(a.name):''}</small></div><span class="chk">${inF?'✓':''}</span>`;
     row.onclick=()=>{const i=f.posts.indexOf(p);if(i>=0)f.posts.splice(i,1);else f.posts.push(p);renderPicker();saveUserData();};
     box.appendChild(row);});
 }
@@ -4252,7 +4253,7 @@ function openProduct(s){
   $('#prodCount').textContent=plays.length;
   const g=$('#prodPlays');g.innerHTML='';
   plays.forEach(p=>{const a=authorOf(p);const el=document.createElement('div');el.className='tpost';
-    el.innerHTML=`<img src="${p.img}" alt="">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}</span>`:''}
+    el.innerHTML=`<img src="${p.img}" alt="" loading="lazy" decoding="async">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}</span>`:''}
       <div class="tt">${a?esc(a.name)+' · ':''}${esc((p.title||'놀이').replace(/^#/,''))}</div>`;
     el.onclick=()=>{['detailOverlay','productOverlay'].forEach(close_);openPost(p);};g.appendChild(el);});
   if(!plays.length)g.innerHTML='<div class="empty">아직 이 상품을 쓴 놀이가 없어요</div>';
@@ -4567,7 +4568,7 @@ async function editCaption(p){
 }
 function miniCardPost(p){
   const el=document.createElement('div');el.className='mini-card';
-  el.innerHTML=`<div class="mimg"><img src="${p.img}">${(isAdmin()&&p.id)?'<button class="cap-edit" title="사진 밑 제목 수정">✎</button>':''}</div><div class="mtitle">${esc(capText(p))}</div><div class="mlike">♡ ${(p.like||0).toLocaleString()}</div>`;
+  el.innerHTML=`<div class="mimg"><img src="${p.img}" loading="lazy" decoding="async">${(isAdmin()&&p.id)?'<button class="cap-edit" title="사진 밑 제목 수정">✎</button>':''}</div><div class="mtitle">${esc(capText(p))}</div><div class="mlike">♡ ${(p.like||0).toLocaleString()}</div>`;
   el.onclick=()=>openPost(p);
   if(isAdmin()&&p.id){ const ce=el.querySelector('.cap-edit'); if(ce)ce.onclick=(e)=>{e.stopPropagation();editCaption(p);}; }
   return el;
@@ -4631,12 +4632,12 @@ function photoGrid(p){
   if(_c>0){ imgs=[imgs[_c],...imgs.slice(0,_c),...imgs.slice(_c+1)]; }
   const n=imgs.length;
   if(!n)return '';
-  if(n<=1)return `<div class="photo single"><img src="${imgs[0].img||p.img}" alt=""></div>`;
+  if(n<=1)return `<div class="photo single"><img src="${imgs[0].img||p.img}" alt="" loading="lazy" decoding="async"></div>`;
   const show=imgs.slice(0,4);
   const cls=n===2?'g2':(n===3?'g3':'g4');
   return `<div class="photo grid ${cls}">`+show.map((im,idx)=>{
     const over=(idx===3&&n>4)?`<span class="more-ph">+${n-4}장</span>`:'';
-    return `<div class="pg-cell"><img src="${im.img}" alt="">${over}</div>`;
+    return `<div class="pg-cell"><img src="${im.img}" alt="" loading="lazy" decoding="async">${over}</div>`;
   }).join('')+`</div>`;
 }
 /* 피드 영상 자동 재생: 화면에 보이면 재생, 벗어나면 멈춤, 첫 6초만 반복 */
