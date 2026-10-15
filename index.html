@@ -1641,7 +1641,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818b</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818e</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2919,7 +2919,8 @@ async function saveUserData(){
   const data={
     saved: savedPosts.map(p=>p.id).filter(Boolean),
     upFolders: customUpload.map(f=>({name:f.name, ids:f.posts.map(p=>p.id).filter(Boolean)})),
-    savFolders: customSaved.map(f=>({name:f.name, ids:f.posts.map(p=>p.id).filter(Boolean)}))
+    savFolders: customSaved.map(f=>({name:f.name, ids:f.posts.map(p=>p.id).filter(Boolean)})),
+    notifSeen: _notifSeenTs||notifSeen()
   };
   try{ await SB.from('user_data').upsert({user_id:authUser.id, data}); }
   catch(e){ console.warn('마이페이지 저장 오류:', e.message||e); }
@@ -2934,6 +2935,9 @@ async function loadUserData(){
   if(!(SB && authUser))return;
   let data=null;
   try{ const r=await SB.from('user_data').select('data').eq('user_id',authUser.id).maybeSingle(); data=r&&r.data&&r.data.data; }catch(e){}
+  // 서버에 저장된 '알림 확인 시각'을 불러와, 다른 기기에서 읽었으면 여기서도 읽음 처리
+  try{ const sv=+(data&&data.notifSeen)||0; if(sv>_notifSeenTs)_notifSeenTs=sv;
+    notifications.forEach(n=>{ if((n.ts||0)<=notifSeen())n.read=true; }); renderBell(); }catch(e){}
   if(!data)return;
   const map={}; allPosts().forEach(p=>{ if(p.id)map[p.id]=p; });
   savedPosts=(data.saved||[]).map(id=>map[id]).filter(Boolean);
@@ -3006,7 +3010,8 @@ async function createNotif(recipient, kind, postId, text){
   if(!(SB && authUser) || !recipient || recipient===authUser.id) return;
   try{await SB.from('notifications').insert({user_id:recipient,actor_id:authUser.id,actor_name:profile.nick,actor_icon:profile.icon||'',kind,post_id:postId||null,text:text||null});}catch(e){}
 }
-function notifSeen(){ try{ return +localStorage.getItem('nolimoa_notif_seen')||0; }catch(e){ return 0; } }
+let _notifSeenTs=0;   // 알림을 마지막으로 확인한 시각 (서버에 저장 → 기기 간 동기화)
+function notifSeen(){ let loc=0; try{ loc=+localStorage.getItem('nolimoa_notif_seen')||0; }catch(e){} return Math.max(loc, _notifSeenTs||0); }
 async function loadNotifs(){
   if(!(SB && authUser))return;
   const seen=notifSeen();
@@ -3794,7 +3799,7 @@ function seedNotifs(){
     {init:'정',name:'정미래 선생님',color:'#f0b429',kind:'follow',post:null,when:'어제',read:true},
   ];
 }
-function unreadCount(){return notifications.filter(n=>!n.read).length;}
+function unreadCount(){const seen=notifSeen();return notifications.filter(n=>!(n.read||(n.ts||0)<=seen)).length;}
 function renderBell(){const c=unreadCount();['bellBadge','btBellBadge'].forEach(id=>{const bd=$('#'+id);if(bd){bd.textContent=c;bd.style.display=c?'grid':'none';}});}
 async function openNotif(){
   try{
@@ -3806,10 +3811,12 @@ async function openNotif(){
     // 1) 지금 갖고 있는 알림을 먼저 그린다 (재조회가 실패해도 화면은 비지 않도록)
     try{ renderNotifList(); }catch(e){ const b=$('#notifList'); if(b)b.innerHTML='<div class="empty">아직 받은 알림이 없어요</div>'; }
     // 2) 읽음 처리
-    try{ localStorage.setItem('nolimoa_notif_seen', String(Date.now())); }catch(e){}
+    const _now=Date.now(); _notifSeenTs=_now;
+    try{ localStorage.setItem('nolimoa_notif_seen', String(_now)); }catch(e){}
     notifications.forEach(n=>n.read=true); renderBell();
     if(SB && authUser){
       try{await SB.from('notifications').update({read:true}).eq('user_id',authUser.id).eq('read',false);}catch(e){}
+      try{ await saveUserData(); }catch(e){}   // 읽은 시각을 서버에 저장 → 다른 기기에서도 숫자 사라짐
     }
     // 3) 그 다음 서버에서 최신 알림을 다시 불러온다 (성공하면 loadNotifs가 목록을 새로 그림)
     if(SB && authUser){ try{ await loadNotifs(); }catch(e){} }
@@ -7065,18 +7072,24 @@ async function saveDraftServer(draft){
   }catch(e){ /* 실패해도 기기 저장은 이미 됐으니 조용히 넘어감 */ }
 }
 async function deleteDraftServer(id){ if(!(SB && authUser))return; try{ await SB.from('drafts').delete().eq('user_id',authUser.id).eq('id',id); }catch(e){} }
-async function syncDraftsIn(){   // 로그인 시: 계정에 저장된 임시저장을 이 기기로 합쳐오기
+async function syncDraftsIn(){   // 로그인 시: 계정(서버)의 임시저장을 '진짜 목록'으로 맞춤 (다른 기기에서 지운 건 여기서도 사라짐)
   if(!(SB && authUser))return;
   try{
-    const {data}=await SB.from('drafts').select('data,updated_at').eq('user_id',authUser.id).order('updated_at',{ascending:false});
+    const {data,error}=await SB.from('drafts').select('data,updated_at').eq('user_id',authUser.id).order('updated_at',{ascending:false});
+    if(error)return;   // 조회 실패 시엔 기기 데이터 그대로 둠(안전)
     const server=(data||[]).map(r=>r.data).filter(d=>d&&d.id);
-    if(!server.length)return;
+    const serverIds=new Set(server.map(d=>d.id));
     // 서버 원본은 무거우니 기기에는 가벼운 사본(썸네일)만 저장 → 저장공간 초과 방지
     const serverLight=await Promise.all(server.map(d=>(d.photos&&d.photos.length)?draftToLight(d):Promise.resolve(d)));
     const map={};
-    [...loadDrafts(), ...serverLight].forEach(d=>{ if(!d||!d.id)return; const ex=map[d.id]; if(!ex || (d.ts||0)>(ex.ts||0)) map[d.id]=d; });
+    serverLight.forEach(d=>{ if(d&&d.id)map[d.id]=d; });   // 서버에 있는 것 = 진짜 목록
+    // 아직 서버에 못 올라간 '최근(5분 이내) 기기 초안'만 예외로 보존 (오프라인 저장 대비)
+    const now=Date.now();
+    loadDrafts().forEach(d=>{ if(d&&d.id&&!serverIds.has(d.id)&&(now-(d.ts||0)<5*60*1000)&&!map[d.id]) map[d.id]=d; });
     const merged=Object.values(map).sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,12);
     lsSetDraftsSafe(merged);
+    // 임시저장 목록이 열려 있으면 새로 그려줌
+    try{ if($('#draftOverlay')&&$('#draftOverlay').classList.contains('on'))renderDraftList(loadDrafts()); }catch(e){}
   }catch(e){}
 }
 function whenDraft(ts){ try{const d=new Date(ts);return `${d.getMonth()+1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}catch(e){return '';} }
