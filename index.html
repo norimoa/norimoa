@@ -713,6 +713,12 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .notice .nc-del{border:none;background:none;color:#c0433f;font-size:15px;cursor:pointer;flex:0 0 auto}
   /* ---------- 커뮤니티 ---------- */
   .comm-card{background:#fff;border:1px solid #efe7e2;border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px;cursor:pointer}
+  /* 카테고리별 묶음 (행정자료실 '전체' 화면) */
+  .comm-group{margin-bottom:22px}
+  .comm-group-head{display:flex;align-items:center;gap:8px;padding:4px 2px 10px;border-bottom:2px solid #f0e7e1;margin-bottom:12px}
+  .comm-group-head .cgh-g{font-size:11.5px;font-weight:700;color:#b6a79e;background:#f6efe9;padding:2px 8px;border-radius:9px}
+  .comm-group-head .cgh-it{font-size:16px;font-weight:800;color:var(--coral-tx)}
+  .comm-group-head .cgh-n{font-size:12px;font-weight:700;color:#fff;background:var(--coral);min-width:20px;height:20px;border-radius:10px;display:inline-grid;place-items:center;padding:0 6px}
   .comm-card.notice{background:#fff7f9;border-color:#f3d3ce}
   .comm-top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
   .comm-top .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:17px;overflow:hidden;flex:0 0 auto}
@@ -1642,7 +1648,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818f</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818g</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -5034,16 +5040,41 @@ function renderCommunity(){
   const all=commList();
   const notices=all.filter(p=>p.notice);
   let posts=all.filter(p=>!p.notice);
-  if(_commFilter) posts=posts.filter(p=>(p.category||'')===_commFilter);
   const nb=$('#commNotices'); if(nb){nb.innerHTML=''; notices.forEach(p=>nb.appendChild(commCard(p)));}
   const fb=$('#commFeed'); if(!fb)return; fb.innerHTML='';
-  if(!posts.length){
-    fb.innerHTML=_commFilter
-      ? '<div class="placeholder"><div class="big">📂</div>이 카테고리에 아직 자료가 없어요.</div>'
-      : '<div class="placeholder"><div class="big">🗂</div>아직 올라온 자료가 없어요.</div>';
+
+  // ① 특정 카테고리를 선택했을 때 — 그 카테고리 글만 (기존 방식)
+  if(_commFilter){
+    const sel=posts.filter(p=>(p.category||'')===_commFilter);
+    if(!sel.length){ fb.innerHTML='<div class="placeholder"><div class="big">📂</div>이 카테고리에 아직 자료가 없어요.</div>'; return; }
+    sel.forEach(p=>fb.appendChild(commCard(p)));
     return;
   }
-  posts.forEach(p=>fb.appendChild(commCard(p)));
+
+  // ② '전체' — 최신순 대신 카테고리별로 묶어서 보여줌
+  if(!posts.length){ fb.innerHTML='<div class="placeholder"><div class="big">🗂</div>아직 올라온 자료가 없어요.</div>'; return; }
+  const used=new Set();
+  commCatGroups().forEach(g=>{
+    (g.items||[]).forEach(it=>{
+      const inCat=posts.filter(p=>(p.category||'')===it);
+      if(!inCat.length)return;
+      inCat.forEach(p=>used.add(p));
+      const sec=document.createElement('div'); sec.className='comm-group';
+      sec.innerHTML=`<div class="comm-group-head"><span class="cgh-g">${esc(g.g)}</span><span class="cgh-it">${esc(it)}</span><span class="cgh-n">${inCat.length}</span></div>`;
+      const wrap=document.createElement('div'); wrap.className='comm-group-body';
+      inCat.forEach(p=>wrap.appendChild(commCard(p)));
+      sec.appendChild(wrap); fb.appendChild(sec);
+    });
+  });
+  // 카테고리가 없거나, 지금 목록에 없는 카테고리의 글은 '기타'로 묶음
+  const rest=posts.filter(p=>!used.has(p));
+  if(rest.length){
+    const sec=document.createElement('div'); sec.className='comm-group';
+    sec.innerHTML=`<div class="comm-group-head"><span class="cgh-it">기타</span><span class="cgh-n">${rest.length}</span></div>`;
+    const wrap=document.createElement('div'); wrap.className='comm-group-body';
+    rest.forEach(p=>wrap.appendChild(commCard(p)));
+    sec.appendChild(wrap); fb.appendChild(sec);
+  }
 }
 function openCommWrite(){
   if(isGuest()){ toast('회원가입하면 글을 쓸 수 있어요'); openAuth('signup'); return; }
