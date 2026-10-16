@@ -1648,7 +1648,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818j</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818l</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1920,6 +1920,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
         <div class="fmt-bar">
           <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('bold')" title="진하게"><b>B</b></button>
           <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('underline')" title="밑줄"><span class="u">U</span></button>
+        <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('italic')" title="기울임"><i style="font-family:Georgia,'Times New Roman',serif;font-weight:600">I</i></button>
           <span class="fmt-div"></span>
           <span class="fmt-label">색상</span>
           <button type="button" class="fmt-size-btn fmt-color-btn" onmousedown="event.preventDefault()" onclick="openColorPalette(this)" title="글씨 색상"><span class="fmt-color-dot"></span> <span class="cv">▾</span></button>
@@ -2132,6 +2133,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
         <div class="fmt-bar">
           <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('bold')" title="진하게"><b>B</b></button>
           <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('underline')" title="밑줄"><span class="u">U</span></button>
+        <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('italic')" title="기울임"><i style="font-family:Georgia,'Times New Roman',serif;font-weight:600">I</i></button>
           <span class="fmt-div"></span>
           <span class="fmt-label">색상</span>
           <button type="button" class="fmt-size-btn fmt-color-btn" onmousedown="event.preventDefault()" onclick="openColorPalette(this)" title="글씨 색상"><span class="fmt-color-dot"></span> <span class="cv">▾</span></button>
@@ -3135,7 +3137,7 @@ function tagQ(s){return noSpace(s).replace(/'/g,"\\'");}
 function dePlay(s){return noSpace(String(s||'').toLowerCase()).replace(/놀이/g,'');}
 /* **굵게** / __밑줄__ 마크업을 안전하게 태그로 변환 (esc 이후에 적용) */
 function fmtRich(s){return s.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/__([^_\n]+)__/g,'<u>$1</u>');}
-function stripFmt(s){return String(s||'').replace(/⟦trip⟧[\s\S]*?⟦\/trip⟧/g,'').replace(/⟦flow⟧[\s\S]*?⟦\/flow⟧/g,'').replace(/\*\*([^*\n]+)\*\*/g,'$1').replace(/__([^_\n]+)__/g,'$1').replace(/⟦[cs]=[^⟧]*⟧/g,'').replace(/⟦\/[cs]⟧/g,'');}
+function stripFmt(s){return String(s||'').replace(/⟦trip⟧[\s\S]*?⟦\/trip⟧/g,'').replace(/⟦flow⟧[\s\S]*?⟦\/flow⟧/g,'').replace(/\*\*([^*\n]+)\*\*/g,'$1').replace(/__([^_\n]+)__/g,'$1').replace(/⟦[cs]=[^⟧]*⟧/g,'').replace(/⟦\/[cs]⟧/g,'').replace(/⟦\/?i⟧/g,'');}
 /* 띄어쓰기가 들어간 '알려진 태그'(카테고리·누리 항목 등)를 통째로 인식 */
 let _knownMW=null;
 function knownMultiwordTags(){
@@ -3650,6 +3652,7 @@ function renderEditImages(){
       <div class="cap-fmt">
         <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('bold')" title="진하게"><b>B</b></button>
         <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('underline')" title="밑줄"><span class="u">U</span></button>
+        <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('italic')" title="기울임"><i style="font-family:Georgia,'Times New Roman',serif;font-weight:600">I</i></button>
         <span class="fmt-size-wrap"><button type="button" class="fmt-size-btn" onmousedown="event.preventDefault()" onclick="openSizePicker(this)" title="글씨 크기">가 <b class="sz-val">17</b> <span class="cv">▾</span></button></span>
         <button type="button" class="fmt-size-btn fmt-color-btn" onmousedown="event.preventDefault()" onclick="openColorPalette(this)" title="글씨 색상"><span class="fmt-color-dot"></span> <span class="cv">▾</span></button>
       </div>
@@ -3797,6 +3800,7 @@ async function saveEdit(){
   const catLabels=[...sel.cat].map(k=>k.split('::')[1]);          // 카테고리(띄어쓰기 유지)
   const photoTags=_editImages.flatMap(im=>extractHashtags(im.desc,true));   // 사진 설명 속 해시태그도 수집
   const tags=[...new Set([...(sel.tags||[]), ...catLabels, ...photoTags].map(noSpace).filter(Boolean))]; // 해시태그(띄어쓰기 없음)
+  document.querySelectorAll('#editImages .ecap.rich, .edit-img .ecap.rich').forEach(d=>{ try{ const i=+d.dataset.i; if(_editImages[i]) _editImages[i].desc=richToMarks(d); }catch(e){} });   // 저장 직전 화면 내용으로 동기화
   const _eci=coverIndexOf(_editImages);   // 대표사진 위치(지정 안 하면 첫 사진)
   const images=_editImages.map((im,k)=>({img:im.img,desc:(im.desc||'').trim(),env:im.env===true,cover:k===_eci,
     spots:im.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:(s.name||'').trim(),mall:(s.mall||'').trim(),
@@ -5734,6 +5738,7 @@ function buildPhotoCard(ph, skipDetect){
     <div class="cap-fmt">
       <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('bold')" title="진하게"><b>B</b></button>
       <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('underline')" title="밑줄"><span class="u">U</span></button>
+        <button type="button" class="fmt-ico-btn" onmousedown="event.preventDefault()" onclick="richCmd('italic')" title="기울임"><i style="font-family:Georgia,'Times New Roman',serif;font-weight:600">I</i></button>
       <span class="fmt-size-wrap"><button type="button" class="fmt-size-btn" onmousedown="event.preventDefault()" onclick="openSizePicker(this)" title="글씨 크기">가 <b class="sz-val">17</b> <span class="cv">▾</span></button></span>
       <button type="button" class="fmt-size-btn fmt-color-btn" onmousedown="event.preventDefault()" onclick="openColorPalette(this)" title="글씨 색상"><span class="fmt-color-dot"></span> <span class="cv">▾</span></button>
     </div>
@@ -7340,6 +7345,8 @@ function richStyle(prop,val){
   try{ span.appendChild(range.extractContents()); range.insertNode(span);
     sel.removeAllRanges(); const r=document.createRange(); r.selectNodeContents(span); sel.addRange(r);
   }catch(e){}
+  /* 색·크기를 바꾼 뒤에도 '입력됨' 신호를 보내 사진 설명 등의 저장값이 최신 상태로 갱신되게 함 */
+  try{ const rt=span.closest('.rich'); if(rt) rt.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){}
 }
 function richColor(hex){ richStyle('color',hex); }
 function richSize(px){ richStyle('fontSize',px+'px'); }
@@ -7395,7 +7402,7 @@ document.addEventListener('keydown',e=>{
     const k=e.key.toLowerCase();
     const el=document.activeElement;
     if(!(el&&el.classList&&el.classList.contains('rich')))return;
-    if(k==='b'||k==='u'){e.preventDefault();richCmd(k==='b'?'bold':'underline');}
+    if(k==='b'||k==='u'||k==='i'){e.preventDefault();richCmd(k==='b'?'bold':k==='i'?'italic':'underline');}
     else if(k==='z'){e.preventDefault();document.execCommand(e.shiftKey?'redo':'undo',false,null);}
     else if(k==='y'){e.preventDefault();document.execCommand('redo',false,null);}
   }
@@ -7406,11 +7413,13 @@ function richToMarks(root){
   let out='';
   const sBold=el=>{const w=(el.style&&el.style.fontWeight)||'';return w==='bold'||w==='bolder'||/^[6-9]00$/.test(w);};
   const sU=el=>{const d=(el.style&&(el.style.textDecoration||el.style.textDecorationLine))||'';return /underline/.test(d);};
+  const sItal=el=>{const f=(el.style&&el.style.fontStyle)||'';return f==='italic'||f==='oblique';};
   const sColor=el=>{const c=(el.style&&el.style.color)||''; return c?rgbToHex6(c):'';};
   const sSize=el=>{const s=(el.style&&el.style.fontSize)||''; const m=s.match(/([\d.]+)px/); return m?String(Math.round(+m[1])):'';};
-  (function walk(node,b,u,color,size){
+  (function walk(node,b,u,color,size,it){
     node.childNodes.forEach(n=>{
       if(n.nodeType===3){let t=n.nodeValue.replace(/\u00a0/g,' ');if(!t)return;
+        if(it)t='\u27e6i\u27e7'+t+'\u27e6/i\u27e7';
         if(b)t='**'+t+'**'; if(u)t='__'+t+'__';
         if(color)t='\u27e6c='+color+'\u27e7'+t+'\u27e6/c\u27e7'; if(size)t='\u27e6s='+size+'\u27e7'+t+'\u27e6/s\u27e7';
         out+=t;}
@@ -7418,17 +7427,18 @@ function richToMarks(root){
         if(tag==='BR'){out+='\n';return;}
         const block=(tag==='DIV'||tag==='P');
         if(block&&out&&!out.endsWith('\n'))out+='\n';
-        walk(n, b||tag==='B'||tag==='STRONG'||sBold(n), u||tag==='U'||sU(n), sColor(n)||color, sSize(n)||size);
+        walk(n, b||tag==='B'||tag==='STRONG'||sBold(n), u||tag==='U'||sU(n), sColor(n)||color, sSize(n)||size, it||tag==='I'||tag==='EM'||sItal(n));
       }
     });
-  })(root,false,false,'','');
+  })(root,false,false,'','',false);
   return out.replace(/\n{3,}/g,'\n\n').trim();
 }
 /* \uc0c9\uc0c1\u00b7\ud06c\uae30 \ub9c8\ucee4(\u27e6c=..\u27e7 \u27e6s=..\u27e7)\ub97c style span\uc73c\ub85c \ubcc0\ud658 (\ud574\uc2dc\ud0dc\uadf8\u00b7URL \ucc98\ub9ac \ub4a4\uc5d0 \uc801\uc6a9) */
 function styleMarks(s){
   return String(s||'')
     .replace(/\u27e6c=([0-9a-fA-F]{3,6})\u27e7([\s\S]*?)\u27e6\/c\u27e7/g,'<span style="color:#$1">$2</span>')
-    .replace(/\u27e6s=(\d{1,3})\u27e7([\s\S]*?)\u27e6\/s\u27e7/g,'<span style="font-size:$1px">$2</span>');
+    .replace(/\u27e6s=(\d{1,3})\u27e7([\s\S]*?)\u27e6\/s\u27e7/g,'<span style="font-size:$1px">$2</span>')
+    .replace(/\u27e6i\u27e7([\s\S]*?)\u27e6\/i\u27e7/g,'<i>$1</i>');
 }
 /* 저장 마커 → 리치 편집 HTML */
 function marksToRich(text){
@@ -7639,6 +7649,7 @@ async function publishPost(){
   const photoTags=photos.flatMap(ph=>extractHashtags(ph.desc,true));   // 사진 설명 속 해시태그도 수집
   const tags=[...new Set([...sel.tags, ...catLabels, ...photoTags].map(noSpace).filter(Boolean))]; // 해시태그(띄어쓰기 없음)
   // 각 사진: 모자이크 적용본 + 사진별 설명 + 사진별 구매표시
+  photos.forEach(ph=>{ try{ const d=ph.el&&ph.el.querySelector('.photo-desc.rich'); if(d) ph.desc=richToMarks(d); }catch(e){} });   // 저장 직전 화면 내용으로 한 번 더 동기화(색·크기 누락 방지)
   const images=photos.map(ph=>({
     img:cleanPhotoDataURL(ph,0.92),  // 보라색 테두리 없이 모자이크만 적용된 이미지
     desc:(ph.desc||'').trim(),
