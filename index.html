@@ -1648,7 +1648,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818h</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818i</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2881,32 +2881,26 @@ function applyGate(){
 }
 
 /* DB에서 실제 글 불러오기 — 속도 개선:
-   ① 목록에는 '대표사진'만 받아온다(사진·첨부 전체는 제외) → 전송량 확 줄어듦
-   ② 글이 도착하면 집계를 기다리지 않고 '즉시' 목록을 그린다
-   ③ 좋아요·조회수 집계는 백그라운드에서 받아 숫자만 나중에 반영
-   (사진 전체·첨부는 '자세히 보기'를 눌렀을 때 그 글만 불러온다 → ensureFullPost) */
+   ① 글이 도착하면 집계를 기다리지 않고 '즉시' 목록을 그린다
+   ② 좋아요·조회수 집계는 백그라운드에서 받아 숫자만 나중에 반영 (5개 쿼리 동시 처리)
+   ③ 사진 '파일'은 화면에 보일 때만 내려받음(lazy) — 목록엔 사진 여러 장 그대로 보임 */
 async function loadDbPosts(){
   if(!SB){window._dbPosts=[];_postsLoading=false;return;}
   // 비공개 모드에서 로그인 안 한 사람은 글을 아예 불러오지 않음 (잠금화면만 보임 → 내용 유출 방지)
   if(PRIVATE_MODE && isGuest()){window._dbPosts=[];_postsLoading=false;return;}
   _postsLoading=true;
-  const LIGHT_COLS='id,user_id,title,description,tags,image_url,age,nuri,categories,is_private,author_name,author_role,author_icon,author_avatar,created_at';
-  let {data,error}=await SB.from('posts').select(LIGHT_COLS).order('created_at',{ascending:false}).limit(2000);
-  if(error && /column|is_private/i.test(error.message||'')){   // 옛 DB(일부 컬럼 없음) 대비
-    ({data,error}=await SB.from('posts').select('*').order('created_at',{ascending:false}).limit(2000));
-  }
+  const {data,error}=await SB.from('posts').select('*').order('created_at',{ascending:false}).limit(2000);
   if(error){console.warn('놀이 목록 불러오기 건너뜀:', error.message||error);_postsLoading=false;if($('#v-browse').classList.contains('on'))renderBrowse();return;}
   window._dbPosts=(data||[]).map(row=>{
-    // 목록은 대표사진 1장만 (전체 사진은 자세히 볼 때 불러옴)
-    const cover=(row.images&&row.images.length)?row.images[0].img:row.image_url;
-    const hasFull=Array.isArray(row.images);   // '*'로 받은 경우엔 이미 전체가 있음
+    const imgs=(row.images&&row.images.length)?row.images
+      :[{img:row.image_url,desc:row.description||'',spots:row.spots||[]}];
     return {
-      db:true, _full:hasFull, id:row.id, user_id:row.user_id, emoji:'🎨', priv:!!row.is_private,
+      db:true, _full:true, id:row.id, user_id:row.user_id, emoji:'🎨', priv:!!row.is_private,
       title:row.title||'놀이', date:fmtDate(row.created_at),
-      desc:row.description||'', img:cover, images:hasFull?row.images:[{img:cover,desc:row.description||'',spots:[]}], video:row.video_url||'',
+      desc:row.description||'', img:row.image_url, images:imgs, video:row.video_url||'',
       tags:row.tags||[], views:'0', like:0, cmt:0, liked:false, comments:[],
       age:row.age, nuri:row.nuri||[], categories:row.categories||[], attachments:row.attachments||[], refs:row.refs||[],
-      spots:hasFull&&row.images[0]?(row.images[0].spots||[]):[], author:{name:row.author_name||'선생님',org:row.author_role||'',
+      spots:imgs[0].spots||[], author:{name:row.author_name||'선생님',org:row.author_role||'',
         init:(row.author_name||'선')[0], color:'#86736b',
         icon:row.author_icon||((authUser&&row.user_id===authUser.id)?profile.icon:'')||'',
         photo:row.author_avatar||((authUser&&row.user_id===authUser.id)?profile.photo:'')||''}
