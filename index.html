@@ -1648,7 +1648,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818i</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818j</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2171,7 +2171,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
 <div class="toast" id="toast"></div>
 <div class="upload-mask" id="uploadingOverlay"><div class="upl-box"><div class="upl-spin"></div><b id="uploadingMsg">글이 올라가는 중이에요…</b><small>잠시만 기다려 주세요</small></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<!-- face-api(얼굴 모자이크용 ~700KB)는 홈 로딩을 느리게 하므로, 사진 편집할 때만 불러옵니다 (ensureFaceApi) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ==================================================================
@@ -3568,6 +3568,7 @@ function closeConfirmDiscard(){ close_('closeConfirmOverlay'); reallyCloseWrite(
 /* 수정: 업로드(글 작성) 창과 '완전히 동일한' 창을 열어요 */
 async function openEdit(){
   const p=_currentPost;if(!p||!canEdit(p))return;
+  try{ ensureFaceApi(); }catch(e){}   // 사진 모자이크 준비를 배경에서 미리 시작
   if(!p._full) await ensureFullPost(p);   // 수정 전에 사진·첨부 전체를 확보 (목록은 대표사진만 받았으므로)
   _editPost=p;
   _editImages=imagesOf(p).map(im=>({img:im.img,desc:im.desc||'',env:im.env===true,cover:im.cover===true,spots:(im.spots||[]).map(s=>({...s})),parts:(im.parts&&im.parts.length>1)?im.parts.slice():undefined}));
@@ -3760,7 +3761,7 @@ async function autoMosaicDataURL(src){
       cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
       let found=[];
       try{
-        if(modelReady){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35}); const dets=await faceapi.detectAllFaces(cv,opt); found=dets.map(d=>({x:d.box.x,y:d.box.y,w:d.box.width,h:d.box.height}));}
+        if(await ensureFaceApi()){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35}); const dets=await faceapi.detectAllFaces(cv,opt); found=dets.map(d=>({x:d.box.x,y:d.box.y,w:d.box.width,h:d.box.height}));}
         else if('FaceDetector' in window){const fd=new FaceDetector({fastMode:true}); const f=await fd.detect(cv); found=f.map(o=>({x:o.boundingBox.x,y:o.boundingBox.y,w:o.boundingBox.width,h:o.boundingBox.height}));}
       }catch(e){}
       const ph={img:im, cv, mosaicOn:true, boxes:found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}))};
@@ -5614,12 +5615,27 @@ function restoreLastView(){
 /* ================= 멀티 사진 업로드 (얼굴 모자이크 + 구매 물품 표시) ================= */
 let photos=[], modelReady=false, pxStrength=16;
 
-async function loadModels(){
-  const bases=['https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights',
-    'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model'];
-  for(const b of bases){try{await faceapi.nets.tinyFaceDetector.loadFromUri(b);modelReady=true;return;}catch(e){}}
+/* 얼굴 모자이크 라이브러리를 '필요할 때만' 불러온다 (홈 로딩 속도를 위해 처음엔 안 받음).
+   사진 업로드/편집을 시작하면 그때 배경에서 받아둔다. 여러 번 불러도 한 번만 로딩됨. */
+let _faceApiLoading=null;
+function ensureFaceApi(){
+  if(_faceApiLoading) return _faceApiLoading;
+  _faceApiLoading=new Promise(resolve=>{
+    try{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js';
+      s.onload=async ()=>{
+        const bases=['https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights',
+          'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model'];
+        for(const b of bases){ try{ await faceapi.nets.tinyFaceDetector.loadFromUri(b); modelReady=true; break; }catch(e){} }
+        resolve(modelReady);
+      };
+      s.onerror=()=>resolve(false);
+      document.head.appendChild(s);
+    }catch(e){ resolve(false); }
+  });
+  return _faceApiLoading;
 }
-loadModels();
 
 $('#file').addEventListener('change',e=>{addFiles(e.target.files);e.target.value='';});
 (function(){const ai=document.getElementById('attachInput');if(ai)ai.addEventListener('change',e=>{addAttachments(e.target.files);e.target.value='';});})();
@@ -5990,7 +6006,7 @@ function removePhoto(ph){markDirty();const i=photos.indexOf(ph);if(i>=0)photos.s
 async function runDetectP(ph){
   ph.status.textContent='🤖 얼굴 인식 중…';ph.boxes=[];let found=[];
   try{
-    if(modelReady){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35});
+    if(await ensureFaceApi()){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35});
       const dets=await faceapi.detectAllFaces(ph.cv,opt);
       found=dets.map(d=>({x:d.box.x,y:d.box.y,w:d.box.width,h:d.box.height}));}
     else if('FaceDetector' in window){const fd=new FaceDetector({fastMode:true});
@@ -6295,7 +6311,7 @@ async function peRedetect(){
   clean.getContext('2d').drawImage(_pe.img,0,0,clean.width,clean.height);
   let found=[];
   try{
-    if(modelReady){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35});
+    if(await ensureFaceApi()){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35});
       const dets=await faceapi.detectAllFaces(clean,opt); found=dets.map(d=>({x:d.box.x,y:d.box.y,w:d.box.width,h:d.box.height}));}
     else if('FaceDetector' in window){const fd=new FaceDetector({fastMode:true}); const f=await fd.detect(clean);
       found=f.map(o=>({x:o.boundingBox.x,y:o.boundingBox.y,w:o.boundingBox.width,h:o.boundingBox.height}));}
@@ -6378,7 +6394,7 @@ async function ieRedetect(){
   clean.getContext('2d').drawImage(_ie.img,0,0,clean.width,clean.height);
   let found=[];
   try{
-    if(modelReady){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35});
+    if(await ensureFaceApi()){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35});
       const dets=await faceapi.detectAllFaces(clean,opt); found=dets.map(d=>({x:d.box.x,y:d.box.y,w:d.box.width,h:d.box.height}));}
     else if('FaceDetector' in window){const fd=new FaceDetector({fastMode:true}); const f=await fd.detect(clean);
       found=f.map(o=>({x:o.boundingBox.x,y:o.boundingBox.y,w:o.boundingBox.width,h:o.boundingBox.height}));}
@@ -7033,6 +7049,7 @@ function renderTags(){
 /* 모달 열기/닫기 (1단계 사진 → 2단계 글) */
 let _skipDraftPrompt=false;
 function openUpload(){
+  try{ ensureFaceApi(); }catch(e){}   // 사진 모자이크 준비를 배경에서 미리 시작
   // 작성 중이던 게 없고, 임시저장 글이 있으면 '이어쓸까요?' 먼저 물어보기
   if(!photos.length && !_skipDraftPrompt){
     const drafts=loadDrafts();
