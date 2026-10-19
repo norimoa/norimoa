@@ -925,6 +925,17 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .trip-row{display:flex;align-items:center;gap:10px}
   .trip-row label{flex:0 0 112px;font-size:13px;font-weight:700;color:#7a6a60;white-space:nowrap}
   .trip-in{flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:9px;padding:9px 11px;font-family:inherit;background:#fff;font-size:13.5px}
+  .trip-sel{appearance:auto;cursor:pointer;color:#333}
+  .trip-chips{flex:1;display:flex;flex-wrap:wrap;gap:6px}
+  .trip-chip{border:1px solid #e7dcd6;background:#fff;color:#7a6a60;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
+  .trip-chip.on{background:var(--coral);border-color:var(--coral);color:#fff}
+  .trip-badges{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}
+  .trip-badges span{font-size:12px;font-weight:700;color:#7a6a60;background:#f3ece7;border-radius:12px;padding:3px 10px}
+  .tsub-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 14px}
+  .tsub-chip{border:1px solid #e7dcd6;background:#fff;color:#7a6a60;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
+  .tsub-chip.on{background:var(--coral);border-color:var(--coral);color:#fff}
+  .tsub-sel{border:1px solid #e7dcd6;border-radius:12px;padding:8px 12px;font-size:13.5px;font-family:inherit;background:#fff;color:#444;max-width:100%}
+  .tsub-n{font-size:12.5px;color:var(--sub);margin-left:4px}
   .trip-star-row{flex:1;display:flex;align-items:center;gap:2px}
   .trip-star{background:none;border:none;padding:0 2px;font-size:26px;line-height:1;color:#e0d7cf;cursor:pointer}
   .trip-star.on{color:#f4b400}
@@ -1648,7 +1659,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818l</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818m</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4343,6 +4354,7 @@ function pickTodayIssues(){
   return issues;
 }
 let _issues=[], curIssue=0, browseFilter='';
+let _tripSub='';   // 체험학습 모아보기 세부 필터 (종류 또는 지역)
 const BROWSE_PAGE=10;             // 둘러보기 피드: 한 번에 보여줄 글 개수
 let _browseShown=BROWSE_PAGE;    // 현재까지 펼친 글 개수
 function showMoreBrowse(){ _browseShown+=BROWSE_PAGE; renderBrowseFeed(true); }
@@ -4646,8 +4658,13 @@ function canonCat(name){
   return n;
 }
 function sameCat(a,b){ return canonCat(a)===canonCat(b); }
+function tripCatOf(label){ const c=canonCat(label); return TRIP_FORMS[c]?c:''; }
 function matchesFilter(p,label){
   if(!label)return true;
+  // '현장체험학습'과 '찾아오는 체험학습'은 서로 섞이지 않게 정확히 그 카테고리 글만
+  const _tc=tripCatOf(label);
+  if(_tc){ const n=x=>noSpace(canonCat(x));
+    return (p.categories||[]).some(c=>n(c)===n(_tc)) || (p.tags||[]).some(t=>n(t)===n(_tc)); }
   const forms=synForms(label); // 공백·'놀이' 무시 + 동의어
   const hit=v=>{const d=dePlay(v); return forms.some(L=>L&&d.includes(L));};
   const inArr=a=>(a||[]).some(hit);
@@ -4660,6 +4677,7 @@ function matchesFilter(p,label){
 function filterByLabel(label){
   ['detailOverlay','teacherOverlay','catOverlay','socialOverlay'].forEach(id=>close_(id));
   go('browse');            // 먼저 둘러보기로 전환(필터·검색 초기화)
+  _tripSub='';
   browseFilter=label;      // 그 다음 클릭한 카테고리·해시태그 필터를 적용
   renderBrowseFeed();
 }
@@ -4701,12 +4719,34 @@ function popScore(p){
   const v=parseInt(String(p&&p.views||'0').replace(/[^\d]/g,''),10)||0;
   return ((p&&p.like)||0)*3 + ((p&&p.saves)||0)*3 + v;
 }
+/* 체험학습 모아보기: 글에 저장된 정보(종류·지역) 읽기 / 필터 / 표시 */
+function tripValsOf(p){ try{ const t=parseTrip((p&&p.desc)||'').trip; return (t&&t.vals)||null; }catch(e){ return null; } }
+function tripSubMatch(p,cat,sub){
+  const v=tripValsOf(p); if(!v) return false;
+  if(cat==='찾아오는 현장체험학습') return String(v['종류']||'').split(',').map(x=>x.trim()).includes(sub);
+  return String(v['지역']||'').startsWith(sub);
+}
+function tripBadgesHTML(p){
+  const v=tripValsOf(p); if(!v) return '';
+  const arr=[]; if(v['종류']) String(v['종류']).split(',').forEach(x=>{ x=x.trim(); if(x)arr.push(x); }); if(v['지역']) arr.push(String(v['지역']));
+  return arr.length?`<div class="trip-badges">${arr.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`:'';
+}
+function tripSubBarHTML(cat,n){
+  const cnt=`<span class="tsub-n">${n}개</span>`;
+  if(cat==='찾아오는 현장체험학습'){
+    const chip=(k,l)=>`<button type="button" class="tsub-chip${_tripSub===k?' on':''}" onclick="setTripSub('${k}')">${esc(l)}</button>`;
+    return `<div class="tsub-bar">${chip('','전체')}${TRIP_KINDS.map(k=>chip(k,k)).join('')}${cnt}</div>`;
+  }
+  return `<div class="tsub-bar"><select class="tsub-sel" onchange="setTripSub(this.value)"><option value="">전체 지역</option>${regionOptionsHTML(_tripSub,true)}</select>${cnt}</div>`;
+}
 function renderBrowseFeed(keep){
   if(!keep) _browseShown=BROWSE_PAGE;   // 검색·필터·새로고침 등에서는 처음부터 다시
   const box=$('#browseFeed');box.innerHTML='';
   const q=($('#brSearch').value||'').trim();
   let list=(window._dbPosts||[]).concat(posts).filter(canSeePost);  // 실제 글 먼저, 그 뒤 데모 · 비공개 글 제외
   if(browseFilter)list=list.filter(p=>matchesFilter(p,browseFilter));
+  const _tcat=tripCatOf(browseFilter);
+  if(_tcat && _tripSub) list=list.filter(p=>tripSubMatch(p,_tcat,_tripSub));
   if(q){const forms=synForms(q); // '놀이' 접미사 무시 + 동의어(재활용=업사이클링)
     list=list.filter(p=>{const a=authorOf(p);
       const hay=dePlay(p.title+' '+p.desc+' '+(p.tags||[]).join(' ')+' '+((a&&a.name)||''));
@@ -4715,7 +4755,7 @@ function renderBrowseFeed(keep){
   if(browseFilter||q){ list=list.slice().sort((a,b)=>popScore(b)-popScore(a)); }
   window._browse=list;
   const fb=$('#brFilterBar');
-  fb.innerHTML=browseFilter?`<div class="filter-chip">#${esc(noSpace(browseFilter))} <span onclick="clearBrowseFilter()">✕</span></div>`:'';
+  fb.innerHTML=browseFilter?`<div class="filter-chip">#${esc(noSpace(browseFilter))} <span onclick="clearBrowseFilter()">✕</span></div>`+(_tcat?tripSubBarHTML(_tcat,list.length):''):'';
   // 검색·필터가 켜져 있으면 추천 섹션을 숨겨 결과가 맨 위에 오게 한다
   const searching=!!(browseFilter||q);
   ['issueSec','popularSec','brTags'].forEach(id=>{const s=$('#'+id);if(s)s.style.display=searching?'none':'';});
@@ -4742,6 +4782,7 @@ function renderBrowseFeed(keep){
         ${followBtn}
       </div>
       <h3>${esc((p.title||'놀이').replace(/^#/,''))}</h3>
+      ${tripBadgesHTML(p)}
       ${descPreview(p,`openBrowsePost(${i})`)}
       ${photoGrid(p)}
       <div class="tags">${p.tags.map(x=>`<span class="tag" onclick="event.stopPropagation();filterByLabel('${tagQ(x)}')">#${esc(noSpace(x))}</span>`).join('')}</div>
@@ -4760,7 +4801,8 @@ function renderBrowseFeed(keep){
   }
   initFeedVideos();
 }
-function clearBrowseFilter(){browseFilter='';renderBrowseFeed();}
+function clearBrowseFilter(){browseFilter='';_tripSub='';renderBrowseFeed();}
+function setTripSub(v){ _tripSub=v||''; renderBrowseFeed(); }
 
 /* ---------------- 카테고리 드로어 ---------------- */
 const catDrawer={
@@ -5593,7 +5635,7 @@ function go(v){
   relocateTopbar(v);   // 상단바(카테고리·로고·검색·알림)를 팔로잉·행정자료실·마이페이지에도 고정 표시
   window.scrollTo(0,0);
   // 둘러보기로 오면 카테고리·해시태그 필터와 검색어를 지워 메인(첫 화면)으로 되돌림
-  if(v==='browse'){ browseFilter=''; const bs=$('#brSearch'); if(bs)bs.value=''; renderBrowse(); }
+  if(v==='browse'){ browseFilter=''; _tripSub=''; const bs=$('#brSearch'); if(bs)bs.value=''; renderBrowse(); }
   if(v==='sub'){ _feedAuthor=null; renderFeed(); }     // 팔로잉 탭: 전체 보기로 초기화
   if(v==='my')renderMyPage();
   if(v==='comm'){ renderCommunity(); loadCommunity().then(renderCommunity); }
@@ -6579,9 +6621,35 @@ function renderCat(){renderCatChips();renderCatPanel();renderTripSection();}
 
 /* ===== 현장체험학습 정보 표 ===== */
 const TRIP_FORMS = {
-  '현장체험학습':      { title:'🚌 현장체험학습 정보',      fields:['주소','입장료','식당 여부','홈페이지/연락처','주차','추천도'] },
-  '찾아오는 현장체험학습':{ title:'🏫 찾아오는 체험학습 정보', fields:['업체명','연락처','소요시간','비용','추천도'] }
+  '현장체험학습':      { title:'🚌 현장체험학습 정보',      fields:['지역','주소','입장료','식당 여부','홈페이지/연락처','주차','추천도'] },
+  '찾아오는 현장체험학습':{ title:'🏫 찾아오는 체험학습 정보', fields:['종류','업체명','연락처','소요시간','비용','추천도'] }
 };
+/* 찾아오는 체험학습 '종류' (여러 개 선택 가능) */
+const TRIP_KINDS=['공연','요리','과학','전통놀이','도예','운동회','기타'];
+/* 현장체험학습 '지역': 서울은 구 단위, 지방은 시 이름만 */
+const SEOUL_GU=['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'];
+const TRIP_REGIONS=[
+  {g:'서울특별시', p:'서울', items:SEOUL_GU},
+  {g:'경기도', p:'경기', items:['수원시','성남시','의정부시','안양시','부천시','광명시','평택시','동두천시','안산시','고양시','과천시','구리시','남양주시','오산시','시흥시','군포시','의왕시','하남시','용인시','파주시','이천시','안성시','김포시','화성시','광주시','양주시','포천시','여주시']},
+  {g:'강원특별자치도', p:'강원', items:['춘천시','원주시','강릉시','동해시','태백시','속초시','삼척시']},
+  {g:'충청북도', p:'충북', items:['청주시','충주시','제천시']},
+  {g:'충청남도', p:'충남', items:['천안시','공주시','보령시','아산시','서산시','논산시','계룡시','당진시']},
+  {g:'전북특별자치도', p:'전북', items:['전주시','군산시','익산시','정읍시','남원시','김제시']},
+  {g:'전라남도', p:'전남', items:['목포시','여수시','순천시','나주시','광양시']},
+  {g:'경상북도', p:'경북', items:['포항시','경주시','김천시','안동시','구미시','영주시','영천시','상주시','문경시','경산시']},
+  {g:'경상남도', p:'경남', items:['창원시','진주시','통영시','사천시','김해시','밀양시','거제시','양산시']},
+  {g:'제주특별자치도', p:'제주', items:['제주시','서귀포시']},
+  {g:'광역시 · 세종', p:'', items:['인천광역시','부산광역시','대구광역시','대전광역시','광주광역시','울산광역시','세종특별자치시']}
+];
+const TRIP_REGION_OTHER='그 외 지역';
+/* 지역 <option> 목록. forFilter=true면 '서울 전체' 같은 묶음 선택지도 넣음 */
+function regionOptionsHTML(sel, forFilter){
+  return TRIP_REGIONS.map(r=>{
+    const opts=r.items.map(it=>{ const v=r.p?(r.p+' '+it):it; return `<option value="${esc(v)}"${v===sel?' selected':''}>${esc(it)}</option>`; }).join('');
+    const all=(forFilter&&r.p)?`<option value="${esc(r.p)}"${r.p===sel?' selected':''}>${esc(r.p)} 전체</option>`:'';
+    return `<optgroup label="${esc(r.g)}">${all}${opts}</optgroup>`;
+  }).join('')+`<option value="${TRIP_REGION_OTHER}"${sel===TRIP_REGION_OTHER?' selected':''}>${TRIP_REGION_OTHER} (군 단위 등)</option>`;
+}
 function tripPh(l){ return ({'주소':'도로명·지번 주소','입장료':'예: 유아: 무료 / 성인: 3,000원','식당 여부':'예: 3층에 도시락 먹을 공간 있음 / 2층에 푸드코트 있음','홈페이지/연락처':'예: www.site.com · 02-000-0000','주차':'예: 버스 주차 가능 / 주차비 1시간에 1,500원','업체명':'','연락처':'예: 010-0000-0000','소요시간':'예: 약 50분','비용':'예: 1인 8,000원'})[l]||''; }
 let _tripVals=null;   // {cat, vals:{항목:값}}
 function activeTripCat(){ for(const key of sel.cat){ const it=canonCat(String(key).split('::')[1]); if(TRIP_FORMS[it]) return it; } return null; }
@@ -6599,11 +6667,28 @@ function renderTripSection(){
       const stars=[1,2,3,4,5].map(n=>`<button type="button" class="trip-star${n<=cur?' on':''}" data-n="${n}">★</button>`).join('');
       return `<div class="trip-row"><label>${esc(l)}</label><div class="trip-star-row"><input type="hidden" class="trip-in" data-l="${esc(l)}" value="${cur||''}">${stars}<button type="button" class="trip-star-clear">지우기</button></div></div>`;
     }
+    if(l==='종류'){
+      const cur=String(_tripVals.vals[l]||'').split(',').map(x=>x.trim()).filter(Boolean);
+      const chips=TRIP_KINDS.map(k=>`<button type="button" class="trip-chip${cur.includes(k)?' on':''}" data-k="${esc(k)}">${esc(k)}</button>`).join('');
+      return `<div class="trip-row"><label>${esc(l)}</label><div class="trip-chips"><input type="hidden" class="trip-in" data-l="${esc(l)}" value="${esc(cur.join(', '))}">${chips}</div></div>`;
+    }
+    if(l==='지역'){
+      const cur=String(_tripVals.vals[l]||'');
+      return `<div class="trip-row"><label>${esc(l)}</label><select class="trip-in trip-sel" data-l="${esc(l)}"><option value="">지역을 선택하세요</option>${regionOptionsHTML(cur,false)}</select></div>`;
+    }
     return `<div class="trip-row"><label>${esc(l)}</label><input class="trip-in" data-l="${esc(l)}" value="${esc(_tripVals.vals[l]||'')}" placeholder="${esc(tripPh(l))}"></div>`;
   }).join('');
   sec.innerHTML=`<div class="sec-label">${f.title} <span class="hint">선택사항 · 채운 칸만 글 위에 표로 보여요 (안 적어도 괜찮아요)</span></div><div class="trip-form">${rows}</div>`;
   sec.style.display='block';
-  sec.querySelectorAll('.trip-in').forEach(inp=>{ inp.oninput=()=>{ _tripVals.vals[inp.dataset.l]=inp.value; }; });
+  sec.querySelectorAll('.trip-in').forEach(inp=>{ inp.oninput=inp.onchange=()=>{ _tripVals.vals[inp.dataset.l]=inp.value; }; });
+  // 종류: 칩 눌러서 여러 개 선택/해제
+  sec.querySelectorAll('.trip-chips').forEach(box=>{ const hid=box.querySelector('.trip-in');
+    box.querySelectorAll('.trip-chip').forEach(b=>b.onclick=()=>{
+      b.classList.toggle('on');
+      const on=[...box.querySelectorAll('.trip-chip.on')].map(x=>x.dataset.k);
+      if(hid){ hid.value=on.join(', '); if(_tripVals)_tripVals.vals[hid.dataset.l]=hid.value; }
+    });
+  });
   // 추천도: 별 클릭으로 1~5점 선택
   sec.querySelectorAll('.trip-star-row').forEach(row=>{ const hid=row.querySelector('.trip-in');
     const setN=(n)=>{ if(hid){ hid.value=n?String(n):''; if(_tripVals)_tripVals.vals[hid.dataset.l]=hid.value; } row.querySelectorAll('.trip-star').forEach(b=>b.classList.toggle('on', n>0 && (+b.dataset.n)<=n)); };
