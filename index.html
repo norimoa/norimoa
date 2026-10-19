@@ -1659,7 +1659,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818n</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818o</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2745,7 +2745,7 @@ async function checkNick(){
   st.textContent='확인 중…';st.className='nick-status warn';
   // 데모 모드에서만 예시 닉네임을 막고, 실제 모드에서는 서버(DB)에 실제 등록된 닉네임만 중복 처리
   let taken = (!SB) && takenNicks.map(x=>x.toLowerCase()).includes(v.toLowerCase());
-  if(SB && !taken){try{const {data}=await SB.from('profiles').select('nickname').ilike('nickname',v);if(data&&data.length)taken=true;}catch(e){}}
+  if(SB && !taken){ taken=await nickTaken(v); }
   if($('#authNick').value.trim()!==v)return; // 그새 값이 바뀌면 무시
   if(taken){st.textContent='이미 사용 중인 닉네임이에요';st.className='nick-status no';}
   else{st.textContent='✓ 사용 가능해요';st.className='nick-status ok';_nickOK=true;}
@@ -2833,12 +2833,17 @@ async function linkGoogle(){
 }
 
 /* 닉네임이 겹치지 않게 만들어 주기 (구글 로그인 등 자동 가입용) */
+/* 닉네임 중복 확인: DB 비공개 잠금 후에도 로그인 전에 동작하도록 서버 함수(nickname_taken)로 확인 (함수가 아직 없으면 예전 방식으로 대체) */
+async function nickTaken(v){
+  try{ const r=await SB.rpc('nickname_taken',{nick:v}); if(!r.error && typeof r.data==='boolean') return r.data; }catch(e){}
+  try{ const {data}=await SB.from('profiles').select('nickname').ilike('nickname',v); return !!(data&&data.length); }catch(e){}
+  return false;
+}
 async function uniqueNick(base){
   base=String(base||'선생님').trim().replace(/\s+/g,' ').slice(0,18)||'선생님';
   let cand=base;
   for(let i=0;i<10;i++){
-    try{ const {data}=await SB.from('profiles').select('id').eq('nickname',cand).maybeSingle();
-      if(!data) return cand; }catch(e){ return cand; }
+    try{ if(!(await nickTaken(cand))) return cand; }catch(e){ return cand; }
     cand=base+(Math.floor(Math.random()*900)+10);   // 예: 선생님23
   }
   return base+String(Date.now()).slice(-4);
