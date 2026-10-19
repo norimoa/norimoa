@@ -1659,7 +1659,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818m</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818n</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -6641,6 +6641,7 @@ const TRIP_REGIONS=[
   {g:'제주특별자치도', p:'제주', items:['제주시','서귀포시']},
   {g:'광역시 · 세종', p:'', items:['인천광역시','부산광역시','대구광역시','대전광역시','광주광역시','울산광역시','세종특별자치시']}
 ];
+TRIP_REGIONS.forEach(r=>{ r.items=r.items.slice().sort((x,y)=>x.localeCompare(y,'ko')); });   // 각 지역의 시·구는 가나다순
 const TRIP_REGION_OTHER='그 외 지역';
 /* 지역 <option> 목록. forFilter=true면 '서울 전체' 같은 묶음 선택지도 넣음 */
 function regionOptionsHTML(sel, forFilter){
