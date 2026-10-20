@@ -498,6 +498,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .prof-body{padding:6px 20px 20px}
   .prof-sec{margin-top:16px}
   .prof-sec h4{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .prof-sec h4 .sec-ic{width:18px;height:18px;flex:0 0 auto;color:var(--coral-tx)}
   .prof-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 
   /* ---------- 알림 벨 (고정형은 사용 안 함 — 검색창 옆 인라인 알림으로 대체) ---------- */
@@ -1104,7 +1105,8 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .prof-expand{margin:0;border:1px solid #eec6c9;background:var(--pink-bg);color:var(--coral-tx);border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
   .prof-expand:hover{background:#f3d3ce}
   .teacher-head .av{width:52px;height:52px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:20px;flex:0 0 auto}
-  .teacher-head .tinfo{flex:1}
+  .teacher-head .tinfo{flex:1;min-width:0}
+  @media(max-width:600px){.teacher-head{padding:16px 14px;gap:10px}.teacher-head .prof-expand{padding:7px 10px;font-size:12px}}
   .teacher-head .tinfo b{font-size:16px}
   .teacher-head .tinfo small{display:block;color:var(--sub);font-size:12.5px;margin-top:2px}
   .prof-stats{display:flex;gap:16px;margin-top:6px;flex-wrap:nowrap}
@@ -1690,7 +1692,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818u</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818v</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -5577,7 +5579,7 @@ function renderAuthorInto(p, headEl, bodyEl, full){
   if(SB && p.user_id) updateProfFollowCounts(p.user_id, fwId, fgId);
   bodyEl.innerHTML='';
   const upSec=document.createElement('div');upSec.className='prof-sec';
-  upSec.innerHTML='<h4>📁 올린 놀이</h4><div class="folder-row prof-row"></div>';
+  upSec.innerHTML='<h4><svg class="sec-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>올린 놀이</h4><div class="folder-row prof-row"></div>';
   bodyEl.appendChild(upSec);
   const frow=upSec.querySelector('.folder-row');
   if(isMe){ renderFolderRow('upload', false, frow); } // 내 프로필: 마이페이지와 동일한 폴더
@@ -5587,7 +5589,7 @@ function renderAuthorInto(p, headEl, bodyEl, full){
   }
   if(isMe){
     const svSec=document.createElement('div');svSec.className='prof-sec';
-    svSec.innerHTML='<h4>🔖 저장한 놀이</h4><div class="folder-row prof-row"></div>';
+    svSec.innerHTML='<h4><svg class="sec-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>저장한 놀이</h4><div class="folder-row prof-row"></div>';
     bodyEl.appendChild(svSec);
     renderFolderRow('saved', false, svSec.querySelector('.folder-row'));
   }
@@ -5601,14 +5603,14 @@ function openTeacher(tid){
   const body=$('#teacherPosts');body.innerHTML='';
   // 올린 놀이 (폴더)
   const upSec=document.createElement('div');upSec.className='prof-sec';
-  upSec.innerHTML='<h4>📁 올린 놀이</h4><div class="folder-row prof-row"></div>';
+  upSec.innerHTML='<h4><svg class="sec-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>올린 놀이</h4><div class="folder-row prof-row"></div>';
   body.appendChild(upSec);
   if(tt.me){ renderFolderRow('upload', false, upSec.querySelector('.folder-row')); }
   else { renderAiFolderRow(upSec.querySelector('.folder-row'), tp); }
   // 저장한 놀이 (폴더) — 본인 프로필에서 공개
   if(tt.me){
     const svSec=document.createElement('div');svSec.className='prof-sec';
-    svSec.innerHTML='<h4>🔖 저장한 놀이</h4><div class="folder-row prof-row"></div>';
+    svSec.innerHTML='<h4><svg class="sec-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>저장한 놀이</h4><div class="folder-row prof-row"></div>';
     body.appendChild(svSec);
     renderFolderRow('saved', false, svSec.querySelector('.folder-row'));
   }
