@@ -1690,7 +1690,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818t</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818u</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4899,11 +4899,13 @@ async function backfillThumbs(){
     let budget=6;          // 썸네일만 만드는 사진: 접속당 최대 6장
     let heavyBudget=60;    // DB에 base64로 박힌(무거운) 사진: 한 번에 정리 (목록이 느린 가장 큰 원인)
     const _adm=(typeof isAdmin==='function')&&isAdmin();   // 운영자는 다른 선생님 글의 무거운 사진도 정리 시도(권한 없으면 건너뜀)
+    // 예전에 저장 권한이 없어 실패한 글은 다시 시도하지 않음(같은 알림·불필요한 업로드 반복 방지)
+    let _skip=[]; try{ _skip=JSON.parse(localStorage.getItem('nolimoa_bf_skip')||'[]'); }catch(e){}
     const need=(p)=>(p.images||[]).some(im=>im&&im.img&&(String(im.img).startsWith('data:')||!im.thumb));
-    const mine=(window._dbPosts||[]).filter(p=>p.db&&p.id&&(p.user_id===authUser.id||_adm)&&Array.isArray(p.images)&&need(p));
+    const mine=(window._dbPosts||[]).filter(p=>p.db&&p.id&&!_skip.includes(p.id)&&(p.user_id===authUser.id||_adm)&&Array.isArray(p.images)&&need(p));
     const heavyCount=mine.reduce((n,p)=>n+p.images.filter(im=>im&&String(im.img).startsWith('data:')).length,0);
     if(heavyCount){ try{ toast('예전 글 사진을 정리하고 있어요. 끝나면 더 빨라져요 (창을 닫지 말아 주세요)'); }catch(e){} }
-    let _done=0;
+    let _done=0, _ok=0;
     // base64가 박힌(무거운) 글을 먼저
     mine.sort((a,b)=>(b.images.some(im=>String(im&&im.img).startsWith('data:'))?1:0)-(a.images.some(im=>String(im&&im.img).startsWith('data:'))?1:0));
     for(const p of mine){
@@ -4927,10 +4929,11 @@ async function backfillThumbs(){
         const upd={images:imgs}; if(imgs[ci]&&imgs[ci].img&&String(p.img||'').startsWith('data:')) upd.image_url=imgs[ci].img;
         let q=SB.from('posts').update(upd).eq('id',p.id); if(!_adm) q=q.eq('user_id',authUser.id);
         const {error}=await q;
-        if(!error){ p.images=imgs; if(upd.image_url)p.img=upd.image_url; }
+        if(!error){ p.images=imgs; if(upd.image_url)p.img=upd.image_url; _ok++; }
+        else { try{ _skip.push(p.id); localStorage.setItem('nolimoa_bf_skip',JSON.stringify(_skip.slice(-200))); }catch(e){} }
       }
     }
-    if(heavyCount&&_done){ try{ toast('사진 정리 완료! 다음 접속부터 더 빨라져요'); renderBrowseFeed(true); }catch(e){} }
+    if(heavyCount&&_ok){ try{ toast('사진 정리 완료! 다음 접속부터 더 빨라져요'); renderBrowseFeed(true); }catch(e){} }
   }catch(e){}
   finally{ _thumbBF=false; }
 }
