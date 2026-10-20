@@ -1690,7 +1690,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818s</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818t</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4494,7 +4494,7 @@ function renderIssues(){
   const box=$('#issueChips');if(!box)return;
   // 관리자 큐레이션 이슈(직접 만든 것)를 앞에, 그 뒤에 자동 추천 이슈
   const admin=(window._adminIssues||[]).map(a=>({icon:a.icon||'📌',label:a.label||'이슈',postIds:a.post_ids||[],admin:true,id:a.id}));
-  _issues=admin.concat(pickTodayIssues().filter(dz=>!admin.some(a=>a.label===dz.label)));   // 같은 이름의 관리자 이슈가 있으면 자동 이슈는 숨김
+  _issues=admin.concat(pickTodayIssues().filter(dz=>!admin.some(a=>a.label===dz.label)&&!isIssueHidden(dz.label)));   // 같은 이름의 관리자 이슈가 있으면 자동 이슈는 숨김
   if(!_issues.length){box.innerHTML='';$('#brRecommend').innerHTML='';return;}
   if(curIssue>=_issues.length)curIssue=0;
   // 관리자 버튼 표시
@@ -4558,7 +4558,25 @@ async function postNotice(text){ text=(text||'').trim(); if(!text){toast('공지
   try{const {error}=await SB.from('notices').insert({text}); if(error)throw error; toast('공지를 등록했어요'); await loadNotices();}catch(e){toast('공지 등록 실패: '+(e.message||e));} }
 async function deleteNotice(id){ if(!isAdmin())return; try{const {error}=await SB.from('notices').delete().eq('id',id); if(error)throw error; await loadNotices(); toast('공지를 삭제했어요');}catch(e){toast('삭제 실패: '+(e.message||e));} }
 /* ===== 오늘의 이슈 (관리자 큐레이션) ===== */
-async function loadFeaturedIssues(){ if(!SB){window._adminIssues=[];return;} try{const {data}=await SB.from('featured_issues').select('*').order('sort',{ascending:true}).order('created_at',{ascending:true}); window._adminIssues=data||[];}catch(e){window._adminIssues=[];} }
+window._hiddenIssues=[];   // 관리자가 삭제(숨김)한 기본 이슈 [{icon,label}]
+async function loadHiddenIssues(){ if(!SB){window._hiddenIssues=[];return;} try{ const {data}=await SB.from('site_config').select('value').eq('key','hidden_issues').maybeSingle(); const it=data&&data.value&&data.value.items; window._hiddenIssues=Array.isArray(it)?it.filter(x=>x&&x.label):[]; }catch(e){} }
+function isIssueHidden(label){ return (window._hiddenIssues||[]).some(x=>x.label===label); }
+async function saveHiddenIssues(items){
+  const {error}=await SB.from('site_config').upsert({key:'hidden_issues', value:{items}, updated_at:new Date().toISOString()},{onConflict:'key'});
+  if(error)throw error; window._hiddenIssues=items;
+}
+async function hideDefaultIssue(icon,label){
+  if(!isAdmin())return;
+  try{ const items=(window._hiddenIssues||[]).filter(x=>x.label!==label).concat([{icon,label}]);
+    await saveHiddenIssues(items); renderIssueMgr(); renderIssues(); toast(`'${label}' 기본 이슈를 삭제했어요 (아래에서 다시 살릴 수 있어요)`);
+  }catch(e){ toast('삭제 실패: '+(e.message||e)); }
+}
+async function restoreDefaultIssue(label){
+  if(!isAdmin())return;
+  try{ await saveHiddenIssues((window._hiddenIssues||[]).filter(x=>x.label!==label)); renderIssueMgr(); renderIssues(); toast(`'${label}' 기본 이슈를 다시 보이게 했어요`);
+  }catch(e){ toast('복원 실패: '+(e.message||e)); }
+}
+async function loadFeaturedIssues(){ if(!SB){window._adminIssues=[];return;} loadHiddenIssues(); try{const {data}=await SB.from('featured_issues').select('*').order('sort',{ascending:true}).order('created_at',{ascending:true}); window._adminIssues=data||[];}catch(e){window._adminIssues=[];} }
 let _issuePickId=null;
 function openIssueMgr(){ if(!isAdmin())return; renderIssueMgr(); open_('issueMgrOverlay'); }
 function renderIssueMgr(){
@@ -4584,14 +4602,27 @@ function renderIssueMgr(){
     box.appendChild(el);
   });
   // 기본(자동) 이슈 — 가져와 편집
-  const defs=pickTodayIssues().filter(dz=>!list.some(a=>a.label===dz.label));
+  const defs=pickTodayIssues().filter(dz=>!list.some(a=>a.label===dz.label)&&!isIssueHidden(dz.label));
   if(defs.length){
     const h2=document.createElement('div'); h2.className='imgr-sec-h'; h2.style.marginTop='18px'; h2.textContent='기본(자동) 이슈 — 가져와서 편집하기'; box.appendChild(h2);
     defs.forEach(dz=>{
       const el=document.createElement('div'); el.className='imgr-item';
       el.innerHTML=`<div class="imgr-head"><b>${dz.icon} ${esc(dz.label)}</b><span class="imgr-cnt">자동</span></div>
-        <div class="imgr-acts"><button class="fa-btn" data-act="imp">이 이슈를 내 이슈로 가져와 편집</button></div>`;
+        <div class="imgr-acts"><button class="fa-btn" data-act="imp">이 이슈를 내 이슈로 가져와 편집</button><button class="fa-btn imgr-del" data-act="hide">삭제</button></div>`;
       el.querySelector('[data-act=imp]').onclick=()=>importDefaultIssue(dz.icon, dz.label);
+      el.querySelector('[data-act=hide]').onclick=()=>hideDefaultIssue(dz.icon, dz.label);
+      box.appendChild(el);
+    });
+  }
+  // 삭제한 기본 이슈 — 다시 살리기
+  const hid=(window._hiddenIssues||[]);
+  if(hid.length){
+    const h3=document.createElement('div'); h3.className='imgr-sec-h'; h3.style.marginTop='18px'; h3.textContent='삭제한 기본 이슈 — 다시 살리기'; box.appendChild(h3);
+    hid.forEach(x=>{
+      const el=document.createElement('div'); el.className='imgr-item';
+      el.innerHTML=`<div class="imgr-head"><b>${esc(x.icon||'📌')} ${esc(x.label)}</b><span class="imgr-cnt">삭제됨</span></div>
+        <div class="imgr-acts"><button class="fa-btn" data-act="res">다시 보이기</button></div>`;
+      el.querySelector('[data-act=res]').onclick=()=>restoreDefaultIssue(x.label);
       box.appendChild(el);
     });
   }
