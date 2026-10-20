@@ -802,6 +802,18 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     font-size:12px;font-weight:600;color:var(--coral-tx);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.14)}
   .env-check input{width:15px;height:15px;accent-color:var(--coral);margin:0}
   /* 환경구성 갤러리 */
+  .file-list{display:flex;flex-direction:column;gap:10px}
+  .file-row{display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:10px 12px 10px 10px;cursor:pointer}
+  .file-thumb{flex:0 0 auto;width:68px;height:68px;border-radius:10px;object-fit:cover;background:#e9e9ee;display:block}
+  .file-main{flex:1;min-width:0}
+  .file-name{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14.5px;color:#4a3d36;line-height:1.35}
+  .file-name svg{flex:0 0 auto;color:var(--coral-tx)}
+  .file-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file-meta{margin-top:3px;font-size:12px;color:var(--sub)}
+  .file-post{margin-top:3px;font-size:12.5px;color:#7a6a60;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file-dl{flex:0 0 auto;width:40px;height:40px;border-radius:50%;border:1px solid #f3d3ce;background:#fff7f9;color:var(--coral-tx);display:inline-flex;align-items:center;justify-content:center}
+  .file-dl:hover{background:#fbe9ec}
+  .file-count{font-size:13px;color:var(--sub);margin:2px 2px 12px}
   .env-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
   .env-tile{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1/1;background:#e9e9ee;cursor:pointer;box-shadow:var(--shadow)}
   .env-tile img{width:100%;height:100%;object-fit:cover;display:block}
@@ -1324,6 +1336,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     border:1px solid #f3d3ce;background:#fff7f9;color:var(--coral-tx);border-radius:12px;padding:14px 16px;
     font-size:14.5px;font-weight:700;cursor:pointer;text-align:center;white-space:nowrap}
   .cat-env-btn:hover{background:#fbe9ec}
+  .cat-env-btn.cat-files-btn{margin-top:-10px}
   .cat-about-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:calc(100% - 56px);margin:14px auto 6px;
     border:1px solid var(--line);background:#faf6f3;color:var(--coral-tx);border-radius:12px;padding:13px 16px;
     font-size:14.5px;font-weight:700;cursor:pointer;text-align:center;white-space:nowrap}
@@ -1335,6 +1348,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .side-env-btn{display:block;width:calc(100% - 24px);margin:0 auto 18px;border:1px solid #f3d3ce;background:#fff7f9;
     color:var(--coral-tx);border-radius:11px;padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
   .side-env-btn:hover{background:#fbe9ec}
+  .side-env-btn.side-files-btn{margin-top:-22px}   /* 환경구성 버튼 바로 밑에 붙이기(사이드바는 간격 14px 포함) */
   .cat-draw-head{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:18px;margin-bottom:20px}
   .cat-draw-head button{border:none;background:none;font-size:24px;color:#999;line-height:1}
   .cat-tabs{display:inline-flex;gap:8px;margin-bottom:18px}
@@ -1477,6 +1491,15 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
       <div class="main-head"><div><h1><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:6px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성</h1><p>게시판 · 교실 환경구성 사진을 모아봤어요</p></div></div>
       <div class="br-search"><span>🔍</span><input id="envSearch" type="search" name="nolimoa-env-search" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="주제로 검색 (예: 여름)" oninput="renderEnv()"></div>
       <div class="env-grid" id="envGrid"></div>
+    </section>
+
+    <!-- 자료 모아보기 -->
+    <section class="view" id="v-files">
+      <div class="post-topbar"><button class="back-btn" onclick="filesBack()">‹ 뒤로</button><span class="pt-mini">자료 모아보기</span></div>
+      <div class="main-head"><div><h1><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:6px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>자료 모아보기</h1><p>놀이글에 올라온 첨부파일을 한눈에 모아봤어요</p></div></div>
+      <div class="br-search"><span>🔍</span><input id="fileSearch" type="search" name="nolimoa-file-search" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="파일 이름·놀이 제목으로 검색" oninput="renderFiles()"></div>
+      <div class="file-count" id="fileCount"></div>
+      <div class="file-list" id="fileList"></div>
     </section>
 
     <!-- 소개 -->
@@ -1663,7 +1686,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818p</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818q</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4848,7 +4871,7 @@ function renderCatDrawer(){
     html+=`<div class="cat-group"><div class="cgl">${groupIco(grp)} ${grp.g}</div><div class="cg-grid">`+
       grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
       `</div></div>`;
-    if(gi===0) html+=`<button type="button" class="cat-env-btn" onclick="openEnv()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성 모아보기</button>`; // '놀이 주제'와 '놀이 유형' 사이
+    if(gi===0) html+=`<button type="button" class="cat-env-btn" onclick="openEnv()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성 모아보기</button><button type="button" class="cat-env-btn cat-files-btn" onclick="openFiles()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>자료 모아보기</button>`; // '놀이 주제'와 '놀이 유형' 사이
   });
   box.innerHTML=html;
 }
@@ -5333,6 +5356,54 @@ function renderEnv(){
   });
 }
 
+/* ===== 자료 모아보기 (놀이글 첨부파일 모음 + 글 썸네일) ===== */
+let _filesBack='browse';
+function openFiles(){
+  close_('catOverlay');
+  const cur=document.querySelector('.view.on');
+  if(cur && cur.id!=='v-files' && cur.id!=='v-post') _filesBack=cur.id.replace('v-','');
+  const s=$('#fileSearch'); if(s)s.value='';
+  go('files');
+  backGuardPush();
+}
+function filesBack(fromPop){ if(!fromPop) backGuardConsume(); go(_filesBack||'browse'); }
+function fileExt(n){ const m=String(n||'').match(/\.([A-Za-z0-9]{1,5})(?:\?|$)/); return m?m[1].toUpperCase():'파일'; }
+function fileItems(){
+  const out=[];
+  allPosts().filter(canSeePost).forEach(p=>{
+    (p.attachments||[]).forEach((a,ai)=>{ if(a&&a.url) out.push({a,ai,post:p}); });
+  });
+  return out;
+}
+function renderFiles(){
+  const box=$('#fileList'); if(!box)return; box.innerHTML='';
+  const q=(($('#fileSearch')&&$('#fileSearch').value)||'').trim();
+  let items=fileItems();
+  if(q){ const qn=dePlay(q)||noSpace(q.toLowerCase());
+    items=items.filter(it=>dePlay([it.a.name||'', it.post.title||'', (it.post.tags||[]).join(' ')].join(' ')).includes(qn)); }
+  const cnt=$('#fileCount'); if(cnt)cnt.textContent=items.length?`자료 ${items.length}개`:'';
+  if(!items.length){
+    box.innerHTML=`<div class="placeholder"><div class="big">📎</div>${q?'조건에 맞는 자료가 없어요':'아직 올라온 첨부파일이 없어요.<br>글을 쓸 때 활동지·도안 같은 파일을 첨부해 보세요'}</div>`;
+    return;
+  }
+  const CLIP2='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>';
+  const DL='<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 20h14"/></svg>';
+  items.forEach(it=>{
+    const p=it.post, a=it.a, au=authorOf(p)||{};
+    const el=document.createElement('div'); el.className='file-row';
+    el.onclick=()=>openPost(p);
+    const dn=(window._dlCounts&&window._dlCounts[a.url])||0;
+    el.innerHTML=`<img class="file-thumb" src="${p.img||''}" alt="" loading="lazy" decoding="async">
+      <div class="file-main">
+        <div class="file-name">${CLIP2}<span>${esc(a.name||'첨부파일')}</span></div>
+        <div class="file-meta">${esc(fileExt(a.name||a.url))}${a.size?' · '+fmtSize(a.size):''} · ⬇ ${dn}명</div>
+        <div class="file-post">${esc((p.title||'놀이').replace(/^#/,''))} · ${esc(au.name||'선생님')}</div>
+      </div>
+      <a class="file-dl" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name||'')}" title="내려받기" onclick="event.stopPropagation();recordDownload('${(a.url||'').replace(/'/g,"\\'")}','${p.id||''}',${it.ai})">${DL}</a>`;
+    box.appendChild(el);
+  });
+}
+
 /* 왼쪽 사이드바에 카테고리 항목 전체 펼쳐 보이기 */
 let sideSection='kinder';
 function setSideSection(s){sideSection=s;
@@ -5355,7 +5426,7 @@ function renderSideCats(){
     `<div class="side-cat-items">`+
     grp.items.map(it=>`<button class="${hiCat(it).trim()}" onclick="filterByLabel('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
     `</div></div>`+
-    (gi===0?`<button type="button" class="side-env-btn" onclick="openEnv()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성 모아보기</button>`:'')  // '놀이 주제'와 '놀이 유형' 사이
+    (gi===0?`<button type="button" class="side-env-btn" onclick="openEnv()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성 모아보기</button><button type="button" class="side-env-btn side-files-btn" onclick="openFiles()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>자료 모아보기</button>`:'')  // '놀이 주제'와 '놀이 유형' 사이
   ).join('');
 }
 /* 선생님 프로필 모달 */
@@ -5660,8 +5731,9 @@ function go(v){
   if(v==='my')renderMyPage();
   if(v==='comm'){ renderCommunity(); loadCommunity().then(renderCommunity); }
   if(v==='env')renderEnv();
+  if(v==='files')renderFiles();
   // 새로고침 시 복원할 수 있게 현재 페이지 기억 (상세/프로필처럼 대상이 필요한 화면은 제외)
-  try{ if(['browse','sub','my','comm','env','about','privacy','terms'].includes(v)) localStorage.setItem('nolimoa_view', v); }catch(e){}
+  try{ if(['browse','sub','my','comm','env','files','about','privacy','terms'].includes(v)) localStorage.setItem('nolimoa_view', v); }catch(e){}
 }
 /* 주소에 #about / #privacy / #terms 로 들어오면 바로 그 페이지를 연다 (구글 OAuth 검증·공유 링크용) */
 function openHashView(){
@@ -5673,7 +5745,7 @@ window.addEventListener('hashchange',()=>{ openHashView(); });
 function restoreLastView(){
   let v=null; try{ v=localStorage.getItem('nolimoa_view'); }catch(e){}
   if(!v || v==='browse') return;
-  if(!['sub','my','comm','env','about','privacy','terms'].includes(v)) return;
+  if(!['sub','my','comm','env','files','about','privacy','terms'].includes(v)) return;
   if(v==='comm' && isGuest()) return; // 커뮤니티는 로그인 상태에서만
   go(v);
 }
