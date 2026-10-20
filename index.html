@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>놀이모아 — 놀이 검색 플랫폼</title>
+<link rel="preconnect" href="https://hcjdvojhfvihiicnbzaz.supabase.co" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet"><!-- 워터마크 손글씨 폰트 -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet"></noscript><!-- 워터마크 손글씨 폰트 -->
 <script>try{ if(document.fonts&&document.fonts.load) document.fonts.load("16px 'Nanum Pen Script'"); }catch(e){}</script>
 <!-- ===== 앱(홈 화면 추가) 설정 : 놀이모아 ===== -->
 <meta name="theme-color" content="#86736b">
@@ -1333,20 +1335,22 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .cat-content{flex:1;overflow:auto;padding:22px 24px}
   .cat-title{font-size:19px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px}
   .cat-env-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:calc(100% - 56px);margin:0 auto 22px;
-    border:1px solid #f3d3ce;background:#fff7f9;color:var(--coral-tx);border-radius:12px;padding:14px 16px;
-    font-size:14.5px;font-weight:700;cursor:pointer;text-align:center;white-space:nowrap}
+    border:1px solid #f3d3ce;background:#fff7f9;color:var(--coral-tx);border-radius:12px;padding:9px 14px;
+    font-size:14px;font-weight:700;cursor:pointer;text-align:center;white-space:nowrap}
   .cat-env-btn:hover{background:#fbe9ec}
+  .cat-env-btn svg{width:18px;height:18px;vertical-align:-4px !important}
   .cat-env-btn.cat-files-btn{margin-top:-10px}
   .cat-about-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:calc(100% - 56px);margin:14px auto 6px;
     border:1px solid var(--line);background:#faf6f3;color:var(--coral-tx);border-radius:12px;padding:13px 16px;
     font-size:14.5px;font-weight:700;cursor:pointer;text-align:center;white-space:nowrap}
   .cat-about-btn:hover{background:#f3ece7}
   @media(max-width:640px){
-    .cat-env-btn{width:calc(100% - 16px);font-size:12.5px;padding:12px 6px}  /* 모바일: 한 줄에 들어가게 */
+    .cat-env-btn{width:calc(100% - 16px);font-size:12.5px;padding:9px 6px}  /* 모바일: 한 줄에 들어가게 */
     .cat-about-btn{width:calc(100% - 16px);font-size:13px;padding:12px 6px}
   }
   .side-env-btn{display:block;width:calc(100% - 24px);margin:0 auto 18px;border:1px solid #f3d3ce;background:#fff7f9;
-    color:var(--coral-tx);border-radius:11px;padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
+    color:var(--coral-tx);border-radius:11px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
+  .side-env-btn svg{width:18px;height:18px;vertical-align:-4px !important}
   .side-env-btn:hover{background:#fbe9ec}
   .side-env-btn.side-files-btn{margin-top:-22px}   /* 환경구성 버튼 바로 밑에 붙이기(사이드바는 간격 14px 포함) */
   .cat-draw-head{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:18px;margin-bottom:20px}
@@ -1489,7 +1493,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <section class="view" id="v-env">
       <div class="post-topbar"><button class="back-btn" onclick="envBack()">‹ 뒤로</button><span class="pt-mini">환경구성</span></div>
       <div class="main-head"><div><h1><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:6px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성</h1><p>게시판 · 교실 환경구성 사진을 모아봤어요</p></div></div>
-      <div class="br-search"><span>🔍</span><input id="envSearch" type="search" name="nolimoa-env-search" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="주제로 검색 (예: 여름)" oninput="renderEnv()"></div>
+      <div class="br-search"><span class="search-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input id="envSearch" type="search" name="nolimoa-env-search" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="주제로 검색 (예: 여름)" oninput="renderEnv()"></div>
       <div class="env-grid" id="envGrid"></div>
     </section>
 
@@ -1497,7 +1501,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <section class="view" id="v-files">
       <div class="post-topbar"><button class="back-btn" onclick="filesBack()">‹ 뒤로</button><span class="pt-mini">자료 모아보기</span></div>
       <div class="main-head"><div><h1><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:6px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>자료 모아보기</h1><p>놀이글에 올라온 첨부파일을 한눈에 모아봤어요</p></div></div>
-      <div class="br-search"><span>🔍</span><input id="fileSearch" type="search" name="nolimoa-file-search" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="파일 이름·놀이 제목으로 검색" oninput="renderFiles()"></div>
+      <div class="br-search"><span class="search-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input id="fileSearch" type="search" name="nolimoa-file-search" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="파일 이름·놀이 제목으로 검색" oninput="renderFiles()"></div>
       <div class="file-count" id="fileCount"></div>
       <div class="file-list" id="fileList"></div>
     </section>
@@ -1686,7 +1690,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818q</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818r</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2976,6 +2980,7 @@ async function loadDbPosts(){
   syncStats();
   if($('#v-browse').classList.contains('on'))renderBrowse();
   if($('#v-my').classList.contains('on'))renderMyPage();
+  try{ if(authUser) scheduleThumbBackfill(); }catch(e){}   // 내 예전 글의 목록용 작은 사진 보정(백그라운드)
 }
 /* ===== 마이페이지 저장(폴더·저장한 놀이) — Supabase 계정별 동기화 ===== */
 async function saveUserData(){
@@ -3622,7 +3627,7 @@ async function openEdit(){
   try{ ensureFaceApi(); }catch(e){}   // 사진 모자이크 준비를 배경에서 미리 시작
   if(!p._full) await ensureFullPost(p);   // 수정 전에 사진·첨부 전체를 확보 (목록은 대표사진만 받았으므로)
   _editPost=p;
-  _editImages=imagesOf(p).map(im=>({img:im.img,desc:im.desc||'',env:im.env===true,cover:im.cover===true,spots:(im.spots||[]).map(s=>({...s})),parts:(im.parts&&im.parts.length>1)?im.parts.slice():undefined}));
+  _editImages=imagesOf(p).map(im=>({img:im.img,thumb:im.thumb,thumbSrc:im.img,desc:im.desc||'',env:im.env===true,cover:im.cover===true,spots:(im.spots||[]).map(s=>({...s})),parts:(im.parts&&im.parts.length>1)?im.parts.slice():undefined}));
   $('#pTitle').value=(p.title||'').replace(/^#/,'');
   { const _pt=parseTrip(p.desc||''); $('#pBody').innerHTML=marksToRich(_pt.body||''); _tripVals=_pt.trip?{cat:_pt.trip.cat, vals:Object.assign({}, _pt.trip.vals)}:null;
     const _ts=$('#tripSec'); if(_ts){ _ts.innerHTML=''; _ts.style.display='none'; } }   // 예전 글의 정보표 DOM 잔상 제거(안 그러면 다른 글 값이 덮어써짐)
@@ -3850,8 +3855,23 @@ async function saveEdit(){
   const photoTags=_editImages.flatMap(im=>extractHashtags(im.desc,true));   // 사진 설명 속 해시태그도 수집
   const tags=[...new Set([...(sel.tags||[]), ...catLabels, ...photoTags].map(noSpace).filter(Boolean))]; // 해시태그(띄어쓰기 없음)
   document.querySelectorAll('#editImages .ecap.rich, .edit-img .ecap.rich').forEach(d=>{ try{ const i=+d.dataset.i; if(_editImages[i]) _editImages[i].desc=richToMarks(d); }catch(e){} });   // 저장 직전 화면 내용으로 동기화
+  // 새로 추가·수정한 사진(data:)은 사진 저장소에 올리고 주소만 DB에 저장 (DB에 사진 원본을 넣으면 목록이 무거워져요)
+  if(SB && authUser && p.db){
+    for(let k=0;k<_editImages.length;k++){
+      const im=_editImages[k];
+      if(im&&String(im.img||'').startsWith('data:')){
+        try{
+          const blob=await (await fetch(im.img)).blob();
+          const path=`${authUser.id}/${Date.now()}_e${k}.jpg`;
+          const url=await putStoragePhoto(blob,path);
+          let th; try{ th=await putStoragePhoto(await makeThumbBlob(im.img), path.replace(/\.jpg$/,'_t.jpg')); }catch(e){}
+          im.img=url; im.thumb=th; im.thumbSrc=url;
+        }catch(e){ toast('사진 업로드 실패: '+(e.message||e)); return; }
+      }
+    }
+  }
   const _eci=coverIndexOf(_editImages);   // 대표사진 위치(지정 안 하면 첫 사진)
-  const images=_editImages.map((im,k)=>({img:im.img,desc:(im.desc||'').trim(),env:im.env===true,cover:k===_eci,
+  const images=_editImages.map((im,k)=>({img:im.img,thumb:(im.thumb&&im.thumbSrc===im.img)?im.thumb:undefined,desc:(im.desc||'').trim(),env:im.env===true,cover:k===_eci,
     spots:im.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:(s.name||'').trim(),mall:(s.mall||'').trim(),
       url:s.url&&!/^https?:\/\//i.test(s.url)?'https://'+s.url:(s.url||'')})),
     parts:(im.parts&&im.parts.length>1)?im.parts:undefined}));   // 콜라주 조각 URL 유지 (수정해도 낱장 안 사라지게)
@@ -4016,7 +4036,7 @@ function folderDrop(ctx,targetId,container){
 function renderMyFolders(){renderFolderRow('upload',true);renderFolderRow('saved',true);}
 function tpostEl(p, removeFn){
   const el=document.createElement('div');el.className='tpost';
-  el.innerHTML=`<img src="${p.img}" alt="" loading="lazy" decoding="async">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}</span>`:''}
+  el.innerHTML=`<img src="${coverThumb(p)}" alt="" loading="lazy" decoding="async">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}</span>`:''}
     ${removeFn?'<button class="tp-x">✕</button>':''}<div class="tt">${p.title}</div>`;
   el.onclick=()=>{close_('folderOverlay');openPost(p);};
   if(removeFn){el.querySelector('.tp-x').onclick=e=>{e.stopPropagation();removeFn();};}
@@ -4125,7 +4145,7 @@ function renderPicker(){
   if(!list.length){box.innerHTML='<div class="empty">담을 놀이가 없어요.</div>';return;}
   list.forEach(p=>{const inF=f.posts.includes(p);const a=authorOf(p);
     const row=document.createElement('div');row.className='pick-row'+(inF?' on':'');
-    row.innerHTML=`<img src="${p.img}" alt="" loading="lazy" decoding="async"><div class="pk"><b>${p.title}</b><small>${a?esc(a.name):''}</small></div><span class="chk">${inF?'✓':''}</span>`;
+    row.innerHTML=`<img src="${coverThumb(p)}" alt="" loading="lazy" decoding="async"><div class="pk"><b>${p.title}</b><small>${a?esc(a.name):''}</small></div><span class="chk">${inF?'✓':''}</span>`;
     row.onclick=()=>{const i=f.posts.indexOf(p);if(i>=0)f.posts.splice(i,1);else f.posts.push(p);renderPicker();saveUserData();};
     box.appendChild(row);});
 }
@@ -4344,7 +4364,7 @@ function openProduct(s){
   $('#prodCount').textContent=plays.length;
   const g=$('#prodPlays');g.innerHTML='';
   plays.forEach(p=>{const a=authorOf(p);const el=document.createElement('div');el.className='tpost';
-    el.innerHTML=`<img src="${p.img}" alt="" loading="lazy" decoding="async">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}</span>`:''}
+    el.innerHTML=`<img src="${coverThumb(p)}" alt="" loading="lazy" decoding="async">${imagesOf(p).length>1?`<span class="pcount">📷 ${imagesOf(p).length}</span>`:''}
       <div class="tt">${a?esc(a.name)+' · ':''}${esc((p.title||'놀이').replace(/^#/,''))}</div>`;
     el.onclick=()=>{['detailOverlay','productOverlay'].forEach(close_);openPost(p);};g.appendChild(el);});
   if(!plays.length)g.innerHTML='<div class="empty">아직 이 상품을 쓴 놀이가 없어요</div>';
@@ -4660,7 +4680,7 @@ async function editCaption(p){
 }
 function miniCardPost(p){
   const el=document.createElement('div');el.className='mini-card';
-  el.innerHTML=`<div class="mimg"><img src="${p.img}" loading="lazy" decoding="async">${(isAdmin()&&p.id)?'<button class="cap-edit" title="사진 밑 제목 수정">✎</button>':''}</div><div class="mtitle">${esc(capText(p))}</div><div class="mlike">♡ ${(p.like||0).toLocaleString()}</div>`;
+  el.innerHTML=`<div class="mimg"><img src="${coverThumb(p)}" loading="lazy" decoding="async">${(isAdmin()&&p.id)?'<button class="cap-edit" title="사진 밑 제목 수정">✎</button>':''}</div><div class="mtitle">${esc(capText(p))}</div><div class="mlike">♡ ${(p.like||0).toLocaleString()}</div>`;
   el.onclick=()=>openPost(p);
   if(isAdmin()&&p.id){ const ce=el.querySelector('.cap-edit'); if(ce)ce.onclick=(e)=>{e.stopPropagation();editCaption(p);}; }
   return el;
@@ -4730,12 +4750,12 @@ function photoGrid(p){
   if(_c>0){ imgs=[imgs[_c],...imgs.slice(0,_c),...imgs.slice(_c+1)]; }
   const n=imgs.length;
   if(!n)return '';
-  if(n<=1)return `<div class="photo single"><img src="${imgs[0].img||p.img}" alt="" loading="lazy" decoding="async"></div>`;
+  if(n<=1)return `<div class="photo single"><img src="${imgs[0].thumb||imgs[0].img||p.img}" alt="" loading="lazy" decoding="async"></div>`;
   const show=imgs.slice(0,4);
   const cls=n===2?'g2':(n===3?'g3':'g4');
   return `<div class="photo grid ${cls}">`+show.map((im,idx)=>{
     const over=(idx===3&&n>4)?`<span class="more-ph">+${n-4}장</span>`:'';
-    return `<div class="pg-cell"><img src="${im.img}" alt="" loading="lazy" decoding="async">${over}</div>`;
+    return `<div class="pg-cell"><img src="${im.thumb||im.img}" alt="" loading="lazy" decoding="async">${over}</div>`;
   }).join('')+`</div>`;
 }
 /* 피드 영상 자동 재생: 화면에 보이면 재생, 벗어나면 멈춤, 첫 6초만 반복 */
@@ -4838,6 +4858,43 @@ function renderBrowseFeed(keep){
     box.appendChild(more);
   }
   initFeedVideos();
+}
+/* 기존 내 글 보정: ① DB에 base64로 박힌 사진을 사진 저장소로 옮기고 ② 목록용 썸네일이 없으면 만들어 줌 (백그라운드·접속당 최대 6장) */
+let _thumbBF=false, _thumbBFTimer=null;
+function scheduleThumbBackfill(){ if(_thumbBFTimer||_thumbBF)return; _thumbBFTimer=setTimeout(()=>{ _thumbBFTimer=null; backfillThumbs(); },9000); }
+async function backfillThumbs(){
+  if(_thumbBF||!SB||!authUser)return; _thumbBF=true;
+  try{
+    let budget=6;
+    const need=(p)=>(p.images||[]).some(im=>im&&im.img&&(String(im.img).startsWith('data:')||!im.thumb));
+    const mine=(window._dbPosts||[]).filter(p=>p.db&&p.id&&p.user_id===authUser.id&&Array.isArray(p.images)&&need(p));
+    // base64가 박힌(무거운) 글을 먼저
+    mine.sort((a,b)=>(b.images.some(im=>String(im&&im.img).startsWith('data:'))?1:0)-(a.images.some(im=>String(im&&im.img).startsWith('data:'))?1:0));
+    for(const p of mine){
+      if(budget<=0)break;
+      const imgs=p.images.map(im=>({...im})); let changed=false;
+      for(let k=0;k<imgs.length&&budget>0;k++){
+        const im=imgs[k]; if(!im||!im.img) continue;
+        const isData=String(im.img).startsWith('data:');
+        if(!isData && im.thumb) continue;
+        budget--;
+        try{
+          const path=`${authUser.id}/${Date.now()}_b${k}.jpg`;
+          const src=im.img;   // 원본(base64 또는 주소) — 작은 사진은 이 원본에서 바로 만들어 다시 내려받지 않음
+          let tBlob=null; try{ tBlob=await makeThumbBlob(src); }catch(e){}
+          if(isData){ im.img=await putStoragePhoto(await (await fetch(src)).blob(), path); changed=true; }   // DB에서 base64 제거
+          if(tBlob){ im.thumb=await putStoragePhoto(tBlob, path.replace(/\.jpg$/,'_t.jpg')); changed=true; }
+        }catch(e){ /* 이 사진은 건너뜀(다음 접속 때 다시 시도) */ }
+      }
+      if(changed){
+        const ci=Math.max(0,imgs.findIndex(i=>i&&i.cover===true));
+        const upd={images:imgs}; if(imgs[ci]&&imgs[ci].img&&String(p.img||'').startsWith('data:')) upd.image_url=imgs[ci].img;
+        const {error}=await SB.from('posts').update(upd).eq('id',p.id).eq('user_id',authUser.id);
+        if(!error){ p.images=imgs; if(upd.image_url)p.img=upd.image_url; }
+      }
+    }
+  }catch(e){}
+  finally{ _thumbBF=false; }
 }
 function clearBrowseFilter(){browseFilter='';_tripSub='';renderBrowseFeed();}
 function setTripSub(v){ _tripSub=v||''; renderBrowseFeed(); }
@@ -5332,7 +5389,7 @@ function envTiles(){
   const out=[];
   // 인기순: 각 사진이 속한 글의 인기 점수(좋아요·저장·조회) 높은 순으로 정렬
   allPosts().slice().sort((a,b)=>popScore(b)-popScore(a)).forEach(p=>{
-    imagesOf(p).forEach(im=>{ if(im && im.env){ out.push({img:im.img, title:(p.title||'놀이').replace(/^#/,''), post:p}); } });
+    imagesOf(p).forEach(im=>{ if(im && im.env){ out.push({img:im.img, thumb:im.thumb, title:(p.title||'놀이').replace(/^#/,''), post:p}); } });
   });
   return out;
 }
@@ -5351,7 +5408,7 @@ function renderEnv(){
   tiles.forEach(t=>{
     const el=document.createElement('div'); el.className='env-tile';
     el.onclick=()=>openPost(t.post);
-    el.innerHTML=`<img src="${t.img}" alt=""><div class="env-title">${esc(t.title)}</div>`;
+    el.innerHTML=`<img src="${t.thumb||t.img}" alt="" loading="lazy" decoding="async"><div class="env-title">${esc(t.title)}</div>`;
     box.appendChild(el);
   });
 }
@@ -5383,7 +5440,7 @@ function renderFiles(){
     items=items.filter(it=>dePlay([it.a.name||'', it.post.title||'', (it.post.tags||[]).join(' ')].join(' ')).includes(qn)); }
   const cnt=$('#fileCount'); if(cnt)cnt.textContent=items.length?`자료 ${items.length}개`:'';
   if(!items.length){
-    box.innerHTML=`<div class="placeholder"><div class="big">📎</div>${q?'조건에 맞는 자료가 없어요':'아직 올라온 첨부파일이 없어요.<br>글을 쓸 때 활동지·도안 같은 파일을 첨부해 보세요'}</div>`;
+    box.innerHTML=`<div class="placeholder"><div class="big"><svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="#b9aca4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></div>${q?'조건에 맞는 자료가 없어요':'아직 올라온 첨부파일이 없어요.<br>글을 쓸 때 활동지·도안 같은 파일을 첨부해 보세요'}</div>`;
     return;
   }
   const CLIP2='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>';
@@ -5393,7 +5450,7 @@ function renderFiles(){
     const el=document.createElement('div'); el.className='file-row';
     el.onclick=()=>openPost(p);
     const dn=(window._dlCounts&&window._dlCounts[a.url])||0;
-    el.innerHTML=`<img class="file-thumb" src="${p.img||''}" alt="" loading="lazy" decoding="async">
+    el.innerHTML=`<img class="file-thumb" src="${coverThumb(p)}" alt="" loading="lazy" decoding="async">
       <div class="file-main">
         <div class="file-name">${CLIP2}<span>${esc(a.name||'첨부파일')}</span></div>
         <div class="file-meta">${esc(fileExt(a.name||a.url))}${a.size?' · '+fmtSize(a.size):''} · ⬇ ${dn}명</div>
@@ -6184,6 +6241,28 @@ function mosaicP(ph,b){const cv=ph.cv,c=ph.ctx,px=pxStrength;
   c.restore();
 }
 /* 저장·업로드용: 모자이크는 적용하되 보라색 외곽선은 '없이' 그린 이미지 (실제 게시물엔 테두리 안 보이게) */
+/* ===== 목록용 작은 사진(썸네일) =====
+   피드·카드에서는 640px 작은 사진을 쓰고, 글 상세에서만 원본 화질을 불러와 첫 화면이 훨씬 빨라져요 */
+const THUMB_W=640, THUMB_Q=0.8;
+function thumbOf(im){ return (im&&(im.thumb||im.img))||''; }
+function coverThumb(p){
+  try{ const ims=imagesOf(p); const c=ims.find(i=>i&&i.cover===true)||ims[0];
+    if(c&&c.thumb&&(c.img===p.img||!p.img)) return c.thumb; }catch(e){}
+  return (p&&p.img)||'';
+}
+async function makeThumbBlob(src){
+  const img=await new Promise((res,rej)=>{ const i=new Image(); i.crossOrigin='anonymous'; i.onload=()=>res(i); i.onerror=()=>rej(new Error('img')); i.src=src; });
+  const w0=img.naturalWidth||img.width, h0=img.naturalHeight||img.height; if(!w0||!h0) throw new Error('size');
+  const sc=Math.min(1,THUMB_W/w0); const c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(w0*sc)); c.height=Math.max(1,Math.round(h0*sc));
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  return await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('blob')),'image/jpeg',THUMB_Q));
+}
+async function putStoragePhoto(blob,path){
+  const up=await SB.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg'});
+  if(up.error)throw up.error;
+  return SB.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+}
 const PHOTO_MAXW=1080;   // 사진 최대 가로 픽셀 (화질) — 예전 520 → 1080으로 상향
 function cleanPhotoDataURL(ph, quality){
   const s=document.createElement('canvas'); s.width=ph.cv.width; s.height=ph.cv.height;
@@ -7863,7 +7942,8 @@ async function publishPost(){
           }
           if(partsUrls.length<2) partsUrls=null;   // 조각 업로드 실패 시엔 콜라주 그대로
         }
-        uploaded.push({img:pub.publicUrl,desc:images[k].desc,env:images[k].env,cover:images[k].cover===true,spots:images[k].spots, parts:partsUrls||undefined});
+        let thumbUrl; try{ thumbUrl=await putStoragePhoto(await makeThumbBlob(images[k].img), path.replace(/\.jpg$/,'_t.jpg')); }catch(e){}   // 목록용 작은 사진(실패해도 업로드는 계속)
+        uploaded.push({img:pub.publicUrl,thumb:thumbUrl,desc:images[k].desc,env:images[k].env,cover:images[k].cover===true,spots:images[k].spots, parts:partsUrls||undefined});
       }
       const atts=await uploadAttachments();
       const _cov=uploaded[coverI]||uploaded[0];    // 대표사진(썸네일)
