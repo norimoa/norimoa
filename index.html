@@ -1692,7 +1692,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="go('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818v</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0818w</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2842,8 +2842,8 @@ async function doAuth(){
       authInfo('이메일 또는 비밀번호가 올바르지 않아요. 다시 확인해 주세요.', true);
     }else if(/already|registered/i.test(m)){
       authInfo('이미 가입된 이메일이에요. 위 제목을 \'로그인\'으로 바꿔 들어와 주세요.', true);
-    }else if(/rate|too many/i.test(m)){
-      authInfo('잠시 후 다시 시도해 주세요. (요청이 너무 잦아요)', true);
+    }else if(/rate limit|too many|over_\w*rate|only request this after|\b429\b/i.test(m)){
+      authInfo('잠시 후 다시 시도해 주세요. (요청이 너무 잦아요)<br><small style="opacity:.7">'+m.replace(/</g,'&lt;')+'</small>', true);
     }else{
       authInfo('문제가 생겼어요: '+m, true);
     }
