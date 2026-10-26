@@ -748,6 +748,14 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .imgr-cnt{font-size:12px;color:var(--sub)}
   .imgr-acts{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;align-items:center}
   .imgr-sec-h{font-size:12.5px;font-weight:800;color:#8a7a6f;margin:4px 2px 8px}
+  .imgr-ord{display:flex;align-items:center;gap:8px;padding:7px 8px 7px 10px;border:1px solid #eadfd8;border-radius:11px;background:#fff;margin-bottom:6px}
+  .imgr-ord .no{width:18px;flex:0 0 auto;color:#8a7a6f;font-size:12px;font-weight:700;text-align:center}
+  .imgr-ord .lb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;font-size:14px}
+  .imgr-ord .tp{flex:0 0 auto;font-size:11.5px;color:#8a7a6f}
+  .imgr-mv{flex:0 0 auto;width:32px;height:32px;border-radius:9px;border:1px solid #e7dcd6;background:#fff;color:#3b2f2a;display:inline-grid;place-items:center;cursor:pointer;padding:0}
+  .imgr-mv:hover:not(:disabled){background:#faf3ef}
+  .imgr-mv:disabled{opacity:.28;cursor:default}
+  .imgr-mv svg{width:17px;height:17px;display:block}
   .imgr-edit{display:flex;gap:7px;align-items:center}
   .imgr-ic{width:52px;text-align:center;border:1px solid #e7dcd6;border-radius:9px;padding:8px 6px;font-family:inherit;background:#fafafb}
   .imgr-lb{flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:9px;padding:8px 10px;font-family:inherit;background:#fafafb;font-size:13.5px}
@@ -1719,7 +1727,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819c</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819d</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2091,7 +2099,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   <div class="modal" style="max-width:560px;max-height:90vh;display:flex;flex-direction:column">
     <div class="modal-head"><b>🛠 오늘의 이슈 관리</b><button class="x" onclick="close_('issueMgrOverlay')">×</button></div>
     <div class="up-body">
-      <p style="margin:0 0 12px;color:var(--sub);font-size:13px">이슈(카테고리)를 만들고, 각 이슈에 보여줄 놀이 글을 직접 골라 넣을 수 있어요. 관리자가 만든 이슈는 자동 추천보다 앞에 표시돼요.</p>
+      <p style="margin:0 0 12px;color:var(--sub);font-size:13px">이슈(카테고리)를 만들고, 각 이슈에 보여줄 놀이 글을 직접 골라 넣을 수 있어요. 보이는 순서는 아래 '보이는 순서'에서 화살표로 바꿀 수 있어요.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
         <input id="newIssueIcon" placeholder="아이콘(예: 🎨)" maxlength="4" style="width:90px;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;text-align:center">
         <input id="newIssueLabel" placeholder="이슈 이름 (예: 이달의 미술놀이)" style="flex:1;min-width:150px;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb">
@@ -4597,7 +4605,7 @@ function renderIssues(){
   const box=$('#issueChips');if(!box)return;
   // 관리자 큐레이션 이슈(직접 만든 것)를 앞에, 그 뒤에 자동 추천 이슈
   const admin=(window._adminIssues||[]).map(a=>({icon:a.icon||'📌',label:a.label||'이슈',postIds:a.post_ids||[],admin:true,id:a.id}));
-  _issues=admin.concat(pickTodayIssues().filter(dz=>!admin.some(a=>a.label===dz.label)&&!isIssueHidden(dz.label)));   // 같은 이름의 관리자 이슈가 있으면 자동 이슈는 숨김
+  _issues=applyIssueOrder(admin.concat(pickTodayIssues().filter(dz=>!admin.some(a=>a.label===dz.label)&&!isIssueHidden(dz.label))));   // 관리자가 정한 순서 적용   // 같은 이름의 관리자 이슈가 있으면 자동 이슈는 숨김
   if(!_issues.length){box.innerHTML='';$('#brRecommend').innerHTML='';return;}
   if(curIssue>=_issues.length)curIssue=0;
   // 관리자 버튼 표시
@@ -4663,6 +4671,31 @@ async function deleteNotice(id){ if(!isAdmin())return; try{const {error}=await S
 /* ===== 오늘의 이슈 (관리자 큐레이션) ===== */
 window._hiddenIssues=[];   // 관리자가 삭제(숨김)한 기본 이슈 [{icon,label}]
 async function loadHiddenIssues(){ if(!SB){window._hiddenIssues=[];return;} try{ const {data}=await SB.from('site_config').select('value').eq('key','hidden_issues').maybeSingle(); const it=data&&data.value&&data.value.items; window._hiddenIssues=Array.isArray(it)?it.filter(x=>x&&x.label):[]; }catch(e){} }
+window._issueOrder=[];    // 관리자가 정한 이슈 순서 [label, ...]
+async function loadIssueOrder(){ if(!SB)return; try{ const {data}=await SB.from('site_config').select('value').eq('key','issue_order').maybeSingle(); const it=data&&data.value&&data.value.labels; window._issueOrder=Array.isArray(it)?it.filter(x=>typeof x==='string'):[]; }catch(e){} }
+async function saveIssueOrder(labels){
+  window._issueOrder=labels;
+  if(!SB) return;
+  const {error}=await SB.from('site_config').upsert({key:'issue_order', value:{labels}, updated_at:new Date().toISOString()},{onConflict:'key'});
+  if(error) throw error;
+}
+/* 정해 둔 순서대로 정렬 (순서에 없는 새 이슈는 맨 뒤, 원래 순서 유지) */
+function applyIssueOrder(list){
+  const ord=window._issueOrder||[]; if(!ord.length) return list;
+  const pos=l=>{ const i=ord.indexOf(l); return i<0?1e6:i; };
+  return list.map((x,i)=>({x,i})).sort((a,b)=>(pos(a.x.label)-pos(b.x.label))||(a.i-b.i)).map(o=>o.x);
+}
+async function moveIssue(idx, dir){
+  if(!isAdmin()) return;
+  const labels=_issues.map(x=>x.label), j=idx+dir;
+  if(j<0 || j>=labels.length) return;
+  [labels[idx],labels[j]]=[labels[j],labels[idx]];
+  const sel=_issues[curIssue] && _issues[curIssue].label, prev=(window._issueOrder||[]).slice();
+  const redraw=()=>{ renderIssues(); const k=_issues.findIndex(x=>x.label===sel); if(k>=0 && k!==curIssue){ curIssue=k; renderIssues(); } renderIssueMgr(); };
+  window._issueOrder=labels; redraw();   // 화면은 바로 바꾸고
+  try{ await saveIssueOrder(labels); }   // 저장은 뒤에서
+  catch(e){ window._issueOrder=prev; redraw(); toast('순서 저장 실패: '+(e.message||e)); }
+}
 function isIssueHidden(label){ return (window._hiddenIssues||[]).some(x=>x.label===label); }
 async function saveHiddenIssues(items){
   const {error}=await SB.from('site_config').upsert({key:'hidden_issues', value:{items}, updated_at:new Date().toISOString()},{onConflict:'key'});
@@ -4679,12 +4712,28 @@ async function restoreDefaultIssue(label){
   try{ await saveHiddenIssues((window._hiddenIssues||[]).filter(x=>x.label!==label)); renderIssueMgr(); renderIssues(); toast(`'${label}' 기본 이슈를 다시 보이게 했어요`);
   }catch(e){ toast('복원 실패: '+(e.message||e)); }
 }
-async function loadFeaturedIssues(){ if(!SB){window._adminIssues=[];return;} loadHiddenIssues(); try{const {data}=await SB.from('featured_issues').select('*').order('sort',{ascending:true}).order('created_at',{ascending:true}); window._adminIssues=data||[];}catch(e){window._adminIssues=[];} }
+async function loadFeaturedIssues(){ if(!SB){window._adminIssues=[];return;} loadHiddenIssues(); loadIssueOrder().then(()=>{ try{ renderIssues(); }catch(e){} }); try{const {data}=await SB.from('featured_issues').select('*').order('sort',{ascending:true}).order('created_at',{ascending:true}); window._adminIssues=data||[];}catch(e){window._adminIssues=[];} }
 let _issuePickId=null;
 function openIssueMgr(){ if(!isAdmin())return; renderIssueMgr(); open_('issueMgrOverlay'); }
 function renderIssueMgr(){
   const box=$('#issueMgrList'); if(!box)return; box.innerHTML='';
   const list=window._adminIssues||[];
+  // 보이는 순서 바꾸기 (내 이슈 + 자동 이슈 모두)
+  try{ renderIssues(); }catch(e){}
+  if(_issues.length>1){
+    const h0=document.createElement('div'); h0.className='imgr-sec-h'; h0.textContent='보이는 순서 (화살표로 위·아래 이동 · 맨 위 이슈가 처음에 보여요)'; box.appendChild(h0);
+    const UP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>';
+    const DN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+    _issues.forEach((iss,i)=>{
+      const r=document.createElement('div'); r.className='imgr-ord';
+      r.innerHTML=`<span class="no">${i+1}</span><span class="lb">${esc(iss.icon||'📌')} ${esc(iss.label)}</span><span class="tp">${iss.admin?'내 이슈':'자동'}</span>`+
+        `<button class="imgr-mv" data-d="-1" aria-label="위로" title="위로"${i===0?' disabled':''}>${UP}</button>`+
+        `<button class="imgr-mv" data-d="1" aria-label="아래로" title="아래로"${i===_issues.length-1?' disabled':''}>${DN}</button>`;
+      r.querySelectorAll('.imgr-mv').forEach(b=>b.onclick=()=>moveIssue(i, +b.dataset.d));
+      box.appendChild(r);
+    });
+    const gap=document.createElement('div'); gap.style.height='12px'; box.appendChild(gap);
+  }
   const h1=document.createElement('div'); h1.className='imgr-sec-h'; h1.textContent='내가 만든 이슈 (이름·아이콘 수정, 글 고르기)'; box.appendChild(h1);
   if(!list.length){ const e=document.createElement('div'); e.className='empty'; e.style.cssText='padding:8px 4px'; e.textContent='아직 만든 이슈가 없어요. 위에서 추가하거나, 아래 기본 이슈를 가져와 편집하세요.'; box.appendChild(e); }
   list.forEach(a=>{
@@ -4733,6 +4782,8 @@ function renderIssueMgr(){
 async function renameFeaturedIssue(id, icon, label){
   if(!isAdmin())return; icon=(icon||'📌').trim()||'📌'; label=(label||'').trim(); if(!label){toast('이슈 이름을 입력하세요');return;}
   try{const {error}=await SB.from('featured_issues').update({icon,label}).eq('id',id); if(error)throw error;
+    const old=((window._adminIssues||[]).find(a=>a.id===id)||{}).label, ord=window._issueOrder||[];   // 이름이 바뀌어도 순서 유지
+    if(old && old!==label && ord.includes(old)){ try{ await saveIssueOrder(ord.map(x=>x===old?label:x)); }catch(e){} }
     await loadFeaturedIssues(); renderIssueMgr(); renderIssues(); toast('이슈를 수정했어요');
   }catch(e){toast('수정 실패: '+(e.message||e));}
 }
