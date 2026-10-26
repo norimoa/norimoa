@@ -1118,7 +1118,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   @media(max-width:600px){.teacher-head{padding:16px 14px;gap:10px}.teacher-head .prof-expand{padding:7px 10px;font-size:12px}}
   .teacher-head .tinfo b{font-size:16px}
   .teacher-head .tinfo small{display:block;color:var(--sub);font-size:12.5px;margin-top:2px}
-  .prof-stats{display:flex;gap:16px;margin-top:6px;flex-wrap:nowrap}
+  .prof-stats{display:flex;gap:10px 16px;margin-top:6px;flex-wrap:wrap}
   .prof-stats span{font-size:12px;color:var(--sub);white-space:nowrap}
   .prof-stats b{font-size:14px;color:var(--ink)}
   .teacher-posts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px 20px}
@@ -1206,7 +1206,9 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   }
   .pa-btn{border:none;background:none;color:#4a4a52;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 2px}
   .pa-btn:hover{color:var(--coral-tx)}
-  .pa-btn.like .hi{display:inline-flex}
+  .pa-btn.like .hi{display:inline-flex;cursor:pointer}
+  .pa-btn.like b{cursor:pointer}
+  .pa-btn.like b:hover{text-decoration:underline}
   .pa-btn.like.on{color:#e0355f}
   .pa-btn.on{color:var(--coral-tx)}
   /* 아이콘 전용 액션 버튼 (저장·공유·수정·삭제) */
@@ -1727,7 +1729,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819d</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819g</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1743,6 +1745,17 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   <button data-v="my" onclick="nav('my')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>마이페이지</button>
 </nav>
+
+<!-- ============ 좋아요한 사람 모달 ============ -->
+<div class="overlay" id="likersOverlay" onclick="if(event.target===this)close_('likersOverlay')">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="tabs"><button class="tab on">❤️ 좋아요</button></div>
+      <button class="x" onclick="close_('likersOverlay')">×</button>
+    </div>
+    <div id="likersRows"></div>
+  </div>
+</div>
 
 <!-- ============ 팔로워 / 팔로잉 모달 ============ -->
 <div class="overlay" id="socialOverlay" onclick="if(event.target===this)close_('socialOverlay')">
@@ -3006,9 +3019,17 @@ async function refreshSession(){
   if(authUser){
     // 가입 시 입력한 닉네임(인증 메타데이터)을 우선 확보
     const metaNick=(authUser.user_metadata&&authUser.user_metadata.nickname)||'';
-    let prof=null;
-    try{const r=await SB.from('profiles').select('*').eq('id',authUser.id).maybeSingle();prof=r.data;}catch(e){}
-    // 프로필 행이 아직 없으면(가입 시 세션 미형성 / 구글 로그인 첫 로그인 등) 지금 만들어 준다
+    let prof=null, profErr=null;
+    try{const r=await SB.from('profiles').select('*').eq('id',authUser.id).maybeSingle();prof=r.data;profErr=r.error;}catch(e){profErr=e;}
+    // 네트워크·일시적 오류로 조회가 실패한 것뿐인데 "신규 가입자"로 착각해 프로필을 또 만들면
+    // (기존 닉네임이 이미 있어 뒤에 숫자가 붙는 등) 기존 계정 정보가 망가짐 → 실패면 한 번 더 재시도
+    if(!prof && profErr){
+      await new Promise(r=>setTimeout(r,900));
+      try{const r2=await SB.from('profiles').select('*').eq('id',authUser.id).maybeSingle();prof=r2.data;profErr=r2.error;}catch(e){profErr=e;}
+    }
+    // 재시도까지 실패했으면(진짜 오류) 기존 화면 값을 그대로 둔다 — 잘못 덮어쓰지 않음
+    if(!prof && profErr){ applyAuthUI(); await loadDbPosts(); return; }
+    // 정말 처음 가입하는 경우에만(오류 없이 '행 없음'이 확인된 경우) 새 프로필을 만들어 준다
     if(!prof){
       const meta=authUser.user_metadata||{};
       // 구글 로그인은 닉네임이 없으니 구글 이름/이메일에서 만들어 겹치지 않게 번호를 붙임
@@ -3531,12 +3552,37 @@ function renderPostEngage(){
   const p=_currentPost; if(!p)return;
   const saved=isSaved(p);
   const html=`
-    <button class="pa-btn like ${p.liked?'on':''}" onclick="togglePostLike()" title="좋아요"><span class="hi">${ICO.heart(p.liked)}</span> <b>${(p.like||0).toLocaleString()}</b></button>
+    <span class="pa-btn like ${p.liked?'on':''}"><span class="hi" onclick="togglePostLike()" title="좋아요">${ICO.heart(p.liked)}</span> <b onclick="openLikers()" title="좋아요한 사람 보기">${(p.like||0).toLocaleString()}</b></span>
     <button class="pa-btn stat" title="댓글 보기" onclick="var c=document.getElementById('cmtList');if(c)c.scrollIntoView({behavior:'smooth',block:'center'})">${ICO.comment} <b>${(p.cmt||0).toLocaleString()}</b></button>
     <button class="pa-btn save ${saved?'on':''}" onclick="togglePostSave()" title="${saved?'저장됨':'저장'}">${ICO.bookmark(saved)} <b>${(p.saves||0).toLocaleString()}</b></button>
     <button class="pa-btn share" onclick="sharePost()" title="공유">${ICO.share}</button>`;
   document.querySelectorAll('.ph-engage').forEach(box=>box.innerHTML=html);   // 위·아래 참여 박스 모두 채움
   document.querySelectorAll('.ph-views').forEach(el=>el.textContent=(p.views||'0'));
+}
+function openLikers(){
+  const p=_currentPost; if(!p)return;
+  if(!(SB && p.db)){ toast('데모 글에서는 볼 수 없어요'); return; }
+  if(!(p.like>0)){ toast('아직 좋아요한 사람이 없어요'); return; }
+  renderLikers(); open_('likersOverlay');
+}
+async function renderLikers(){
+  const p=_currentPost, box=$('#likersRows'); if(!p||!box)return;
+  box.innerHTML='<div class="empty">불러오는 중…</div>';
+  try{
+    const {data:rows}=await SB.from('likes').select('user_id,created_at').eq('post_id',p.id).order('created_at',{ascending:false});
+    const ids=(rows||[]).map(r=>r.user_id); if(!ids.length){ box.innerHTML='<div class="empty">아직 좋아요한 사람이 없어요</div>'; return; }
+    const {data:profs}=await SB.from('profiles').select('id,nickname,role,icon,avatar_url').in('id',ids);
+    const byId={}; (profs||[]).forEach(pr=>byId[pr.id]=pr);
+    box.innerHTML='';
+    ids.forEach(uid=>{
+      const pr=byId[uid]||{}; const av={icon:pr.icon,photo:pr.avatar_url,init:(pr.nickname||'선')[0],color:'#86736b'};
+      const r=document.createElement('div'); r.className='foll-row';
+      r.innerHTML=`<div class="av" style="${avStyle(av)}">${avInner(av)}</div>
+        <div class="info"><b>${esc(pr.nickname||'선생님')}</b><small>${esc((pr.role||'').replace(' 교사',''))}</small></div>`;
+      wireSocialRowClick(r, {user_id:uid, name:pr.nickname, org:(pr.role||'').replace(' 교사',''), icon:pr.icon, photo:pr.avatar_url});
+      box.appendChild(r);
+    });
+  }catch(e){ box.innerHTML='<div class="empty">불러오지 못했어요</div>'; }
 }
 async function togglePostLike(){
   const p=_currentPost;if(!p)return;
