@@ -1729,7 +1729,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819j</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819l</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2263,7 +2263,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
 <button class="bell-btn" id="bellBtn" onclick="openNotif()" aria-label="알림"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="bell-badge" id="bellBadge"></span></button>
 <div class="overlay" id="notifOverlay" onclick="if(event.target===this)close_('notifOverlay')">
   <div class="modal">
-    <div class="modal-head"><b>🔔 알림</b><button class="x" onclick="close_('notifOverlay')">×</button></div>
+    <div class="modal-head"><b><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>알림</b><button class="x" onclick="close_('notifOverlay')">×</button></div>
     <div id="notifList"></div>
   </div>
 </div>
@@ -2395,6 +2395,9 @@ const browsePosts = [
 /* ---------------- helpers ---------------- */
 const $=s=>document.querySelector(s);
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._);t._=setTimeout(()=>t.classList.remove('on'),1900);}
+/* 토스트 맨 앞에 깔끔한 흑백 아이콘(svg)을 붙여서 보여줄 때 */
+function toastIcon(svg,m){const t=$('#toast');t.innerHTML=svg+esc(m);t.classList.add('on');clearTimeout(t._);t._=setTimeout(()=>t.classList.remove('on'),1900);}
+const ICO_FILE='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>';
 /* 업로드/수정 중 로딩 창 표시 + 완료 버튼 잠금(중복 클릭 방지) */
 let _publishing=false;
 let _commPublishing=false;
@@ -2694,9 +2697,9 @@ function isAdmin(){ return !!(SB && authUser && (authUser.email||'').toLowerCase
 const roles=['유아교사','학부모','학원','학생/예비교사','기타'];
 const profileIcons=['🧑','🐣','🌸','🌊','🦋','🌈','🐬','🌻','⭐'];
 /* 프로필 사진·아이콘을 아무것도 설정하지 않았을 때 보이는 기본 아바타 (인스타그램 스타일 회색 사람 아이콘) */
-const DEFAULT_AV_ICON='<svg viewBox="0 0 100 100" width="62%" height="62%" style="display:block" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="38" r="19" fill="#aab0b8"/><path d="M50 62c-24 0-42 13-42 30v8h84v-8c0-17-18-30-42-30z" fill="#aab0b8"/></svg>';
-/* 사진/아이콘 유무에 따른 아바타 배경색: 사진>아이콘 미설정(기본 회색)>아이콘(복숭아색)>색상+대표글자 순 */
-function avBg(a){return (a&&a.photo)?'#eee':(a&&('icon' in a)&&!a.icon)?'#e5e5e5':(a&&a.icon)?'#f3ddd6':((a&&a.color)||'#ccc');}
+const DEFAULT_AV_ICON='<svg viewBox="0 0 100 100" width="62%" height="62%" style="display:block" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="38" r="19" fill="#86736b"/><path d="M50 62c-24 0-42 13-42 30v8h84v-8c0-17-18-30-42-30z" fill="#86736b"/></svg>';
+/* 사진/아이콘 유무에 따른 아바타 배경색: 사진 > 아이콘 미설정(기본, 다른 아이콘과 같은 연분홍) > 아이콘(연분홍) > 색상+대표글자 순 */
+function avBg(a){return (a&&a.photo)?'#eee':(a&&('icon' in a)&&!a.icon)?'#f3ddd6':(a&&a.icon)?'#f3ddd6':((a&&a.color)||'#ccc');}
 const myPlays=[
   {title:'수박 주제 놀이',tag:'수박',count:3,img:'https://images.unsplash.com/photo-1595475207225-428b62bda831?w=400&q=70'},
   {title:'여름 물활동 모음',tag:'여름',count:12,img:'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=400&q=70'},
@@ -2817,9 +2820,8 @@ function renderPeAvatar(){
 }
 function renderPeIcons(){
   const box=$('#peIcons');box.innerHTML='';
-  // 맨 앞: 아이콘·사진을 아무것도 쓰지 않는 '기본(회색)' 선택지
+  // 맨 앞: 아이콘·사진을 아무것도 쓰지 않는 '기본' 선택지 (다른 아이콘과 같은 연분홍 배경)
   const none=document.createElement('button');none.innerHTML=DEFAULT_AV_ICON;none.title='기본';
-  none.style.background='#e5e5e5';
   none.className=(!peSel.photo&&!peSel.icon)?'on':'';
   none.onclick=()=>{peSel.icon='';peSel.photo='';peSel.photoIsNew=false;renderPeAvatar();renderPeIcons();};
   box.appendChild(none);
@@ -7850,7 +7852,7 @@ async function saveDraft(){
     if(idx>=0) drafts[idx]=draft; else drafts.unshift(draft);   // 게스트/데모: 기기에만 저장
     ok=lsSetDraftsSafe(drafts);
   }
-  toast(ok?'✅ 임시저장되었어요':'임시저장 공간이 부족해요. 사진을 줄여보세요.');
+  if(ok) toastIcon(ICO_FILE,'임시저장되었어요'); else toast('임시저장 공간이 부족해요. 사진을 줄여보세요.');
   if(ok){ const btn=$('#writeDraftBtn'); if(btn){ const orig=btn.innerHTML; btn.innerHTML='✓ 저장됨'; btn.disabled=true;
     setTimeout(()=>{ btn.innerHTML=orig; btn.disabled=false; }, 1500); } }
 }
