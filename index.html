@@ -1729,7 +1729,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819h</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819i</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2821,11 +2821,11 @@ function renderPeIcons(){
   const none=document.createElement('button');none.innerHTML=DEFAULT_AV_ICON;none.title='기본';
   none.style.background='#e5e5e5';
   none.className=(!peSel.photo&&!peSel.icon)?'on':'';
-  none.onclick=()=>{peSel.icon='';peSel.photo='';renderPeAvatar();renderPeIcons();};
+  none.onclick=()=>{peSel.icon='';peSel.photo='';peSel.photoIsNew=false;renderPeAvatar();renderPeIcons();};
   box.appendChild(none);
   profileIcons.forEach(ic=>{const b=document.createElement('button');b.textContent=ic;
     b.className=(!peSel.photo&&peSel.icon===ic)?'on':'';
-    b.onclick=()=>{peSel.icon=ic;peSel.photo='';renderPeAvatar();renderPeIcons();};box.appendChild(b);});
+    b.onclick=()=>{peSel.icon=ic;peSel.photo='';peSel.photoIsNew=false;renderPeAvatar();renderPeIcons();};box.appendChild(b);});
 }
 function renderRoleGrid(){
   const box=$('#roleGrid');box.innerHTML='';
@@ -2836,7 +2836,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   try{hardenAutofill(document);}catch(e){}
   const pf=$('#peFile');
   if(pf)pf.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;
-    const r=new FileReader();r.onload=()=>{peSel.photo=r.result;renderPeAvatar();renderPeIcons();};r.readAsDataURL(f);});
+    const r=new FileReader();r.onload=()=>{peSel.photo=r.result;peSel.photoIsNew=true;renderPeAvatar();renderPeIcons();};r.readAsDataURL(f);});
   // 제목·본문을 고치면 '저장 안 된 변경'으로 표시 (닫기 확인용)
   const pt=$('#pTitle'); if(pt)pt.addEventListener('input',markDirty);
   const pb=$('#pBody'); if(pb)pb.addEventListener('input',markDirty);
@@ -2875,6 +2875,15 @@ async function reconcileMyPosts(){
 async function saveProfile(){
   const newNick=$('#peNick').value.trim()||'선생님';
   const roleShort=peSel.role.replace(' 교사','');
+  // 새로 고른 사진이면 저장 전에 먼저 서버(스토리지)에 올려 '진짜 사진 주소'로 바꿔둔다.
+  // (예전엔 사진을 그대로 통째로 저장해서, 내 화면에선 보여도 다른 사람 화면·안드로이드 앱에선 안 보이는 문제가 있었어요)
+  if(peSel.photoIsNew && peSel.photo && SB && authUser){
+    try{
+      const path=`${authUser.id}/avatar_${Date.now()}.jpg`;
+      const url=await putStoragePhoto(await makeThumbBlob(peSel.photo), path);
+      peSel.photo=url; peSel.photoIsNew=false;
+    }catch(e){ toast('사진 업로드 실패: '+(e.message||e)); return; }
+  }
   // 실제 계정: 먼저 DB에 저장하고, 성공했을 때만 화면에 반영 (실패 시 되돌아가는 문제 방지)
   if(SB && authUser){
     const {error}=await SB.from('profiles').upsert({id:authUser.id,nickname:newNick,
@@ -3104,7 +3113,7 @@ async function loadDbPosts(){
       title:row.title||'놀이', date:fmtDate(row.created_at),
       desc:row.description||'', img:row.image_url, images:imgs, video:row.video_url||'',
       tags:row.tags||[], views:'0', like:0, cmt:0, liked:false, comments:[],
-      age:row.age, nuri:row.nuri||[], categories:row.categories||[], attachments:row.attachments||[], refs:row.refs||[],
+      age:row.age, nuri:row.nuri||[], categories:row.categories||[], attachments:row.attachments||[], refs:row.refs||[], book_id:row.book_id||null,
       spots:imgs[0].spots||[], author:{name:row.author_name||'선생님',org:row.author_role||'',
         init:(row.author_name||'선')[0], color:'#86736b',
         icon:row.author_icon||((authUser&&row.user_id===authUser.id)?profile.icon:'')||'',
@@ -3123,7 +3132,7 @@ async function loadDbPosts(){
   // ② 나머지 부가 데이터(폴더·팔로잉·알림·공지·카테고리·행정자료실 등)는 병렬로
   await Promise.allSettled([
     loadUserData(), syncDraftsIn(), loadFollows(), loadNotifs(), loadNotices(),
-    loadFeaturedIssues(), loadCategories(), loadCaptions(), loadCommCats(), loadCommunity()
+    loadFeaturedIssues(), loadCategories(), loadCaptions(), loadCommCats(), loadCommunity(), loadBooks()
   ]);
   reconcileMyPosts();   // 예전 글 저자 표시가 현재 프로필과 다르면 자동 보정
   if($('#v-comm').classList.contains('on'))renderCommunity();
@@ -3520,6 +3529,7 @@ function renderPostPage(p){
       <div class="pf-stack">${photos}</div>
     </div>
     ${(p.attachments&&p.attachments.length)?`<div class="pd-sec"><h4><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>첨부파일</h4><div class="attach-list">${p.attachments.map((a,ai)=>`<a class="attach-chip" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name)}" onclick="recordDownload('${(a.url||'').replace(/'/g,"\\'")}','${p.id||''}',${ai})"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;flex:0 0 auto"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><b>${esc(a.name)}</b><span>${fmtSize(a.size)} · ⬇ <b id="dln-${ai}">${(window._dlCounts&&window._dlCounts[a.url])||0}</b>명</span></a>`).join('')}</div></div>`:''}
+    ${bookCardHTML(p)}
     ${refsHTML(p)}
     ${productsHTML(p)}
     <div class="pd-sec cmt-sec">
@@ -5864,6 +5874,176 @@ function renderPopTags(){
   tags.forEach(tag=>{const s=document.createElement('span');s.textContent='#'+noSpace(tag);s.onclick=()=>filterByLabel(tag);box.appendChild(s);});
 }
 
+/* ================= 동화책 연계 ================= */
+let _dbBooks=[];   // 실제(Supabase)로 등록된 책 목록
+let _bmNew=[];      // 책 관리 화면에서 아직 저장 안 한 새 행(임시)
+let _writeBookId=null;   // 지금 작성 중인 글에 연결한 책 id
+// 데모(미리보기) 전용 예시 — 실제 서비스에선 보이지 않음
+const demoBooksSeed=[
+  {id:'demo-book-1', title:'미용실 안 갈 거야', author:'지혜', publisher:'아람', year:'2025', cover_url:'', link:'', created_by:'demo'}
+];
+function allBooks(){ return SB ? _dbBooks : _dbBooks.concat(demoBooksSeed); }
+function bookById(id){ return id ? allBooks().find(b=>b.id===id) : null; }
+async function loadBooks(){
+  if(!SB){ return; }
+  try{ const {data}=await SB.from('books').select('*').order('created_at',{ascending:false}); _dbBooks=data||[]; }catch(e){ _dbBooks=[]; }
+}
+/* 글쓰기 창: 선택된 책 미리보기 칩 */
+function renderBookSel(){
+  const box=$('#bookSel'); if(!box)return;
+  const b=bookById(_writeBookId);
+  if(!b){ box.innerHTML=''; return; }
+  const cover=b.cover_url?`<img src="${esc(b.cover_url)}" alt="">`:'<div class="bsel-ic">📖</div>';
+  const meta=[b.author,b.publisher,b.year].filter(Boolean).join(' · ');
+  box.innerHTML=`<div class="bsel-chip">${cover}<div class="rbody"><div class="rtt">${esc(b.title||'동화책')}</div>${meta?`<div class="rsub">${esc(meta)}</div>`:''}</div><button type="button" class="bsel-x" title="연결 해제">✕</button></div>`;
+  const xb=box.querySelector('.bsel-x'); if(xb)xb.onclick=()=>{ _writeBookId=null; renderBookSel(); };
+}
+function openBookPicker(){
+  const s=$('#bookSearch'); if(s)s.value='';
+  const f=$('#bookAddForm'); if(f)f.style.display='none';
+  clearBookForm();
+  renderBookPick();
+  open_('bookPickOverlay');
+}
+function renderBookPick(){
+  const box=$('#bookPickList'); if(!box)return; box.innerHTML='';
+  const q=(($('#bookSearch')||{}).value||'').trim().toLowerCase();
+  let list=allBooks();
+  if(q) list=list.filter(b=>((b.title||'')+' '+(b.author||'')).toLowerCase().includes(q));
+  list=list.slice(0,40);
+  if(!list.length){ box.innerHTML='<div class="empty" style="padding:14px 4px">'+(q?'검색 결과가 없어요. 아래에서 새로 등록해보세요.':'아직 등록된 책이 없어요. 아래에서 새로 등록해보세요.')+'</div>'; return; }
+  list.forEach(b=>{
+    const meta=[b.author,b.publisher,b.year].filter(Boolean).join(' · ');
+    const el=document.createElement('div'); el.className='refpick-item';
+    el.innerHTML=`${b.cover_url?`<img src="${esc(b.cover_url)}" alt="">`:'<div class="refpick-item-ic" style="width:46px;height:62px;border-radius:7px;background:#f6ddd8;display:grid;place-items:center;flex:0 0 auto">📖</div>'}
+      <div class="rbody"><div class="rtt">${esc(b.title||'책')}</div>${meta?`<div class="rsub">${esc(meta)}</div>`:''}</div>`;
+    el.onclick=()=>pickBook(b);
+    box.appendChild(el);
+  });
+}
+function pickBook(b){ _writeBookId=b.id; close_('bookPickOverlay'); renderBookSel(); try{markDirty();}catch(e){} }
+function toggleBookAddForm(){ const f=$('#bookAddForm'); if(f)f.style.display=f.style.display==='none'?'block':'none'; }
+let _bfCoverData='';
+function clearBookForm(){
+  _bfCoverData='';
+  ['bfTitle','bfAuthor','bfPublisher','bfYear','bfLink'].forEach(id=>{ const el=$('#'+id); if(el)el.value=''; });
+  const pv=$('#bfCoverPrev'); if(pv)pv.innerHTML='📖';
+}
+async function addNewBook(){
+  const title=(($('#bfTitle')||{}).value||'').trim();
+  if(!title){ toast('책 제목을 입력해주세요'); return; }
+  const author=(($('#bfAuthor')||{}).value||'').trim();
+  const publisher=(($('#bfPublisher')||{}).value||'').trim();
+  const year=(($('#bfYear')||{}).value||'').trim();
+  let link=(($('#bfLink')||{}).value||'').trim();
+  if(link && !/^https?:\/\//i.test(link)) link='https://'+link;
+  let cover_url='';
+  try{
+    if(_bfCoverData){
+      if(SB && authUser){ const path=`${authUser.id}/books/${Date.now()}.jpg`; cover_url=await putStoragePhoto(await makeThumbBlob(_bfCoverData), path); }
+      else { cover_url=_bfCoverData; }
+    }
+  }catch(e){}
+  let newBook;
+  if(SB && authUser){
+    try{
+      const {data,error}=await SB.from('books').insert({title,author,publisher,year,cover_url,link,created_by:authUser.id}).select().single();
+      if(error)throw error;
+      newBook=data;
+    }catch(e){ toast('책 등록 실패: '+(e.message||e)); return; }
+  } else {
+    newBook={id:'local'+Date.now(), title, author, publisher, year, cover_url, link, created_by:'me'};
+  }
+  _dbBooks.unshift(newBook);
+  _writeBookId=newBook.id;
+  close_('bookPickOverlay'); renderBookSel();
+  toast('책을 등록하고 연결했어요');
+}
+(function(){ const cf=document.getElementById('bfCoverFile'); if(cf)cf.addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader(); r.onload=()=>{ _bfCoverData=r.result; const pv=$('#bfCoverPrev'); if(pv)pv.innerHTML=`<img src="${r.result}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`; };
+  r.readAsDataURL(f);
+}); })();
+/* ===== (관리자) 동화책 관리 — 책을 미리 등록해두는 화면 ===== */
+function openBookMgr(){ if(!canEditCats()){ toast('관리자만 사용할 수 있어요'); return; } _bmNew=[]; renderBookMgr(); swapOverlay('catOverlay','bookMgrOverlay'); }
+function addBookMgrRow(){ _bmNew.unshift({_tmpId:'tmp'+Date.now(), title:'',author:'',publisher:'',year:'',cover_url:'',link:''}); renderBookMgr(); }
+function bmFindRow(key){ return _bmNew.find(x=>x._tmpId===key) || allBooks().find(x=>x.id===key); }
+function renderBookMgr(){
+  const box=$('#bookMgrList'); if(!box)return; box.innerHTML='';
+  const rows=_bmNew.concat(allBooks());
+  if(!rows.length){ box.innerHTML='<div class="empty">등록된 책이 없어요. 위의 + 새 책 추가로 등록해보세요.</div>'; return; }
+  rows.forEach(b=>{
+    const key=b.id||b._tmpId;
+    const el=document.createElement('div'); el.className='bm-row';
+    el.innerHTML=`
+      <div class="bm-cover" data-key="${key}">${b.cover_url?`<img src="${esc(b.cover_url)}" alt="">`:'📖'}</div>
+      <input type="file" class="bm-coverfile" data-key="${key}" accept="image/*" hidden>
+      <div class="bm-fields">
+        <input class="bm-in" data-k="title" data-key="${key}" placeholder="책 제목 *" value="${esc(b.title||'')}">
+        <div style="display:flex;gap:6px">
+          <input class="bm-in" data-k="author" data-key="${key}" placeholder="저자" value="${esc(b.author||'')}">
+          <input class="bm-in" data-k="publisher" data-key="${key}" placeholder="출판사" value="${esc(b.publisher||'')}">
+          <input class="bm-in" data-k="year" data-key="${key}" placeholder="연도" style="width:70px;flex:0 0 70px" value="${esc(b.year||'')}">
+        </div>
+        <input class="bm-in" data-k="link" data-key="${key}" placeholder="구매 링크 (선택)" value="${esc(b.link||'')}">
+      </div>
+      <div class="bm-actions">
+        <button type="button" class="bm-cover-btn" data-key="${key}">사진</button>
+        <button type="button" class="bm-save" data-key="${key}">저장</button>
+        <button type="button" class="bm-del" data-key="${key}">삭제</button>
+      </div>`;
+    box.appendChild(el);
+  });
+  wireBookMgr();
+}
+function wireBookMgr(){
+  const box=$('#bookMgrList'); if(!box)return;
+  box.querySelectorAll('.bm-in').forEach(inp=>{ inp.onchange=()=>{ const row=bmFindRow(inp.dataset.key); if(row) row[inp.dataset.k]=inp.value; }; });
+  box.querySelectorAll('.bm-coverfile').forEach(cf=>{ cf.onchange=e=>{ const f=e.target.files[0]; if(!f)return;
+    const r=new FileReader(); r.onload=()=>{ const row=bmFindRow(cf.dataset.key); if(row){ row.cover_url=r.result; row._coverChanged=true; } renderBookMgr(); }; r.readAsDataURL(f); }; });
+  box.querySelectorAll('.bm-cover-btn').forEach(b=>{ b.onclick=()=>{ const inp=box.querySelector('.bm-coverfile[data-key="'+b.dataset.key+'"]'); if(inp)inp.click(); }; });
+  box.querySelectorAll('.bm-save').forEach(b=>{ b.onclick=()=>saveBookMgrRow(b.dataset.key); });
+  box.querySelectorAll('.bm-del').forEach(b=>{ b.onclick=()=>delBookMgrRow(b.dataset.key); });
+}
+async function saveBookMgrRow(key){
+  const row=bmFindRow(key); if(!row)return;
+  if(!(row.title||'').trim()){ toast('책 제목을 입력해주세요'); return; }
+  let link=(row.link||'').trim(); if(link && !/^https?:\/\//i.test(link)) link='https://'+link; row.link=link;
+  let cover_url=row.cover_url||'';
+  try{
+    if(row._coverChanged && cover_url && SB && authUser){
+      const path=`${authUser.id}/books/${Date.now()}.jpg`;
+      cover_url=await putStoragePhoto(await makeThumbBlob(cover_url), path);
+    }
+  }catch(e){}
+  const payload={title:row.title.trim(), author:(row.author||'').trim(), publisher:(row.publisher||'').trim(), year:(row.year||'').trim(), cover_url, link};
+  if(row.id){
+    if(SB){ try{ const {error}=await SB.from('books').update(payload).eq('id',row.id); if(error)throw error; }catch(e){ toast('저장 실패: '+(e.message||e)); return; } }
+    Object.assign(row,payload); row._coverChanged=false;
+    toast('저장했어요');
+  } else {
+    if(SB && authUser){
+      try{ const {data,error}=await SB.from('books').insert(Object.assign({created_by:authUser.id},payload)).select().single(); if(error)throw error;
+        _dbBooks.unshift(data); _bmNew=_bmNew.filter(x=>x._tmpId!==key);
+      }catch(e){ toast('등록 실패: '+(e.message||e)); return; }
+    } else {
+      const nb=Object.assign({id:'local'+Date.now()},payload,{created_by:'me'});
+      _dbBooks.unshift(nb); _bmNew=_bmNew.filter(x=>x._tmpId!==key);
+    }
+    toast('책을 등록했어요');
+  }
+  renderBookMgr();
+}
+function delBookMgrRow(key){
+  if(String(key).indexOf('tmp')===0){ _bmNew=_bmNew.filter(x=>x._tmpId!==key); renderBookMgr(); return; }
+  if(!confirm('이 책을 목록에서 삭제할까요? 이미 연결된 글에서도 책 정보가 사라져요.'))return;
+  (async()=>{
+    if(SB){ try{ const {error}=await SB.from('books').delete().eq('id',key); if(error)throw error; }catch(e){ toast('삭제 실패: '+(e.message||e)); return; } }
+    _dbBooks=_dbBooks.filter(x=>x.id!==key);
+    renderBookMgr(); toast('삭제했어요');
+  })();
+}
+
 /* ================= 참고 · 출처 ================= */
 let postRefs=[];  // 작성 중인 글의 참고/출처 목록
 const REF_RELS=['참고했어요','출처'];   // '이 놀이와 연결돼요'는 놀이흐름 기능으로 대체 (제거)
@@ -5950,6 +6130,19 @@ function renderRefList(){
     box.appendChild(el);
   });
 }
+/* 상세 페이지: 이 글에 연결된 동화책 카드 */
+function bookOf(p){ return p&&p.book_id ? bookById(p.book_id) : null; }
+function bookCardHTML(p){
+  const b=bookOf(p); if(!b) return '';
+  const cover=b.cover_url?`<img class="ric" src="${esc(b.cover_url)}" alt="">`:'<div class="ric">📖</div>';
+  const meta=[b.author,b.publisher,b.year].filter(Boolean).join(' · ');
+  let link=(b.link||'').trim(); if(link && !/^https?:\/\//i.test(link)) link='https://'+link;
+  const body=`${cover}<div class="rbody"><div class="rtt">${esc(b.title||'동화책')}</div>${meta?`<div class="rsub">${esc(meta)}</div>`:''}<span class="prod-buy" style="margin-top:5px;display:inline-block">${link?'구매하기 ↗':'링크 준비중'}</span></div>`;
+  const card=link?`<a class="ref-link book-card" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${body}</a>`:`<div class="ref-link book-card">${body}</div>`;
+  return `<div class="pd-sec"><h4>📖 함께 읽은 동화책</h4>${card}</div>`;
+}
+/* 같은 책을 연결한 다른 글들 */
+function bookRelated(p){ if(!p||!p.book_id) return []; return allPosts().filter(q=>q!==p&&canSeePost(q)&&q.book_id===p.book_id); }
 /* 상세 페이지: 참고·출처 카드 렌더 (내가 건 연결만 · 양방향 자동표시는 놀이흐름으로 대체) */
 function refsHTML(p){
   const refs=p.refs||[];
