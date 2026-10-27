@@ -1729,7 +1729,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819g</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819h</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2685,14 +2685,18 @@ function removeFollower(i){followers.splice(i,1);renderSocial();}
 /* ---------------- 마이페이지 ---------------- */
 // 데모 모드면 윤서쌤 미리보기, 실제 모드면 로그인 전까지 게스트
 let profile = (typeof SB!=='undefined' && SB)
-  ? {nick:'게스트',role:'',roleShort:'',icon:'🧑',photo:'',guest:true}
-  : {nick:'윤서쌤',role:'유아교사',roleShort:'유치원',icon:'🧑',photo:''};
+  ? {nick:'게스트',role:'',roleShort:'',icon:'',photo:'',guest:true}
+  : {nick:'윤서쌤',role:'유아교사',roleShort:'유치원',icon:'',photo:''};
 function isGuest(){return !!(SB && !authUser);}
 /* ===== 관리자 ===== 지정 이메일로만 관리자 권한 (RLS에서도 동일 이메일로 보호) */
 const ADMIN_EMAIL='1004chldbstj3@gmail.com';
 function isAdmin(){ return !!(SB && authUser && (authUser.email||'').toLowerCase()===ADMIN_EMAIL); }
 const roles=['유아교사','학부모','학원','학생/예비교사','기타'];
 const profileIcons=['🧑','🐣','🌸','🌊','🦋','🌈','🐬','🌻','⭐'];
+/* 프로필 사진·아이콘을 아무것도 설정하지 않았을 때 보이는 기본 아바타 (인스타그램 스타일 회색 사람 아이콘) */
+const DEFAULT_AV_ICON='<svg viewBox="0 0 100 100" width="62%" height="62%" style="display:block" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="38" r="19" fill="#aab0b8"/><path d="M50 62c-24 0-42 13-42 30v8h84v-8c0-17-18-30-42-30z" fill="#aab0b8"/></svg>';
+/* 사진/아이콘 유무에 따른 아바타 배경색: 사진>아이콘 미설정(기본 회색)>아이콘(복숭아색)>색상+대표글자 순 */
+function avBg(a){return (a&&a.photo)?'#eee':(a&&('icon' in a)&&!a.icon)?'#e5e5e5':(a&&a.icon)?'#f3ddd6':((a&&a.color)||'#ccc');}
 const myPlays=[
   {title:'수박 주제 놀이',tag:'수박',count:3,img:'https://images.unsplash.com/photo-1595475207225-428b62bda831?w=400&q=70'},
   {title:'여름 물활동 모음',tag:'여름',count:12,img:'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=400&q=70'},
@@ -2704,10 +2708,10 @@ const savedPlays=[
   {title:'저장 — 실내 체육',tag:'실내',count:11,img:'https://images.unsplash.com/photo-1526634332515-d56c5fd16991?w=400&q=70'},
   {title:'저장 — 감각 탐색',tag:'감각',count:9,img:'https://images.unsplash.com/photo-1545558014-8692077e9b5c?w=400&q=70'},
 ];
-function avatarHTML(size){return profile.photo?`<img src="${profile.photo}">`:profile.icon;}
-/* 글쓴이 아바타: 설정한 프로필 사진 > 아이콘 > 대표글자 순으로 표시 */
-function avStyle(a){return (a&&a.photo)?'background:#eee;overflow:hidden':(a&&a.icon)?'background:#f3ddd6':`background:${(a&&a.color)||'#ccc'}`;}
-function avInner(a){return (a&&a.photo)?`<img src="${a.photo}" style="width:100%;height:100%;object-fit:cover">`:(a&&a.icon)?a.icon:((a&&a.init)||'?');}
+function avatarHTML(size){return profile.photo?`<img src="${profile.photo}">`:(profile.icon||DEFAULT_AV_ICON);}
+/* 글쓴이 아바타: 설정한 프로필 사진 > 아이콘 > (둘 다 없으면 기본 회색 아이콘, 데모처럼 아이콘 자체가 없던 글은 대표글자) 순으로 표시 */
+function avStyle(a){return `background:${avBg(a)}${(a&&a.photo)?';overflow:hidden':''}`;}
+function avInner(a){return (a&&a.photo)?`<img src="${a.photo}" style="width:100%;height:100%;object-fit:cover">`:(a&&('icon' in a)&&!a.icon)?DEFAULT_AV_ICON:(a&&a.icon)?a.icon:((a&&a.init)||'?');}
 /* 지금 로그인한 나의 아바타 객체 (댓글·답글 입력창용) */
 function myAv(){return {photo:profile.photo||'',icon:profile.icon||'',color:'#5b8def',init:(profile.nick||'나')[0]};}
 
@@ -2749,11 +2753,13 @@ function renderProfile(){
   const guest=isGuest();
   const nick=guest?'게스트':profile.nick;
   const role=guest?'로그인이 필요해요':(profile.roleShort||profile.role);
-  $('#pcAv').innerHTML=guest?'🔒':avatarHTML();
+  const pcAv=$('#pcAv');
+  pcAv.innerHTML=guest?'🔒':avatarHTML();
+  pcAv.style.background=guest?'':avBg(profile);
   $('#pcName').textContent=nick;
   $('#pcRole').textContent=role;
   const rsAv=$('#rsAv'),rsName=$('#rsName'),rsRole=$('#rsRole');
-  if(rsAv)rsAv.innerHTML=guest?'🔒':avatarHTML();
+  if(rsAv){rsAv.innerHTML=guest?'🔒':avatarHTML();rsAv.style.background=guest?'':avBg(profile);}
   if(rsName)rsName.textContent=nick;
   if(rsRole)rsRole.textContent=role;
   const me=t('me');if(me){me.name=profile.nick;me.icon=profile.icon;me.photo=profile.photo;}
@@ -2804,9 +2810,19 @@ function openProfileEdit(){
   }
   open_('profileOverlay');
 }
-function renderPeAvatar(){$('#peAv').innerHTML=peSel.photo?`<img src="${peSel.photo}">`:peSel.icon;}
+function renderPeAvatar(){
+  const el=$('#peAv');
+  el.innerHTML=peSel.photo?`<img src="${peSel.photo}">`:(peSel.icon||DEFAULT_AV_ICON);
+  el.style.background=avBg(peSel);
+}
 function renderPeIcons(){
   const box=$('#peIcons');box.innerHTML='';
+  // 맨 앞: 아이콘·사진을 아무것도 쓰지 않는 '기본(회색)' 선택지
+  const none=document.createElement('button');none.innerHTML=DEFAULT_AV_ICON;none.title='기본';
+  none.style.background='#e5e5e5';
+  none.className=(!peSel.photo&&!peSel.icon)?'on':'';
+  none.onclick=()=>{peSel.icon='';peSel.photo='';renderPeAvatar();renderPeIcons();};
+  box.appendChild(none);
   profileIcons.forEach(ic=>{const b=document.createElement('button');b.textContent=ic;
     b.className=(!peSel.photo&&peSel.icon===ic)?'on':'';
     b.onclick=()=>{peSel.icon=ic;peSel.photo='';renderPeAvatar();renderPeIcons();};box.appendChild(b);});
@@ -2947,7 +2963,7 @@ async function doAuth(){
       const nick=$('#authNick').value.trim()||'선생님';
       const {data,error}=await SB.auth.signUp({email,password:pw,options:{data:{nickname:nick}}});
       if(error)throw error;
-      if(data.user){try{await SB.from('profiles').upsert({id:data.user.id,nickname:nick,role:'유아교사',icon:'🧑'});}catch(e){}}
+      if(data.user){try{await SB.from('profiles').upsert({id:data.user.id,nickname:nick,role:'유아교사',icon:''});}catch(e){}}
       if(data.session){                       // 이메일 인증 OFF → 바로 로그인
         close_('authOverlay'); await refreshSession(); toast('회원가입 완료! 바로 로그인됐어요');
       }else{                                   // 이메일 인증 필요
@@ -2974,7 +2990,7 @@ async function doAuth(){
   }finally{ if(btn){btn.disabled=false; btn.textContent='계속하기';} }
 }
 async function logout(){if(SB)await SB.auth.signOut();authUser=null;myFollowing=new Set();
-  profile={nick:'게스트',role:'',roleShort:'',icon:'🧑',photo:'',guest:true};
+  profile={nick:'게스트',role:'',roleShort:'',icon:'',photo:'',guest:true};
   applyAuthUI();if($('#v-my').classList.contains('on'))renderMyPage();toast('로그아웃되었어요');}
 async function googleAuth(){
   if(!SB){toast('데모 모드예요 — Supabase 키를 넣고, Supabase에서 구글 로그인을 켜면 동작해요');close_('authOverlay');return;}
@@ -3036,8 +3052,8 @@ async function refreshSession(){
       const base=metaNick||meta.full_name||meta.name||((authUser.email||'').split('@')[0])||'선생님';
       const nick=await uniqueNick(base);
       const photo=meta.avatar_url||meta.picture||'';
-      try{await SB.from('profiles').upsert({id:authUser.id,nickname:nick,role:'유아교사',icon:'🧑',avatar_url:photo});}catch(e){}
-      prof={nickname:nick,role:'유아교사',icon:'🧑',avatar_url:photo};
+      try{await SB.from('profiles').upsert({id:authUser.id,nickname:nick,role:'유아교사',icon:'',avatar_url:photo});}catch(e){}
+      prof={nickname:nick,role:'유아교사',icon:'',avatar_url:photo};
     }
     profile.nick=prof.nickname||metaNick||profile.nick;
     profile.role=prof.role||profile.role;
@@ -5306,7 +5322,7 @@ async function loadCommunity(){
     const {data}=await SB.from('community_posts').select('*').order('created_at',{ascending:false});
     window._commPosts=(data||[]).map(r=>({id:r.id, db:true, user_id:r.user_id, notice:!!r.is_notice,
       title:r.title||'', body:r.body||'', date:fmtDate(r.created_at), attachments:r.attachments||[], category:r.category||'',
-      author:{name:r.author_name||'선생님', icon:r.author_icon||'🧑', photo:r.author_avatar||'', color:'#86736b', init:(r.author_name||'선')[0]}}));
+      author:{name:r.author_name||'선생님', icon:r.author_icon||'', photo:r.author_avatar||'', color:'#86736b', init:(r.author_name||'선')[0]}}));
   }catch(e){ window._commPosts=[]; }
 }
 /* ===== 커뮤니티 파일 첨부 ===== */
