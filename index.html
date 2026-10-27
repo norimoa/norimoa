@@ -208,6 +208,9 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;
     border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff}
   .modal-head b{font-size:17px}
+  .ft-ico-btn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:1px solid #e4ded8;background:#fff;color:#555;margin-left:6px;vertical-align:-7px;padding:0;flex:0 0 auto}
+  .ft-ico-btn svg{width:13px;height:13px;display:block}
+  .ft-ico-btn.del{color:#c33;border-color:#f3d7d7}
   .modal-head .x{border:none;background:#f2f2f5;width:30px;height:30px;border-radius:50%;font-size:16px;color:#666}
   .foll-row{display:flex;align-items:center;gap:12px;padding:12px 20px}
   .foll-row .av{width:44px;height:44px;border-radius:50%;background:var(--teal);color:#fff;
@@ -489,8 +492,9 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .folder .ai-badge2{position:absolute;right:8px;top:8px;background:#c04a6e;color:#fff;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:10px}
   .folder .my-badge2{position:absolute;right:8px;top:8px;background:var(--coral);color:#fff;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:10px}
   .folder .fnew{width:100%;height:100%;display:grid;place-items:center;font-size:34px;color:var(--coral-tx);background:#fcf4f1;border:2px dashed #e3cfc7}
-  .folder-actions{display:flex;gap:8px;flex-wrap:wrap;padding:14px 20px 4px}
+  .folder-actions{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:14px 20px 10px}
   .folder-actions:empty{display:none}
+  .folder-actions .fa-btn,.folder-actions .fa-hint{flex:0 0 auto;white-space:nowrap}
   .fa-btn{border:1px solid #e4ded8;background:#fff;color:#555;border-radius:18px;padding:8px 14px;font-size:12.5px;font-weight:600}
   .fa-btn.p{background:var(--coral);color:#fff;border-color:var(--coral)}
   .fa-btn.del{color:#c33}
@@ -1284,7 +1288,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .cmt-del{border:none;background:none;color:var(--sub);font-size:11.5px;cursor:pointer;padding:2px 6px;margin-left:6px;border-radius:6px;display:inline-flex;align-items:center;gap:3px}
   .cmt-del:hover{color:#5a5a62;background:#efeae6}
   .cmt-del svg,.reply-btn svg{width:13px;height:13px;flex:0 0 auto}
-  .delphoto svg,.ei-del-btn svg,.fa-btn.del svg,.btn-line.del svg{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
+  .delphoto svg,.ei-del-btn svg,.fa-btn svg,.btn-line.del svg{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
   .cmt-head{display:flex;align-items:center;justify-content:flex-start;gap:18px;margin-bottom:12px;flex-wrap:wrap}
   .cmt-head .cmt-label{font-size:14px;font-weight:600;color:#4a4a52;display:inline-flex;align-items:center;gap:6px}
   .cmt-head .cmt-label svg{width:20px;height:20px;display:block}
@@ -1752,7 +1756,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819o</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819r</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -4368,12 +4372,12 @@ function materializeAiFolder(){
 }
 function openCustomFolder(ctx, id){   // 편집 가능 (드래그 순서변경 포함)
   _curCtx=ctx;_curFolder=id;const col=COL[ctx], f=col.custom().find(x=>x.id===id);if(!f)return;
-  $('#folderTitle').innerHTML=`${FOLDER_ICO} ${esc(f.name)} <span class="fsub">· ${f.posts.length}개</span>`;
+  $('#folderTitle').innerHTML=`${FOLDER_ICO} ${esc(f.name)} <span class="fsub">· ${f.posts.length}개</span>
+    <button class="ft-ico-btn" onclick="openNewFolder('${ctx}','${id}')" title="이름 변경">${ICO.edit}</button>
+    <button class="ft-ico-btn del" onclick="deleteFolder('${ctx}','${id}')" title="삭제">${ICO.trash}</button>`;
   $('#folderActions').innerHTML=`
     <button class="fa-btn p" onclick="openPicker()">＋ 놀이 담기</button>
     ${f.posts.length?`<button class="fa-btn" onclick="openFolderCoverPicker('${ctx}','${id}')">${ICO.image} 폴더 사진</button>`:''}
-    <button class="fa-btn" onclick="openNewFolder('${ctx}','${id}')">✎ 이름 변경</button>
-    <button class="fa-btn del" onclick="deleteFolder('${ctx}','${id}')">${ICO.trash} 삭제</button>
     ${f.posts.length>1?'<span class="fa-hint">↕ 드래그로 순서 변경</span>':''}`;
   fillFolderFlowOrList(f.posts, g=>{
     if(!f.posts.length){g.innerHTML='<div class="empty">아직 비어 있어요. ＋ 놀이 담기로 넣어보세요.</div>';return;}
