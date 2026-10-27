@@ -1036,6 +1036,26 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .ref-link .rrel{display:inline-block;font-size:11px;font-weight:700;color:#fff;background:var(--coral);border-radius:6px;padding:1px 7px;margin-bottom:3px}
   .ref-link .rtt{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ref-link .rsub{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* 동화책 카드(상세 페이지)는 표지가 책처럼 세로로 길게 */
+  .ref-link.book-card .ric{width:52px;height:72px;border-radius:7px}
+  /* 글쓰기 창: 선택된 책 미리보기 칩 */
+  .bsel-chip{display:flex;gap:10px;align-items:center;border:1px solid #eadfd8;border-radius:12px;padding:9px 11px;background:#fdf7f5;margin-bottom:8px}
+  .bsel-chip img,.bsel-chip .bsel-ic{width:40px;height:56px;border-radius:6px;object-fit:cover;flex:0 0 auto;background:#f2ece8;display:grid;place-items:center;font-size:18px}
+  .bsel-chip .rbody{flex:1;min-width:0}
+  .bsel-x{margin-left:auto;background:none;border:none;font-size:15px;color:var(--sub);cursor:pointer;flex:0 0 auto;padding:4px}
+  /* 책 새로 등록 폼의 표지 미리보기 */
+  .bf-cover{width:48px;height:66px;border-radius:7px;background:#f6ddd8;display:grid;place-items:center;font-size:20px;overflow:hidden;flex:0 0 auto}
+  .bf-cover img{width:100%;height:100%;object-fit:cover}
+  /* (관리자) 동화책 관리 목록 */
+  .bm-row{display:flex;gap:10px;align-items:flex-start;border:1px solid #eee;border-radius:12px;padding:10px;margin-bottom:10px;background:#fff}
+  .bm-cover{width:52px;height:72px;border-radius:7px;background:#f6ddd8;display:grid;place-items:center;font-size:20px;flex:0 0 auto;overflow:hidden}
+  .bm-cover img{width:100%;height:100%;object-fit:cover}
+  .bm-fields{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+  .bm-in{border:1px solid #e7dcd6;border-radius:9px;padding:8px 10px;font-family:inherit;background:#fafafb;font-size:13px;width:100%;box-sizing:border-box}
+  .bm-actions{display:flex;flex-direction:column;gap:6px;flex:0 0 auto}
+  .bm-actions button{border:1px solid #e7dcd6;border-radius:8px;padding:6px 10px;font-size:12px;background:#fff;cursor:pointer;white-space:nowrap}
+  .bm-save{color:#fff!important;background:var(--coral)!important;border-color:var(--coral)!important}
+  .bm-del{color:#b5423a}
   .big-write{min-height:220px;font-size:14.5px;line-height:1.7}
   .sec-write{min-height:72px;font-size:14px;line-height:1.6}
   /* 본문 안 URL 자동 링크 */
@@ -1729,7 +1749,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819l</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819m</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -2080,6 +2100,13 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
         <div id="refList" style="margin-top:10px"></div>
       </div>
 
+      <!-- 동화책 연계 -->
+      <div class="sec">
+        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="sl-t">동화책</span> <span class="hint">이 놀이와 연계한 동화책이 있으면 연결해보세요 · 선택</span></div>
+        <div id="bookSel"></div>
+        <button type="button" class="fa-btn" onclick="openBookPicker()">＋ 동화책 선택/추가</button>
+      </div>
+
       <!-- 사진별 설명·상품태그 (수정할 때만 표시) -->
       <div class="sec" id="writeImagesSec" style="display:none">
         <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="sl-t">사진 · 설명 · 상품 태그</span> <span class="hint">사진을 눌러 수정 · 휴지통으로 삭제 · 아래에서 추가</span></div>
@@ -2103,6 +2130,46 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <div class="up-body">
       <input id="refSearch" type="search" name="nolimoa-refsearch" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" placeholder="놀이 제목·해시태그·선생님 이름 검색" oninput="renderRefPick()" style="width:100%;border:1px solid #e7dcd6;border-radius:20px;padding:11px 15px;font-size:13.5px;background:#fafafb;margin-bottom:12px">
       <div id="refPickList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 동화책 선택/등록 모달 ============ -->
+<div class="overlay" id="bookPickOverlay" onclick="if(event.target===this)close_('bookPickOverlay')">
+  <div class="modal" style="max-width:560px;max-height:88vh;display:flex;flex-direction:column">
+    <div class="modal-head"><b>📖 동화책 선택</b><button class="x" onclick="close_('bookPickOverlay')">×</button></div>
+    <div class="up-body">
+      <input id="bookSearch" type="search" name="nolimoa-booksearch" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" placeholder="책 제목 검색" oninput="renderBookPick()" style="width:100%;border:1px solid #e7dcd6;border-radius:20px;padding:11px 15px;font-size:13.5px;background:#fafafb;margin-bottom:12px">
+      <div id="bookPickList"></div>
+      <button type="button" class="fa-btn" style="margin-top:10px;width:100%;box-sizing:border-box" onclick="toggleBookAddForm()">＋ 목록에 없는 책 새로 등록</button>
+      <div id="bookAddForm" style="display:none;margin-top:12px;border-top:1px solid #eee;padding-top:12px">
+        <input id="bfTitle" placeholder="책 제목 *" style="width:100%;box-sizing:border-box;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px;margin-bottom:8px">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="bfAuthor" placeholder="저자(선택)" style="flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px">
+          <input id="bfPublisher" placeholder="출판사(선택)" style="flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px">
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input id="bfYear" placeholder="발행연도(선택)" style="width:90px;flex:0 0 90px;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px">
+          <input id="bfLink" type="url" placeholder="구매 링크(선택)" style="flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px">
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div class="bf-cover" id="bfCoverPrev">📖</div>
+          <input type="file" id="bfCoverFile" accept="image/*" hidden>
+          <button type="button" class="fa-btn" onclick="document.getElementById('bfCoverFile').click()">표지 사진 올리기(선택)</button>
+        </div>
+        <button type="button" class="fa-btn" style="width:100%;box-sizing:border-box;background:var(--coral);color:#fff;border-color:var(--coral)" onclick="addNewBook()">＋ 책 등록하고 연결하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ (관리자) 동화책 관리 모달 ============ -->
+<div class="overlay" id="bookMgrOverlay" onclick="if(event.target===this)close_('bookMgrOverlay')">
+  <div class="modal folder-modal" style="max-width:640px">
+    <div class="modal-head"><b>📖 동화책 관리</b><button class="x" onclick="close_('bookMgrOverlay')">×</button></div>
+    <div class="up-body" style="max-height:70vh;overflow:auto">
+      <button type="button" class="fa-btn" style="margin-bottom:10px" onclick="addBookMgrRow()">＋ 새 책 추가</button>
+      <div id="bookMgrList"></div>
     </div>
   </div>
 </div>
@@ -3123,6 +3190,7 @@ async function loadDbPosts(){
     };
   });
   _postsLoading=false;         // 글 도착 → '불러오는 중' 해제
+  try{ reconcileFolderRefs(); }catch(e){}   // 새로 불러온 글 객체로 내 폴더·저장목록 다시 연결(뒤죽박죽 방지)
   // ① 글이 준비되면 '즉시' 목록을 그린다 (집계를 기다리지 않음)
   if($('#v-browse').classList.contains('on'))renderBrowse();
   if($('#v-my').classList.contains('on'))renderMyPage();
@@ -3143,7 +3211,19 @@ async function loadDbPosts(){
   if($('#v-my').classList.contains('on'))renderMyPage();
   try{ if(authUser) scheduleThumbBackfill(); }catch(e){}   // 내 예전 글의 목록용 작은 사진 보정(백그라운드)
 }
-/* ===== 마이페이지 저장(폴더·저장한 놀이) — Supabase 계정별 동기화 ===== */
+/* ===== 마이페이지 저장(폴더·저장한 놀이) — Supabase 계정별 동기화 =====
+   ⚠️ loadDbPosts()는 글 목록을 매번 '새 객체'로 다시 만들기 때문에(수정·삭제·업로드 후 등)
+   그 전에 폴더·저장목록에 담아둔 놀이(객체 참조)가 새 목록과 더는 같은 객체가 아니게 돼요.
+   그러면 "이미 폴더에 들어있다"는 걸 못 알아봐서 전부 미분류로 보이고, 결국 AI가
+   주제별로 자동 재분류한 것처럼 보여요(=내 폴더가 뒤죽박죽돼 보이는 원인).
+   → 글 목록을 새로 불러올 때마다 id 기준으로 다시 연결해줘서 이 문제를 막아요. */
+function reconcileFolderRefs(){
+  const map={}; allPosts().forEach(p=>{ if(p.id)map[p.id]=p; });
+  const relink=arr=>(arr||[]).map(p=>(p&&p.id&&map[p.id])?map[p.id]:p).filter(Boolean);
+  savedPosts=relink(savedPosts);
+  customUpload.forEach(f=>{ f.posts=relink(f.posts); });
+  customSaved.forEach(f=>{ f.posts=relink(f.posts); });
+}
 async function saveUserData(){
   if(!(SB && authUser))return;
   const data={
@@ -3826,6 +3906,7 @@ async function openEdit(){
   _postPriv=!!p.priv; { const pc=$('#postPrivChk'); if(pc)pc.checked=_postPriv; }   // '나만 보기' 상태 불러오기
   attachments=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url}));
   postRefs=(p.refs||[]).map(r=>({...r}));
+  _writeBookId=p.book_id||null; renderBookSel();
   _flow=parseFlow(p.desc||'').flow||{type:'',nodes:[]};
   _flowHost=null; _flowHostBaseline='';
   // 이 글에 자체 흐름이 없고, 다른 글이 이 글을 흐름으로 연결했다면 → 그 원글의 흐름을 여기서 수정
@@ -5201,6 +5282,7 @@ function renderCatDrawer(){
   let html=`<div class="cat-draw-head"><span>카테고리</span><button onclick="close_('catOverlay')" aria-label="닫기">×</button></div>`;
   html+=`<button type="button" class="cat-about-btn" onclick="nav('about')"><img alt="" width="16" height="16" style="border-radius:4px;vertical-align:-3px;margin-right:3px" src="data:image/png;base64,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"> 놀이모아 소개</button>`;
   if(canEditCats()) html+=`<button type="button" class="cat-admin-btn" onclick="openCatAdmin()">✏️ 카테고리 편집${isAdmin()?' (관리자)':' (미리보기)'}</button>`;
+  if(canEditCats()) html+=`<button type="button" class="cat-admin-btn" onclick="openBookMgr()">📖 동화책 관리${isAdmin()?' (관리자)':' (미리보기)'}</button>`;
   d.groups.forEach((grp,gi)=>{
     html+=`<div class="cat-group"><div class="cgl">${groupIco(grp)} ${grp.g}</div><div class="cg-grid">`+
       grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
