@@ -368,6 +368,9 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .folder-flow-card{grid-column:1/-1}
   .folder-flow-card .fd-svg{max-height:600px}
   .folder-flow-card .flow-card-h{font-size:16px}
+  .folder-flow-card[draggable="true"]{cursor:grab}
+  .folder-flow-card.dragging{opacity:.5}
+  .flow-drag-handle{color:var(--sub);margin-right:3px;font-size:15px;cursor:grab}
   .folder-rest-h{grid-column:1/-1;font-size:13px;font-weight:700;color:var(--sub);margin:6px 2px 0}
   .folder-flow-toggle{grid-column:1/-1;justify-self:start}
   .fd-path{fill:none;stroke:#e0a9b8;stroke-width:2.5}
@@ -640,7 +643,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .spot-pop .pop-more:hover{color:var(--coral-tx)}
   #productOverlay{z-index:75}
   #folderOverlay{z-index:80}
-  #newFolderOverlay,#pickerOverlay{z-index:85}
+  #newFolderOverlay,#pickerOverlay,#coverPickOverlay{z-index:85}
   #editOverlay{z-index:88}
   #imgEditOverlay{z-index:95}
   /* 모바일 확대 모자이크 편집 */
@@ -1749,7 +1752,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819m</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819o</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1883,6 +1886,14 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <div class="modal-head"><b>저장한 놀이 담기</b><button class="x" onclick="close_('pickerOverlay')">×</button></div>
     <div id="pickerList" style="max-height:60vh;overflow:auto"></div>
     <div class="up-foot"><button onclick="closePicker()">완료</button></div>
+  </div>
+</div>
+
+<!-- ============ 폴더 사진(썸네일) 고르기 ============ -->
+<div class="overlay" id="coverPickOverlay" onclick="if(event.target===this)close_('coverPickOverlay')">
+  <div class="modal">
+    <div class="modal-head"><b>폴더 사진 고르기</b><button class="x" onclick="close_('coverPickOverlay')">×</button></div>
+    <div id="coverPickList" style="max-height:60vh;overflow:auto"></div>
   </div>
 </div>
 
@@ -3228,8 +3239,8 @@ async function saveUserData(){
   if(!(SB && authUser))return;
   const data={
     saved: savedPosts.map(p=>p.id).filter(Boolean),
-    upFolders: customUpload.map(f=>({name:f.name, ids:f.posts.map(p=>p.id).filter(Boolean)})),
-    savFolders: customSaved.map(f=>({name:f.name, ids:f.posts.map(p=>p.id).filter(Boolean)})),
+    upFolders: customUpload.map(f=>({name:f.name, ids:f.posts.map(p=>p.id).filter(Boolean), cover:f.cover||null})),
+    savFolders: customSaved.map(f=>({name:f.name, ids:f.posts.map(p=>p.id).filter(Boolean), cover:f.cover||null})),
     notifSeen: _notifSeenTs||notifSeen()
   };
   try{ await SB.from('user_data').upsert({user_id:authUser.id, data}); }
@@ -3251,8 +3262,8 @@ async function loadUserData(){
   if(!data)return;
   const map={}; allPosts().forEach(p=>{ if(p.id)map[p.id]=p; });
   savedPosts=(data.saved||[]).map(id=>map[id]).filter(Boolean);
-  customUpload=(data.upFolders||[]).map(f=>({id:'f'+(_folderSeq++), name:f.name, posts:(f.ids||[]).map(id=>map[id]).filter(Boolean)}));
-  customSaved=(data.savFolders||[]).map(f=>({id:'f'+(_folderSeq++), name:f.name, posts:(f.ids||[]).map(id=>map[id]).filter(Boolean)}));
+  customUpload=(data.upFolders||[]).map(f=>({id:'f'+(_folderSeq++), name:f.name, posts:(f.ids||[]).map(id=>map[id]).filter(Boolean), cover:f.cover||null}));
+  customSaved=(data.savFolders||[]).map(f=>({id:'f'+(_folderSeq++), name:f.name, posts:(f.ids||[]).map(id=>map[id]).filter(Boolean), cover:f.cover||null}));
   if($('#v-my')&&$('#v-my').classList.contains('on'))renderMyPage();
 }
 /* ===== 진짜 팔로우 (Supabase) ===== */
@@ -3652,7 +3663,9 @@ const ICO={
   edit:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>`,
   trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
   comment:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
-  reply:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`
+  reply:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`,
+  image:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`,
+  check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
 };
 function renderPostActions(){
   const p=_currentPost, box=$('#phActions');if(!p||!box)return;
@@ -4257,10 +4270,20 @@ function folderTile(cover,count,name,badgeCls,badgeTxt){
   el.innerHTML=`<div class="fimg">${cover}<span class="cnt">${count}개</span><span class="${badgeCls}">${badgeTxt}</span></div><div class="ft">${name}</div>`;
   return el;
 }
+// 내 폴더 썸네일: 직접 고른 사진(f.cover=글id)이 있으면 그걸, 없으면 첫 번째 글 사진을 사용
+function folderCoverPost(f, list){
+  // 보통은 글 id로 저장하지만(기기·새로고침에도 유지), id가 없는 데모 글은 객체 자체로 비교
+  if(f && f.cover){ const p=(list||[]).find(x=>(x.id&&x.id===f.cover)||x===f.cover); if(p) return p; }
+  return (list||[])[0]||null;
+}
+function folderCoverTag(f, list){
+  const p=folderCoverPost(f,list);
+  return p?`<img src="${coverThumb(p)}" alt="">`:'<div class="fnew" style="font-size:30px">📁</div>';
+}
 function renderFolderRow(ctx, editable, container){
   const col=COL[ctx], box=container||$(col.row);if(!box)return;box.innerHTML='';
   col.custom().forEach(f=>{
-    const cover=f.posts[0]?`<img src="${f.posts[0].img}" alt="">`:'<div class="fnew" style="font-size:30px">📁</div>';
+    const cover=folderCoverTag(f,f.posts);
     const el=folderTile(cover,f.posts.length,esc(f.name),'my-badge2','내 폴더');
     el.onclick=()=> editable?openCustomFolder(ctx,f.id):showPlays(`${FOLDER_ICO} ${esc(f.name)}`, f.posts.slice());
     if(editable){ // 내 폴더는 드래그해서 순서 바꾸기
@@ -4276,7 +4299,7 @@ function renderFolderRow(ctx, editable, container){
   rest.forEach(p=>{const k=themeFolderOf(p);(groups[k]=groups[k]||[]).push(p);});
   Object.keys(groups).forEach(theme=>{const arr=groups[theme];
     const el=folderTile(`<img src="${arr[0].img}" alt="">`,arr.length,theme,'ai-badge2','자동 분류');
-    el.onclick=editable?()=>openAiFolder(ctx,theme,arr):()=>showPlays(`🗂️ ${theme} · AI 자동 분류`, arr.slice());
+    el.onclick=editable?()=>openAiFolder(ctx,theme,arr):()=>showPlays(`${FOLDER_ICO} ${theme} · AI 자동 분류`, arr.slice());
     box.appendChild(el);});
   if(editable){const add=document.createElement('div');add.className='folder';
     add.innerHTML=`<div class="fimg"><div class="fnew">＋</div></div><div class="ft" style="color:var(--coral-tx)">새 폴더</div>`;
@@ -4324,7 +4347,7 @@ function showPlays(title, arr){   // 읽기 전용 (프로필에서 열람)
 let _aiFolder=null;
 function openAiFolder(ctx, theme, arr){
   _aiFolder={ctx, theme, arr:arr.slice()};
-  $('#folderTitle').innerHTML=`🗂️ ${esc(theme)} <span class="fsub">· ${arr.length}개 · ✨AI 자동 분류</span>`;
+  $('#folderTitle').innerHTML=`${FOLDER_ICO} ${esc(theme)} <span class="fsub">· ${arr.length}개 · ✨AI 자동 분류</span>`;
   $('#folderActions').innerHTML=`<button class="fa-btn p" onclick="materializeAiFolder()">✎ 폴더 편집 (이름 변경·놀이 관리)</button>
     ${ctx==='saved'?`<button class="fa-btn del" onclick="deleteAiFolder()">${ICO.trash} 삭제</button>`:''}
     <span class="fa-hint">편집하면 내 폴더가 돼요</span>`;
@@ -4348,6 +4371,7 @@ function openCustomFolder(ctx, id){   // 편집 가능 (드래그 순서변경 �
   $('#folderTitle').innerHTML=`${FOLDER_ICO} ${esc(f.name)} <span class="fsub">· ${f.posts.length}개</span>`;
   $('#folderActions').innerHTML=`
     <button class="fa-btn p" onclick="openPicker()">＋ 놀이 담기</button>
+    ${f.posts.length?`<button class="fa-btn" onclick="openFolderCoverPicker('${ctx}','${id}')">${ICO.image} 폴더 사진</button>`:''}
     <button class="fa-btn" onclick="openNewFolder('${ctx}','${id}')">✎ 이름 변경</button>
     <button class="fa-btn del" onclick="deleteFolder('${ctx}','${id}')">${ICO.trash} 삭제</button>
     ${f.posts.length>1?'<span class="fa-hint">↕ 드래그로 순서 변경</span>':''}`;
@@ -4363,8 +4387,41 @@ function openCustomFolder(ctx, id){   // 편집 가능 (드래그 순서변경 �
         const it=f.posts.splice(_dragFrom,1)[0];f.posts.splice(idx,0,it);_dragFrom=null;openCustomFolder(ctx,id);renderMyFolders();saveUserData();});
       g.appendChild(el);
     });
-  });
+  }, {ctx,id});
   open_('folderOverlay');
+}
+/* 폴더 썸네일 고르기 */
+let _coverPickCtx=null, _coverPickId=null;
+function openFolderCoverPicker(ctx,id){
+  const f=COL[ctx].custom().find(x=>x.id===id); if(!f||!f.posts.length)return;
+  _coverPickCtx=ctx; _coverPickId=id;
+  renderCoverPick(); open_('coverPickOverlay');
+}
+function renderCoverPick(){
+  const f=COL[_coverPickCtx].custom().find(x=>x.id===_coverPickId); if(!f)return;
+  const box=$('#coverPickList'); if(!box)return; box.innerHTML='';
+  const cp=folderCoverPost(f,f.posts);
+  f.posts.forEach(p=>{
+    const on=p===cp;
+    const row=document.createElement('div'); row.className='pick-row'+(on?' on':'');
+    row.innerHTML=`<img src="${coverThumb(p)}" alt="" loading="lazy" decoding="async"><div class="pk"><b>${esc((p.title||'놀이').replace(/^#/,''))}</b></div><span class="chk">${on?ICO.check:''}</span>`;
+    row.onclick=()=>{ f.cover=p.id||p; close_('coverPickOverlay'); renderMyFolders(); saveUserData();
+      if($('#folderOverlay').classList.contains('on'))openCustomFolder(_coverPickCtx,_coverPickId); };
+    box.appendChild(row);
+  });
+}
+/* 폴더 안 놀이흐름 순서 바꾸기: 흐름 카드를 드래그하면, 그 흐름의 '원본 글'끼리 순서가 바뀌어요 */
+function reorderFolderFlows(ctx, id, fromIdx, toIdx){
+  const f=COL[ctx].custom().find(x=>x.id===id); if(!f)return;
+  const flows=folderFlows(f.posts);
+  if(fromIdx<0||toIdx<0||fromIdx>=flows.length||toIdx>=flows.length||fromIdx===toIdx)return;
+  const hostOrder=flows.map(fl=>fl.host);
+  const moved=hostOrder.splice(fromIdx,1)[0];
+  hostOrder.splice(toIdx,0,moved);
+  const hostSet=new Set(flows.map(fl=>fl.host));
+  let hi=0;
+  f.posts=f.posts.map(p=>hostSet.has(p)?hostOrder[hi++]:p);
+  openCustomFolder(ctx,id); renderMyFolders(); saveUserData();
 }
 function openNewFolder(ctx, renameId){
   _newCtx=ctx;_renameId=renameId||null;
@@ -5933,7 +5990,7 @@ function renderExternalFolders(box, folders, posts){   // 다른 선생님 프�
   (folders||[]).forEach(f=>{
     const fposts=(f.ids||[]).map(id=>map[id]).filter(Boolean);
     fposts.forEach(p=>assigned.add(p));
-    const cover=fposts[0]?`<img src="${fposts[0].img}" alt="">`:'<div class="fnew" style="font-size:30px">📁</div>';
+    const cover=folderCoverTag(f,fposts);
     const el=folderTile(cover,fposts.length,esc(f.name),'my-badge2','📁 폴더');
     el.onclick=()=>showPlays(`${FOLDER_ICO} ${esc(f.name)}`, fposts.slice());
     box.appendChild(el);
@@ -5942,7 +5999,7 @@ function renderExternalFolders(box, folders, posts){   // 다른 선생님 프�
   rest.forEach(p=>{const k=themeFolderOf(p);(groups[k]=groups[k]||[]).push(p);});
   Object.keys(groups).forEach(theme=>{const arr=groups[theme];
     const el=folderTile(`<img src="${arr[0].img}" alt="">`,arr.length,theme,'ai-badge2','자동 분류');
-    el.onclick=()=>showPlays(`🗂️ ${theme} · AI 자동 분류`,arr.slice());box.appendChild(el);});
+    el.onclick=()=>showPlays(`${FOLDER_ICO} ${theme} · AI 자동 분류`,arr.slice());box.appendChild(el);});
   if(!box.children.length)box.innerHTML='<div class="empty">아직 올린 놀이가 없어요</div>';
 }
 function renderAiFolderRow(box, list){   // 다른 선생님 프로필: 주제별 AI 폴더 (읽기전용)
@@ -5950,7 +6007,7 @@ function renderAiFolderRow(box, list){   // 다른 선생님 프로필: 주제�
   list.forEach(p=>{const k=themeFolderOf(p);(groups[k]=groups[k]||[]).push(p);});
   Object.keys(groups).forEach(theme=>{const arr=groups[theme];
     const el=folderTile(`<img src="${arr[0].img}" alt="">`,arr.length,theme,'ai-badge2','자동 분류');
-    el.onclick=()=>showPlays(`🗂️ ${theme}`,arr.slice());box.appendChild(el);});
+    el.onclick=()=>showPlays(`${FOLDER_ICO} ${theme}`,arr.slice());box.appendChild(el);});
   if(!list.length)box.innerHTML='<div class="empty">아직 올린 놀이가 없어요</div>';
 }
 /* 인기 태그(우측) 렌더 */
@@ -7791,18 +7848,29 @@ function folderPhotoOf(n, host){
     if(im){ if(n.partIdx!=null && im.parts && im.parts[n.partIdx]!=null){ const pt=im.parts[n.partIdx]; return (typeof pt==='string')?pt:((pt&&pt.img)||im.img||''); }
       if(im.img) return im.img; } }catch(e){} }
   const p=folderNodePost(n,host); return p?coverOf(p):''; }
-function fillFolderFlowOrList(posts, listFiller){
+let _flowDragIdx=null;
+function fillFolderFlowOrList(posts, listFiller, dragInfo){
   const g=$('#folderPosts'); if(!g)return; g.innerHTML='';
   const flows=folderFlows(posts);
   if(flows.length){
     // 1) 폴더 안 놀이흐름 도식들 — 세로로 위에서 아래로 나열
     const mem=new Set();
+    const canDrag=dragInfo && flows.length>1;
     flows.forEach((ff,idx)=>{
       if(ff.host)mem.add(postRefId(ff.host)); (ff.flow.nodes||[]).forEach(n=>{if(n.refId)mem.add(n.refId);});
       const card=document.createElement('div'); card.className='folder-flow-card';
       const dia=flowDiagramFromData(ff.flow.type, ff.flow.nodes, true, {big:true, host:ff.host});
       const cnt = flows.length>1 ? ` <span class="hint" style="font-weight:500">· ${idx+1}/${flows.length}</span>` : '';
-      card.innerHTML=`<div class="flow-card"><div class="flow-card-h">${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${cnt}${flowNavHint(ff.flow, ff.host, '')}</div>${dia}</div>`;
+      const handle = canDrag ? `<span class="flow-drag-handle" title="드래그해서 순서 변경">↕</span>` : '';
+      card.innerHTML=`<div class="flow-card"><div class="flow-card-h">${handle}${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${cnt}${flowNavHint(ff.flow, ff.host, '')}</div>${dia}</div>`;
+      if(canDrag){
+        card.draggable=true;
+        card.addEventListener('dragstart',e=>{_flowDragIdx=idx;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+        card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+        card.addEventListener('dragover',e=>e.preventDefault());
+        card.addEventListener('drop',e=>{e.preventDefault();if(_flowDragIdx==null||_flowDragIdx===idx)return;
+          const fi=_flowDragIdx; _flowDragIdx=null; reorderFolderFlows(dragInfo.ctx,dragInfo.id,fi,idx);});
+      }
       g.appendChild(card);
     });
     // 2) 어떤 흐름에도 없는 나머지 글 → 타일로 함께 표시
@@ -7812,11 +7880,12 @@ function fillFolderFlowOrList(posts, listFiller){
       g.appendChild(h);
       rest.forEach(p=>g.appendChild(tpostEl(p)));   // 눌러서 바로 글로 이동
     }
+    if(canDrag){ const hint=document.createElement('div'); hint.className='fa-hint'; hint.style.cssText='display:block;margin:2px 0 8px'; hint.textContent='↕ 흐름 카드를 드래그하면 순서를 바꿀 수 있어요'; g.insertBefore(hint, g.firstChild); }
     // 3) 관리(순서변경·빼기)가 필요하면 목록으로 전환
     const tg=document.createElement('button'); tg.type='button'; tg.className='fa-btn folder-flow-toggle'; tg.textContent='📋 전체를 목록으로 보기';
     tg.onclick=()=>{ g.innerHTML=''; listFiller(g);
       const back=document.createElement('button'); back.type='button'; back.className='fa-btn'; back.style.marginTop='8px'; back.textContent='흐름 도식으로 보기';
-      back.onclick=()=>fillFolderFlowOrList(posts,listFiller); g.appendChild(back); };
+      back.onclick=()=>fillFolderFlowOrList(posts,listFiller,dragInfo); g.appendChild(back); };
     g.appendChild(tg);
   } else { listFiller(g); }
 }
