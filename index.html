@@ -793,10 +793,9 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .comm-cat-badge{display:inline-block;background:#f4ede7;color:#7a6a60;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px}
   .comm-title-row{display:flex;align-items:center;gap:8px}
   .comm-title-row h3{flex:1;min-width:0}
-  .comm-ref-thumbs{display:flex;flex:0 0 auto;margin-bottom:5px}
-  .comm-ref-thumbs img{width:28px;height:28px;border-radius:7px;object-fit:cover;border:2px solid #fff;box-shadow:0 0 0 1px #eadfd8;margin-left:-8px;background:#f6ddd8}
-  .comm-ref-thumbs img:first-child{margin-left:0}
-  .crt-more{width:28px;height:28px;border-radius:7px;background:#f3eeeb;color:var(--sub);font-size:10.5px;font-weight:700;display:grid;place-items:center;margin-left:-8px;border:2px solid #fff;flex:0 0 auto}
+  .comm-ref-thumbs{display:flex;flex:0 0 auto;gap:4px;margin-bottom:5px}
+  .comm-ref-thumbs img{width:56px;height:56px;border-radius:10px;object-fit:cover;background:#f6ddd8;box-shadow:0 0 0 1px #eadfd8}
+  .crt-more{width:56px;height:56px;border-radius:10px;background:#f3eeeb;color:var(--sub);font-size:12px;font-weight:700;display:grid;place-items:center;flex:0 0 auto}
   .cca-group{border:1px solid #eadfd8;border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff}
   .cca-group.dragover{border-color:var(--coral);background:#fff6f8}
   .cca-group.dragging{opacity:.5}
@@ -1750,7 +1749,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0820d</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0820f</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1967,7 +1966,10 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
       <label id="commNoticeRow" class="comm-notice-row" style="display:none">
         <input type="checkbox" id="commNotice"> <span>📢 공지로 등록 (관리자)</span>
       </label>
-      <button class="btn-fill" style="width:100%;margin-top:12px" onclick="submitCommPost()">등록</button>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button type="button" id="commDraftBtn" class="btn g" style="flex:0 0 auto;width:auto;padding:12px 16px" onclick="saveCommDraft()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>임시저장</button>
+        <button class="btn-fill" style="flex:1 1 auto;width:auto" onclick="submitCommPost()">등록</button>
+      </div>
     </div>
   </div>
 </div>
@@ -5688,7 +5690,7 @@ function renderCommunity(){
     sec.appendChild(wrap); fb.appendChild(sec);
   }
 }
-function openCommWrite(){
+async function openCommWrite(){
   if(isGuest()){ toast('회원가입하면 글을 쓸 수 있어요'); openAuth('signup'); return; }
   _commEditId=null;
   const h=$('#commWriteHead'); if(h)h.textContent='자료 올리기';
@@ -5697,7 +5699,17 @@ function openCommWrite(){
   _commWriteCat=''; _commWriteRef=[]; renderCommWriteCats(); renderCommWriteRef();
   const nr=$('#commNoticeRow'); if(nr)nr.style.display=isAdmin()?'flex':'none';
   const nc=$('#commNotice'); if(nc)nc.checked=false;
+  const db=$('#commDraftBtn'); if(db)db.style.display='';
   open_('commWriteOverlay');
+  try{
+    const draft=await loadCommDraft();
+    if(draft && (draft.title||draft.body) && !_commEditId){
+      $('#commTitle').value=draft.title||''; $('#commBody').value=draft.body||'';
+      _commWriteCat=draft.cat||''; _commWriteRef=normalizeRefs(draft.ref); renderCommWriteCats(); renderCommWriteRef();
+      const nc2=$('#commNotice'); if(nc2 && isAdmin()) nc2.checked=!!draft.notice;
+      toast('임시저장한 내용을 불러왔어요 · 첨부파일은 다시 올려주세요');
+    }
+  }catch(e){}
 }
 function openCommEdit(id){
   const p=commList().find(x=>String(x.id)===String(id)); if(!p)return;
@@ -5709,6 +5721,7 @@ function openCommEdit(id){
   _commWriteCat=p.category||''; _commWriteRef=normalizeRefs(p.ref); renderCommWriteCats(); renderCommWriteRef();
   const nr=$('#commNoticeRow'); if(nr)nr.style.display=isAdmin()?'flex':'none';
   const nc=$('#commNotice'); if(nc)nc.checked=!!p.notice;
+  const db=$('#commDraftBtn'); if(db)db.style.display='none';
   swapOverlay('commPostOverlay','commWriteOverlay');
 }
 // DB에 아직 최신 SQL이 반영되지 않아 특정 컬럼(category/attachments)이 없어도
@@ -5753,7 +5766,7 @@ async function submitCommPost(){
   }
   if(!SB){
     communityDemo.unshift({id:'c'+Date.now(), tid:'me', notice, title, body, category:_commWriteCat, ref:(_commWriteRef.length?_commWriteRef.slice():null), date:'방금', attachments:_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})), author:myAuthorObj()});
-    close_('commWriteOverlay'); renderCommunity(); toast('등록했어요 (데모)'); return;
+    close_('commWriteOverlay'); clearCommDraft(); renderCommunity(); toast('등록했어요 (데모)'); return;
   }
   if(!authUser){ toast('로그인이 필요해요'); openAuth('login'); return; }
   _commPublishing=true; showUploading(true,'자료가 올라가는 중이에요…');
@@ -5762,7 +5775,7 @@ async function submitCommPost(){
     const row={ user_id:authUser.id, title, body, is_notice:!!notice, category:_commWriteCat, attachments:atts, ref:(_commWriteRef.length?_commWriteRef.slice():null),
       author_name:profile.nick, author_icon:profile.icon, author_avatar:profile.photo };
     const {error}=await commWriteDB(row, null); if(error)throw error;
-    close_('commWriteOverlay'); await loadCommunity(); renderCommunity();
+    close_('commWriteOverlay'); clearCommDraft(); await loadCommunity(); renderCommunity();
     toast(notice?'공지를 등록했어요':'글을 등록했어요');
   }catch(e){ toast('등록 실패: '+(e.message||e)); }
   finally{ _commPublishing=false; showUploading(false); }
@@ -8025,6 +8038,41 @@ async function saveDraftServer(draft){
   }catch(e){ /* 실패해도 기기 저장은 이미 됐으니 조용히 넘어감 */ }
 }
 async function deleteDraftServer(id){ if(!(SB && authUser))return; try{ await SB.from('drafts').delete().eq('user_id',authUser.id).eq('id',id); }catch(e){} }
+
+/* ===== 행정자료실(커뮤니티) 임시저장 — 글 하나만 보관(목록 아님), 첨부파일은 저장 안 함 ===== */
+const COMM_DRAFT_KEY='nolimoa_comm_draft';
+const COMM_DRAFT_ID='comm-draft';
+async function saveCommDraft(){
+  const title=($('#commTitle').value||'').trim();
+  const body=($('#commBody').value||'').trim();
+  if(!title && !body){ toast('임시저장할 내용이 없어요'); return; }
+  const draft={ id:COMM_DRAFT_ID, ts:Date.now(), title, body, cat:_commWriteCat||'', ref:(_commWriteRef||[]).map(r=>({...r})), notice:!!($('#commNotice')&&$('#commNotice').checked) };
+  const loggedIn=!!(SB && authUser);
+  let ok;
+  if(loggedIn){
+    saveDraftServer(draft);          // 기존 drafts 테이블을 고정 id로 재사용(목록에 섞이지 않음)
+    ok=lsSet(COMM_DRAFT_KEY, draft); // 기기에도 가볍게 보관(제목·내용만 있어 용량 부담 없음)
+  } else {
+    ok=lsSet(COMM_DRAFT_KEY, draft);
+  }
+  if(ok) toastIcon(ICO_FILE,'임시저장되었어요'); else toast('임시저장에 실패했어요');
+  const btn=$('#commDraftBtn'); if(btn){ const orig=btn.innerHTML; btn.innerHTML='✓ 저장됨'; btn.disabled=true;
+    setTimeout(()=>{ btn.innerHTML=orig; btn.disabled=false; }, 1500); }
+}
+function loadCommDraftLocal(){ return lsGet(COMM_DRAFT_KEY); }
+async function loadCommDraft(){
+  if(SB && authUser){
+    try{
+      const {data}=await SB.from('drafts').select('data').eq('user_id',authUser.id).eq('id',COMM_DRAFT_ID).maybeSingle();
+      if(data && data.data) return data.data;
+    }catch(e){ /* 조회 실패 시 기기 보관본으로 대체 */ }
+  }
+  return loadCommDraftLocal();
+}
+function clearCommDraft(){
+  try{ localStorage.removeItem(COMM_DRAFT_KEY); }catch(e){}
+  deleteDraftServer(COMM_DRAFT_ID);
+}
 async function syncDraftsIn(){   // 로그인 시: 계정(서버)의 임시저장을 '진짜 목록'으로 맞춤 (다른 기기에서 지운 건 여기서도 사라짐)
   if(!(SB && authUser))return;
   try{
