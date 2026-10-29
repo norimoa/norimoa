@@ -1088,6 +1088,8 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .attach-item .an{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .attach-item .asz{color:var(--sub);font-size:11.5px;white-space:nowrap}
   .attach-item .ax{border:none;background:none;color:#c33;font-size:14px;cursor:pointer}
+  .attach-item .ax2{border:none;background:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;flex:0 0 auto;padding:2px}
+  .attach-item .ax2 svg{width:15px;height:15px}
   .attach-list{display:flex;flex-direction:column;gap:8px}
   .attach-chip{display:flex;align-items:center;gap:9px;border:1px solid #e7dcd6;background:#fcf4f1;border-radius:11px;padding:12px 14px;font-size:13.5px;color:#555}
   .attach-chip b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1271,7 +1273,10 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .cmt-del{border:none;background:none;color:var(--sub);font-size:11.5px;cursor:pointer;padding:2px 6px;margin-left:6px;border-radius:6px;display:inline-flex;align-items:center;gap:3px}
   .cmt-del:hover{color:#5a5a62;background:#efeae6}
   .cmt-del svg,.reply-btn svg{width:13px;height:13px;flex:0 0 auto}
-  .delphoto svg,.ei-del-btn svg,.fa-btn svg,.btn-line.del svg{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
+  .delphoto svg,.ei-del-btn svg,.fa-btn svg,.btn-line svg{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
+  .cat-admin-btn svg{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+  #writeTitle svg{width:16px;height:16px;vertical-align:-3px;margin-right:4px}
+  .ei-edit svg{width:12px;height:12px;vertical-align:-1px;margin-right:2px}
   .cmt-head{display:flex;align-items:center;justify-content:flex-start;gap:18px;margin-bottom:12px;flex-wrap:wrap}
   .cmt-head .cmt-label{font-size:14px;font-weight:600;color:#4a4a52;display:inline-flex;align-items:center;gap:6px}
   .cmt-head .cmt-label svg{width:20px;height:20px;display:block}
@@ -1739,7 +1744,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819v</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819x</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1928,7 +1933,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
 <!-- ============ 카테고리 편집 (관리자) ============ -->
 <div class="overlay" id="catAdminOverlay" onclick="if(event.target===this)close_('catAdminOverlay')">
   <div class="modal folder-modal">
-    <div class="modal-head"><b>✏️ 카테고리 편집</b><button class="x" onclick="close_('catAdminOverlay')">×</button></div>
+    <div class="modal-head"><b><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg> 카테고리 편집</b><button class="x" onclick="close_('catAdminOverlay')">×</button></div>
     <div class="ca-note">⠿ 손잡이를 <b>드래그</b>하면 순서를 바꿀 수 있어요. 큰 카테고리를 옮기면 안의 항목들도 함께 이동해요. 항목은 추가·이름수정·삭제도 돼요. (이름을 바꿔도 이미 올라간 글은 예전 이름 그대로 남아요.)</div>
     <div id="catAdminBody"></div>
     <div class="ca-foot"><button class="ca-cancel" onclick="close_('catAdminOverlay')">취소</button><button class="ca-save" onclick="saveCatAdmin()">저장</button></div>
@@ -2195,7 +2200,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
         <button class="btn g" onclick="peClear()">모자이크 지우기</button>
         <label class="switch"><input type="checkbox" id="peMz" checked onchange="peToggleMz()"> 모자이크</label>
       </div>
-      <div style="font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5">✏️ 빈 곳을 <b>드래그</b>하면 가릴 부분을 추가하고, 지우고 싶은 모자이크를 <b>누르면</b> 하나씩 지워져요.</div>
+      <div style="font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg> 빈 곳을 <b>드래그</b>하면 가릴 부분을 추가하고, 지우고 싶은 모자이크를 <b>누르면</b> 하나씩 지워져요.</div>
     </div>
     <div class="up-foot"><button onclick="applyPartEdit()">✓ 적용</button></div>
   </div>
@@ -2204,7 +2209,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
 <!-- ============ 사진 수정(모자이크·자르기·회전) 모달 ============ -->
 <div class="overlay" id="imgEditOverlay" onclick="if(event.target===this)closeImgEdit()">
   <div class="modal" style="max-width:620px;max-height:92vh;display:flex;flex-direction:column">
-    <div class="modal-head"><b><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> 사진 수정</b><button class="x" onclick="closeImgEdit()">×</button></div>
+    <div class="modal-head"><b><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> <span id="ieTitleTxt">사진 수정</span></b><button class="x" onclick="closeImgEdit()">×</button></div>
     <div class="up-body">
       <div class="up-photo" style="position:relative;display:flex;justify-content:center"><canvas id="ieCanvas" style="max-width:100%;touch-action:none;border-radius:10px"></canvas></div>
       <div id="ieStatus" style="font-size:12.5px;color:var(--sub);margin:10px 2px"></div>
@@ -2220,7 +2225,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
         <button class="btn g" onclick="ieClear()">모자이크 지우기</button>
         <label class="switch"><input type="checkbox" id="ieMz" checked onchange="ieToggleMz()"> 모자이크</label>
       </div>
-      <div style="font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5">✏️ 빈 곳을 <b>드래그</b>하면 가릴 부분을 추가하고, 지우고 싶은 모자이크를 <b>누르면</b> 하나씩 지워져요. 회전·자르기로 사진도 다듬을 수 있어요.</div>
+      <div style="font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg> 빈 곳을 <b>드래그</b>하면 가릴 부분을 추가하고, 지우고 싶은 모자이크를 <b>누르면</b> 하나씩 지워져요. 회전·자르기로 사진도 다듬을 수 있어요.</div>
     </div>
     <div class="up-foot"><button onclick="ieApply()">✓ 적용</button></div>
   </div>
@@ -2247,7 +2252,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
 <!-- ============ 놀이 수정 모달 ============ -->
 <div class="overlay" id="editOverlay" onclick="if(event.target===this)close_('editOverlay')">
   <div class="modal up-modal big-modal">
-    <div class="modal-head"><b>✏️ 놀이 수정</b><button class="x" onclick="close_('editOverlay')">×</button></div>
+    <div class="modal-head"><b><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg> 놀이 수정</b><button class="x" onclick="close_('editOverlay')">×</button></div>
     <div class="up-body">
       <div class="sec"><div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span class="sl-t">놀이 제목</span></div><div class="title-input"><input id="eTitle"></div></div>
       <div class="sec"><div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="13" y2="17"/></svg><span class="sl-t">글 내용</span> <span class="hint">#해시태그를 쓰면 자동으로 태그가 달려요</span></div>
@@ -3575,6 +3580,7 @@ function renderPostPage(p){
     </div>
     ${(p.attachments&&p.attachments.length)?`<div class="pd-sec"><h4><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>첨부파일</h4><div class="attach-list">${p.attachments.map((a,ai)=>`<a class="attach-chip" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name)}" onclick="recordDownload('${(a.url||'').replace(/'/g,"\\'")}','${p.id||''}',${ai})"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;flex:0 0 auto"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><b>${esc(a.name)}</b><span>${fmtSize(a.size)} · ⬇ <b id="dln-${ai}">${(window._dlCounts&&window._dlCounts[a.url])||0}</b>명</span></a>`).join('')}</div></div>`:''}
     ${refsHTML(p)}
+    <div id="commBacklinks"></div>
     ${productsHTML(p)}
     <div class="pd-sec cmt-sec">
       <div id="cmtList"></div>
@@ -3585,6 +3591,7 @@ function renderPostPage(p){
     <div class="pd-sec"><h4><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>다른 선생님들의 관련 글</h4><div class="rel-grid" id="otherRel"></div></div>`;
   renderPostEngage();
   renderComments(p);
+  renderCommBacklinks(p);
   renderRelGrid('#authorRel', authorRelated(p), '아직 관련 놀이가 없어요');
   renderRelGrid('#otherRel', otherRelated(p), '아직 관련 글이 없어요');
   syncCaptionWidths();
@@ -3802,7 +3809,7 @@ function catLabelsToKeys(labels){
 }
 /* 글 작성 모달을 '업로드' 모드 / '수정' 모드로 전환 */
 function setWriteMode(edit){
-  const t=$('#writeTitle');if(t)t.textContent=edit?'✏️ 놀이 수정':'2단계 · 글 작성하기';
+  const t=$('#writeTitle');if(t)t.innerHTML=edit?(ICO.edit+' 놀이 수정'):'2단계 · 글 작성하기';
   const bk=$('#writeBack');if(bk)bk.style.display=edit?'none':'';
   const sub=$('#writeSubmit');if(sub)sub.textContent=edit?'✓ 수정 완료':'✓ 업로드';
   const sec=$('#writeImagesSec');if(sec)sec.style.display=edit?'':'none';
@@ -3928,7 +3935,7 @@ function renderEditImages(){
           <button type="button" class="btn g ei-del-btn" data-i="${idx}" title="삭제" aria-label="삭제">${ICO.trash}</button>
         </div>
       </div>
-      <div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt="">${markersHtml}<span class="ei-edit">✏️ 사진 수정</span><label class="env-check ei-env" data-i="${idx}" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox"> 환경구성이면 체크</label></div>
+      <div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt="">${markersHtml}<span class="ei-edit">${ICO.edit} 사진 수정</span><label class="env-check ei-env" data-i="${idx}" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox"> 환경구성이면 체크</label></div>
       <div class="ai-controls">
         <button type="button" class="btn g ei-edit-btn" data-i="${idx}"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> 사진 수정 (모자이크·자르기·회전)</button>
         ${idx<_editImages.length-1?`<button type="button" class="btn g ei-collage" data-i="${idx}"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="2"/><path d="M8 21h11a2 2 0 0 0 2-2V8"/></svg> 아래 사진과 콜라주</button>`:''}
@@ -5283,7 +5290,7 @@ function renderCatDrawer(){
   const d=catDrawer[catSectionCur], box=$('#catContent');
   let html=`<div class="cat-draw-head"><span>카테고리</span><button onclick="close_('catOverlay')" aria-label="닫기">×</button></div>`;
   html+=`<button type="button" class="cat-about-btn" onclick="nav('about')"><img alt="" width="16" height="16" style="border-radius:4px;vertical-align:-3px;margin-right:3px" src="data:image/png;base64,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"> 놀이모아 소개</button>`;
-  if(canEditCats()) html+=`<button type="button" class="cat-admin-btn" onclick="openCatAdmin()">✏️ 카테고리 편집${isAdmin()?' (관리자)':' (미리보기)'}</button>`;
+  if(canEditCats()) html+=`<button type="button" class="cat-admin-btn" onclick="openCatAdmin()">${ICO.edit} 카테고리 편집${isAdmin()?' (관리자)':' (미리보기)'}</button>`;
   d.groups.forEach((grp,gi)=>{
     html+=`<div class="cat-group"><div class="cgl">${groupIco(grp)} ${grp.g}</div><div class="cg-grid">`+
       grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
@@ -5440,11 +5447,15 @@ function isPdfAtt(f){ return /\.pdf$/i.test((f&&f.name)||'') || (f&&f.type)==='a
 async function addCommAttachments(list){
   const ok=[], over=[]; [...list].forEach(f=>(f.size>MAX_UPLOAD_BYTES?over:ok).push(f));
   warnOversize(over);
-  for(let f of ok){
+  for(const f of ok){
     if(isRefCat(_commWriteCat) && isPdfAtt(f)){
       showUploading(true,'PDF 속 얼굴을 찾아 모자이크하는 중이에요… (파일/페이지 수에 따라 시간이 걸려요)');
-      try{ f=await mosaicPdfFile(f); }
-      catch(e){ toast('PDF 모자이크에 실패해서 원본 파일로 올렸어요'); }
+      try{
+        const processed=await mosaicPdfFile(f);
+        const pdfPages=processed._pdfPages;
+        _commAtts.push({name:processed.name,size:processed.size,file:processed,url:URL.createObjectURL(processed),pdfPages,pdfOrigName:f.name});
+        continue;
+      }catch(e){ toast('PDF 모자이크에 실패해서 원본 파일로 올렸어요'); }
       finally{ showUploading(false); }
     }
     _commAtts.push({name:f.name,size:f.size,file:f,url:URL.createObjectURL(f)});
@@ -5454,7 +5465,8 @@ async function addCommAttachments(list){
 function renderCommAttachList(){
   const box=$('#commAttachList'); if(!box)return; box.innerHTML='';
   _commAtts.forEach((a,i)=>{ const el=document.createElement('div'); el.className='attach-item';
-    el.innerHTML=`<span>${isImgAtt(a)?ICO.image:ICO.file}</span><span class="an">${esc(a.name)}</span><span class="asz">${a.size?fmtSize(a.size):''}</span><button class="ax" title="삭제">✕</button>`;
+    el.innerHTML=`<span>${isImgAtt(a)?ICO.image:ICO.file}</span><span class="an">${esc(a.name)}</span><span class="asz">${a.size?fmtSize(a.size):''}</span>${a.pdfPages?`<button type="button" class="ax2" title="모자이크 직접 수정">${ICO.edit}</button>`:''}<button class="ax" title="삭제">✕</button>`;
+    const editBtn=el.querySelector('.ax2'); if(editBtn)editBtn.onclick=()=>openCommPdfMosaicEdit(i);
     el.querySelector('.ax').onclick=()=>{ _commAtts.splice(i,1); renderCommAttachList(); };
     box.appendChild(el); });
 }
@@ -5753,7 +5765,7 @@ function openCommPost(id){
     ${commAttachHTML(p.attachments)}
     ${commRefCardHTML(p)}
     ${(commCanEdit(p)||commCanDel(p))?`<div style="margin-top:18px;display:flex;gap:8px;justify-content:flex-end">
-      ${commCanEdit(p)?`<button class="btn-line" onclick="openCommEdit('${p.id}')">✏️ 수정</button>`:''}
+      ${commCanEdit(p)?`<button class="btn-line" onclick="openCommEdit('${p.id}')">${ICO.edit} 수정</button>`:''}
       ${commCanDel(p)?`<button class="btn-line del" onclick="deleteCommPost('${p.id}')">${ICO.trash} 삭제</button>`:''}
     </div>`:''}`;
   open_('commPostOverlay');
@@ -6112,6 +6124,21 @@ function refsHTML(p){
   }).join('');
   return `<div class="pd-sec"><h4>${LINK_ICO} 참고 · 출처</h4><div class="ref-cards">${cards}</div></div>`;
 }
+/* 이 놀이글을 '해당 놀이'로 연결해둔 행정자료실 글들(반대 방향 링크) */
+function commRefsTo(p){
+  const rid=postRefId(p);
+  return commList().filter(c=>c.ref && c.ref.refId===rid);
+}
+/* 상세 페이지: 반대로 연결된 행정자료실 글 카드 렌더 (놀이글 → 행정자료실 글로 타고 들어가기) */
+async function renderCommBacklinks(p){
+  if(SB && window._commPosts===undefined){ try{ await loadCommunity(); }catch(e){} }
+  const box=$('#commBacklinks'); if(!box || _currentPost!==p)return;   // 그 사이에 다른 글로 넘어갔으면 무시
+  const list=commRefsTo(p);
+  if(!list.length){ box.innerHTML=''; return; }
+  const cards=list.map(c=>`<div class="ref-link" onclick="openCommPost('${esc(String(c.id))}')"><div class="ric">${LINK_ICO_RIC}</div>
+    <div class="rbody"><div class="rtt">${esc(c.title||'(제목 없음)')}</div><div class="rsub">${esc(c.category||'행정자료실')} 글 보기 ›</div></div></div>`).join('');
+  box.innerHTML=`<div class="pd-sec"><h4>${LINK_ICO} 연결된 행정자료실 글</h4><div class="ref-cards">${cards}</div></div>`;
+}
 /* 상세 페이지: 사진에 태그된 상품(구매 물품)들을 한곳에 자동 정리 */
 function productsHTML(p){
   const seen=new Set(), items=[];
@@ -6252,29 +6279,98 @@ function ensurePdfTools(){
   })();
   return _pdfToolsLoading;
 }
-/* PDF 파일(File) → 페이지마다 얼굴 모자이크를 입힌 새 PDF 파일(File)로 변환 */
-async function mosaicPdfFile(file){
+/* PDF 파일(File) → 각 페이지를 그림(raw)으로 그리고, 얼굴 자동 인식 박스(boxes, 아직 안 지워진 상태)만 찾아둠.
+   모자이크를 '바로 굽지' 않아서, 나중에 사람이 박스를 더하거나 빼고 나서 구울 수 있어요. */
+async function renderPdfPages(file){
   if(!(await ensurePdfTools())) throw new Error('모자이크 도구를 불러오지 못했어요');
   const buf=await file.arrayBuffer();
   const pdf=await window.pdfjsLib.getDocument({data:buf}).promise;
-  const {jsPDF}=window.jspdf;
-  let outPdf=null;
+  const pages=[];
   for(let i=1;i<=pdf.numPages;i++){
     const page=await pdf.getPage(i);
     const renderVp=page.getViewport({scale:2});           // 고해상도로 그려야 모자이크 품질이 좋아요
     const canvas=document.createElement('canvas');
     canvas.width=renderVp.width; canvas.height=renderVp.height;
     await page.render({canvasContext:canvas.getContext('2d'), viewport:renderVp}).promise;
-    const mosaicUrl=await autoMosaicDataURL(canvas.toDataURL('image/jpeg',0.92));
+    const raw=canvas.toDataURL('image/jpeg',0.95);
+    let found=[];
+    try{
+      if(await ensureFaceApi()){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35}); const dets=await faceapi.detectAllFaces(canvas,opt); found=dets.map(d=>({x:d.box.x,y:d.box.y,w:d.box.width,h:d.box.height}));}
+      else if('FaceDetector' in window){const fd=new FaceDetector({fastMode:true}); const f=await fd.detect(canvas); found=f.map(o=>({x:o.boundingBox.x,y:o.boundingBox.y,w:o.boundingBox.width,h:o.boundingBox.height}));}
+    }catch(e){}
+    const boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
     const baseVp=page.getViewport({scale:1});             // 실제 출력 크기(mm 환산용, 96dpi 기준)
-    const wmm=baseVp.width*25.4/96, hmm=baseVp.height*25.4/96;
-    const orient=wmm>hmm?'l':'p';
+    pages.push({raw, boxes, wmm:baseVp.width*25.4/96, hmm:baseVp.height*25.4/96});
+  }
+  return pages;
+}
+/* 페이지 하나(raw 그림 + boxes)를 실제로 모자이크 '구워서' dataURL로 */
+function bakePdfPage(pg){
+  return new Promise(resolve=>{
+    const im=new Image();
+    im.onload=()=>{
+      const cv=document.createElement('canvas'); cv.width=im.width; cv.height=im.height;
+      try{ resolve(cleanPhotoDataURL({img:im, cv, boxes:pg.boxes, mosaicOn:true}, 0.92)); }
+      catch(e){ resolve(pg.raw); }
+    };
+    im.onerror=()=>resolve(pg.raw);
+    im.src=pg.raw;
+  });
+}
+/* 모자이크(또는 수정)가 끝난 페이지 그림들을 하나의 PDF 파일(File)로 합치기 */
+async function buildPdfFromImages(dataUrls, wmms, hmms, name){
+  if(!(await ensurePdfTools())) throw new Error('모자이크 도구를 불러오지 못했어요');
+  const {jsPDF}=window.jspdf;
+  let outPdf=null;
+  for(let i=0;i<dataUrls.length;i++){
+    const wmm=wmms[i], hmm=hmms[i], orient=wmm>hmm?'l':'p';
     if(!outPdf) outPdf=new jsPDF({unit:'mm', format:[wmm,hmm], orientation:orient});
     else outPdf.addPage([wmm,hmm], orient);
-    outPdf.addImage(mosaicUrl,'JPEG',0,0,wmm,hmm);
+    outPdf.addImage(dataUrls[i],'JPEG',0,0,wmm,hmm);
   }
   if(!outPdf) throw new Error('빈 PDF예요');
-  return new File([outPdf.output('blob')], file.name, {type:'application/pdf'});
+  return new File([outPdf.output('blob')], name, {type:'application/pdf'});
+}
+/* PDF 파일(File) → 페이지마다 얼굴 자동 모자이크를 입힌 새 PDF 파일(File)로 변환 (기본 동작).
+   결과 파일에 ._pdfPages(원본 그림+박스)를 함께 담아둬서, 나중에 '모자이크 직접 수정'을 열 수 있게 해요. */
+async function mosaicPdfFile(file){
+  const pages=await renderPdfPages(file);
+  const baked=[]; for(const pg of pages) baked.push(await bakePdfPage(pg));
+  const out=await buildPdfFromImages(baked, pages.map(p=>p.wmm), pages.map(p=>p.hmm), file.name);
+  out._pdfPages=pages;
+  return out;
+}
+/* ===== PDF 모자이크 직접 수정 (사진 수정과 같은 화면을 페이지마다 순서대로 열어요) ===== */
+let _commPdfEdit=null;
+function openCommPdfMosaicEdit(i){
+  const a=_commAtts[i]; if(!a||!a.pdfPages||!a.pdfPages.length)return;
+  _commPdfEdit={attIdx:i, pageIdx:0, results:[]};
+  stepCommPdfMosaicEdit();
+}
+function stepCommPdfMosaicEdit(){
+  const st=_commPdfEdit; if(!st)return;
+  const a=_commAtts[st.attIdx]; if(!a){_commPdfEdit=null;return;}
+  const pages=a.pdfPages;
+  if(st.pageIdx>=pages.length){ finishCommPdfMosaicEdit(); return; }
+  const pg=pages[st.pageIdx];
+  openImgEdit(pg.raw, {
+    boxes:(pg.boxes||[]).map(b=>({...b})), mosaicOn:true,
+    title:`PDF 모자이크 수정 (${st.pageIdx+1}/${pages.length}페이지)`,
+    status:'빈 곳을 드래그해 가릴 부분을 추가하거나, 모자이크를 눌러 지워보세요',
+    onApply:(url)=>{ pg.boxes=_ie.boxes.map(b=>({...b})); st.results.push(url); st.pageIdx++; stepCommPdfMosaicEdit(); }
+  });
+}
+async function finishCommPdfMosaicEdit(){
+  const st=_commPdfEdit; _commPdfEdit=null; if(!st)return;
+  const a=_commAtts[st.attIdx]; if(!a)return;
+  showUploading(true,'수정한 내용으로 PDF를 다시 만드는 중이에요…');
+  try{
+    const file=await buildPdfFromImages(st.results, a.pdfPages.map(p=>p.wmm), a.pdfPages.map(p=>p.hmm), a.pdfOrigName||a.name);
+    file._pdfPages=a.pdfPages;
+    a.file=file; a.url=URL.createObjectURL(file); a.size=file.size;
+    toast('모자이크 수정을 반영했어요');
+  }catch(e){ toast('PDF를 다시 만들지 못했어요: '+(e.message||e)); }
+  finally{ showUploading(false); renderCommAttachList(); }
 }
 
 $('#file').addEventListener('change',e=>{addFiles(e.target.files);e.target.value='';});
@@ -7041,7 +7137,8 @@ function openImgEdit(src, opts){
       _ie.drag=null; _ie.cropMode=false; _ie.cropRect=null; _ie.cropping=false; _ie.onApply=opts.onApply||null;
       const mz=$('#ieMz'); if(mz)mz.checked=_ie.mosaicOn;
       const cb=$('#ieCropBar'); if(cb)cb.style.display='none';
-      const st=$('#ieStatus'); if(st)st.textContent=_ie.boxes.length?'빈 곳을 눌러(드래그해) 더 가릴 수 있어요 · 빈 곳 드래그로 추가':'빈 곳을 드래그해 가릴 부분을 추가하거나, 회전·자르기로 다듬어 보세요.';
+      const tt=$('#ieTitleTxt'); if(tt)tt.textContent=opts.title||'사진 수정';
+      const st=$('#ieStatus'); if(st)st.textContent=opts.status||(_ie.boxes.length?'빈 곳을 눌러(드래그해) 더 가릴 수 있어요 · 빈 곳 드래그로 추가':'빈 곳을 드래그해 가릴 부분을 추가하거나, 회전·자르기로 다듬어 보세요.');
       renderCanvasP(_ie);
       open_('imgEditOverlay');
     };
