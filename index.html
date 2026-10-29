@@ -1043,26 +1043,6 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .ref-link .rrel{display:inline-block;font-size:11px;font-weight:700;color:#fff;background:var(--coral);border-radius:6px;padding:1px 7px;margin-bottom:3px}
   .ref-link .rtt{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ref-link .rsub{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  /* 동화책 카드(상세 페이지)는 표지가 책처럼 세로로 길게 */
-  .ref-link.book-card .ric{width:52px;height:72px;border-radius:7px}
-  /* 글쓰기 창: 선택된 책 미리보기 칩 */
-  .bsel-chip{display:flex;gap:10px;align-items:center;border:1px solid #eadfd8;border-radius:12px;padding:9px 11px;background:#fdf7f5;margin-bottom:8px}
-  .bsel-chip img,.bsel-chip .bsel-ic{width:40px;height:56px;border-radius:6px;object-fit:cover;flex:0 0 auto;background:#f2ece8;display:grid;place-items:center;font-size:18px}
-  .bsel-chip .rbody{flex:1;min-width:0}
-  .bsel-x{margin-left:auto;background:none;border:none;font-size:15px;color:var(--sub);cursor:pointer;flex:0 0 auto;padding:4px}
-  /* 책 새로 등록 폼의 표지 미리보기 */
-  .bf-cover{width:48px;height:66px;border-radius:7px;background:#f6ddd8;display:grid;place-items:center;font-size:20px;overflow:hidden;flex:0 0 auto}
-  .bf-cover img{width:100%;height:100%;object-fit:cover}
-  /* (관리자) 동화책 관리 목록 */
-  .bm-row{display:flex;gap:10px;align-items:flex-start;border:1px solid #eee;border-radius:12px;padding:10px;margin-bottom:10px;background:#fff}
-  .bm-cover{width:52px;height:72px;border-radius:7px;background:#f6ddd8;display:grid;place-items:center;font-size:20px;flex:0 0 auto;overflow:hidden}
-  .bm-cover img{width:100%;height:100%;object-fit:cover}
-  .bm-fields{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
-  .bm-in{border:1px solid #e7dcd6;border-radius:9px;padding:8px 10px;font-family:inherit;background:#fafafb;font-size:13px;width:100%;box-sizing:border-box}
-  .bm-actions{display:flex;flex-direction:column;gap:6px;flex:0 0 auto}
-  .bm-actions button{border:1px solid #e7dcd6;border-radius:8px;padding:6px 10px;font-size:12px;background:#fff;cursor:pointer;white-space:nowrap}
-  .bm-save{color:#fff!important;background:var(--coral)!important;border-color:var(--coral)!important}
-  .bm-del{color:#b5423a}
   .big-write{min-height:220px;font-size:14.5px;line-height:1.7}
   .sec-write{min-height:72px;font-size:14px;line-height:1.6}
   /* 본문 안 URL 자동 링크 */
@@ -1756,7 +1736,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819r</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819t</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1960,6 +1940,11 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
       <input id="commTitle" class="comm-input" placeholder="제목" name="nolimoa-comm-title" autocomplete="off" maxlength="80">
       <div class="comm-wcats-label">카테고리 <span style="color:var(--sub);font-weight:400">(선택)</span></div>
       <div id="commWriteCats" class="comm-wcats"></div>
+      <div id="commRefSec" class="sec" style="display:none">
+        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span class="sl-t">해당 놀이</span> <span class="hint">이 글과 관련된 내 놀이글을 연결해보세요 · 선택</span></div>
+        <div id="commWriteRefSel"></div>
+        <button type="button" class="fa-btn" onclick="openCommRefPicker()">＋ 놀이모아 글 인용</button>
+      </div>
       <textarea id="commBody" class="comm-textarea" style="min-height:200px" placeholder="내용을 입력하세요 (링크·#해시태그도 됩니다)"></textarea>
       <input type="file" id="commAttachInput" multiple hidden>
       <div style="margin-top:10px"><button type="button" class="fa-btn" onclick="document.getElementById('commAttachInput').click()">📎 파일 첨부 <span style="color:var(--sub);font-weight:400">· 이미지·PDF·한글(hwp)·워드 등</span></button></div>
@@ -2115,13 +2100,6 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
         <div id="refList" style="margin-top:10px"></div>
       </div>
 
-      <!-- 동화책 연계 -->
-      <div class="sec">
-        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="sl-t">동화책</span> <span class="hint">이 놀이와 연계한 동화책이 있으면 연결해보세요 · 선택</span></div>
-        <div id="bookSel"></div>
-        <button type="button" class="fa-btn" onclick="openBookPicker()">＋ 동화책 선택/추가</button>
-      </div>
-
       <!-- 사진별 설명·상품태그 (수정할 때만 표시) -->
       <div class="sec" id="writeImagesSec" style="display:none">
         <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="sl-t">사진 · 설명 · 상품 태그</span> <span class="hint">사진을 눌러 수정 · 휴지통으로 삭제 · 아래에서 추가</span></div>
@@ -2141,50 +2119,10 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
 <!-- ============ 놀이모아 글 참고 선택 모달 ============ -->
 <div class="overlay" id="refPickOverlay" onclick="if(event.target===this)close_('refPickOverlay')">
   <div class="modal" style="max-width:560px;max-height:88vh;display:flex;flex-direction:column">
-    <div class="modal-head"><b>🔗 인용할 놀이 고르기</b><button class="x" onclick="close_('refPickOverlay')">×</button></div>
+    <div class="modal-head"><b><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>인용할 놀이 고르기</b><button class="x" onclick="close_('refPickOverlay')">×</button></div>
     <div class="up-body">
       <input id="refSearch" type="search" name="nolimoa-refsearch" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" placeholder="놀이 제목·해시태그·선생님 이름 검색" oninput="renderRefPick()" style="width:100%;border:1px solid #e7dcd6;border-radius:20px;padding:11px 15px;font-size:13.5px;background:#fafafb;margin-bottom:12px">
       <div id="refPickList"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ============ 동화책 선택/등록 모달 ============ -->
-<div class="overlay" id="bookPickOverlay" onclick="if(event.target===this)close_('bookPickOverlay')">
-  <div class="modal" style="max-width:560px;max-height:88vh;display:flex;flex-direction:column">
-    <div class="modal-head"><b>📖 동화책 선택</b><button class="x" onclick="close_('bookPickOverlay')">×</button></div>
-    <div class="up-body">
-      <input id="bookSearch" type="search" name="nolimoa-booksearch" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" placeholder="책 제목 검색" oninput="renderBookPick()" style="width:100%;border:1px solid #e7dcd6;border-radius:20px;padding:11px 15px;font-size:13.5px;background:#fafafb;margin-bottom:12px">
-      <div id="bookPickList"></div>
-      <button type="button" class="fa-btn" style="margin-top:10px;width:100%;box-sizing:border-box" onclick="toggleBookAddForm()">＋ 목록에 없는 책 새로 등록</button>
-      <div id="bookAddForm" style="display:none;margin-top:12px;border-top:1px solid #eee;padding-top:12px">
-        <input id="bfTitle" placeholder="책 제목 *" style="width:100%;box-sizing:border-box;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px;margin-bottom:8px">
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input id="bfAuthor" placeholder="저자(선택)" style="flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px">
-          <input id="bfPublisher" placeholder="출판사(선택)" style="flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px">
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:10px">
-          <input id="bfYear" placeholder="발행연도(선택)" style="width:90px;flex:0 0 90px;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px">
-          <input id="bfLink" type="url" placeholder="구매 링크(선택)" style="flex:1;min-width:0;border:1px solid #e7dcd6;border-radius:10px;padding:10px;font-family:inherit;background:#fafafb;font-size:13.5px">
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div class="bf-cover" id="bfCoverPrev">📖</div>
-          <input type="file" id="bfCoverFile" accept="image/*" hidden>
-          <button type="button" class="fa-btn" onclick="document.getElementById('bfCoverFile').click()">표지 사진 올리기(선택)</button>
-        </div>
-        <button type="button" class="fa-btn" style="width:100%;box-sizing:border-box;background:var(--coral);color:#fff;border-color:var(--coral)" onclick="addNewBook()">＋ 책 등록하고 연결하기</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ============ (관리자) 동화책 관리 모달 ============ -->
-<div class="overlay" id="bookMgrOverlay" onclick="if(event.target===this)close_('bookMgrOverlay')">
-  <div class="modal folder-modal" style="max-width:640px">
-    <div class="modal-head"><b>📖 동화책 관리</b><button class="x" onclick="close_('bookMgrOverlay')">×</button></div>
-    <div class="up-body" style="max-height:70vh;overflow:auto">
-      <button type="button" class="fa-btn" style="margin-bottom:10px" onclick="addBookMgrRow()">＋ 새 책 추가</button>
-      <div id="bookMgrList"></div>
     </div>
   </div>
 </div>
@@ -3197,7 +3135,7 @@ async function loadDbPosts(){
       title:row.title||'놀이', date:fmtDate(row.created_at),
       desc:row.description||'', img:row.image_url, images:imgs, video:row.video_url||'',
       tags:row.tags||[], views:'0', like:0, cmt:0, liked:false, comments:[],
-      age:row.age, nuri:row.nuri||[], categories:row.categories||[], attachments:row.attachments||[], refs:row.refs||[], book_id:row.book_id||null,
+      age:row.age, nuri:row.nuri||[], categories:row.categories||[], attachments:row.attachments||[], refs:row.refs||[],
       spots:imgs[0].spots||[], author:{name:row.author_name||'선생님',org:row.author_role||'',
         init:(row.author_name||'선')[0], color:'#86736b',
         icon:row.author_icon||((authUser&&row.user_id===authUser.id)?profile.icon:'')||'',
@@ -3217,7 +3155,7 @@ async function loadDbPosts(){
   // ② 나머지 부가 데이터(폴더·팔로잉·알림·공지·카테고리·행정자료실 등)는 병렬로
   await Promise.allSettled([
     loadUserData(), syncDraftsIn(), loadFollows(), loadNotifs(), loadNotices(),
-    loadFeaturedIssues(), loadCategories(), loadCaptions(), loadCommCats(), loadCommunity(), loadBooks()
+    loadFeaturedIssues(), loadCategories(), loadCaptions(), loadCommCats(), loadCommunity()
   ]);
   reconcileMyPosts();   // 예전 글 저자 표시가 현재 프로필과 다르면 자동 보정
   if($('#v-comm').classList.contains('on'))renderCommunity();
@@ -3633,7 +3571,6 @@ function renderPostPage(p){
       <div class="pf-stack">${photos}</div>
     </div>
     ${(p.attachments&&p.attachments.length)?`<div class="pd-sec"><h4><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>첨부파일</h4><div class="attach-list">${p.attachments.map((a,ai)=>`<a class="attach-chip" href="${a.url}" target="_blank" rel="noopener" download="${esc(a.name)}" onclick="recordDownload('${(a.url||'').replace(/'/g,"\\'")}','${p.id||''}',${ai})"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;flex:0 0 auto"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><b>${esc(a.name)}</b><span>${fmtSize(a.size)} · ⬇ <b id="dln-${ai}">${(window._dlCounts&&window._dlCounts[a.url])||0}</b>명</span></a>`).join('')}</div></div>`:''}
-    ${bookCardHTML(p)}
     ${refsHTML(p)}
     ${productsHTML(p)}
     <div class="pd-sec cmt-sec">
@@ -3923,7 +3860,6 @@ async function openEdit(){
   _postPriv=!!p.priv; { const pc=$('#postPrivChk'); if(pc)pc.checked=_postPriv; }   // '나만 보기' 상태 불러오기
   attachments=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url}));
   postRefs=(p.refs||[]).map(r=>({...r}));
-  _writeBookId=p.book_id||null; renderBookSel();
   _flow=parseFlow(p.desc||'').flow||{type:'',nodes:[]};
   _flowHost=null; _flowHostBaseline='';
   // 이 글에 자체 흐름이 없고, 다른 글이 이 글을 흐름으로 연결했다면 → 그 원글의 흐름을 여기서 수정
@@ -5343,7 +5279,6 @@ function renderCatDrawer(){
   let html=`<div class="cat-draw-head"><span>카테고리</span><button onclick="close_('catOverlay')" aria-label="닫기">×</button></div>`;
   html+=`<button type="button" class="cat-about-btn" onclick="nav('about')"><img alt="" width="16" height="16" style="border-radius:4px;vertical-align:-3px;margin-right:3px" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAM8UlEQVR4nO2dWW8b2ZmGn3NqYZEUKVmbraUt21L39DKddHoyCDIzwGCCQf5MLnPXPyB3fdn/JwgyCXIxSS+x22tkWZJlWSt31nZOLopVokRSomxZVZT1AoIAVpEofu853/4dCi4Iv/vtb/RFfdao4KuvvxFv+xlv9QHvo9AH4U3JOPebroV+Ns5DhjzPB18LfzicR05DMXUt+DfHWbvhzB1wLfy3w1nyO5WAa+FfDE6T40ACroV/sRgkz776KW3hC9H7WFpfjfVw0ib0fNMsCN8wDCzTSp5OKYXneVeSBDPNB+kH27KYn5vnzu0lTNNEKcVh5ZAHjx7SarXSfrwLx7EdkObqF0IgpWR6appf/+p/KZXGEAg0mlazxR/+9EdebKwTBMGV2AnxLkiMcNqqB6LVYFsWjuNgWzaWZWFbNrZtYxhG2o93oYjlfa5I+F1DSEk+n0f2McJXFZkhQAiBEIJcLoeQxwlQWhOGYUpP9m5hQjbUD4AhDSbK40hxtC601vi+R6VaJQzDM/X/SRc2y/bid7/9jc6UF2SYBjPTMxjmkb5XWtFsNnFdt+f+eNccew1xzLVQSmWahMwQIIQg7+QplcaO7wClabsuSqnkvljoUkoMw0AKiZCRF5V3HEwz+lpKaWq16rH3Zw1mFtSPlBLTMJiZnsbJOT2r2nVdENF9aI1hmuRsm4nxCaanpimXSuRyOYqFIuVyCdOICAjCkLX1F3z3w/dUKhVClT07kpkdQMcAS9nfL8g7DrZlUSqVmJ2eZXFhgempKSzTQkoZ7Qwpju0egI9WVhBC8Ke//BnlZk8dZYcAIiPcD8VCkf/65X9SKBQoFoqYhoFpmongT4NlWti2nVnXNjME5OwcszMzPQGXaZrMz88jOIqWzwOtNSqDqidG6gRIKbEsi9sffMDC/HxiQLthDhEF606soLVO/gDabpu9vT3CrBrhtB8AItdxrDgWZUDfAJ7nUW/U2T84oN6o47ouvu+jlKJSrfLy1VZms6mZIAB4Yx3t+z6Pnz7h/o8PqDXq0S5QGk0kbKVUphN4mSBAo/EDnyAIsCzrmGGNVYvn++SdXhfV8zye/OMpewf7hEGYCL77/VkVPmSAAKUUvu/zbHWVyRuTfLC4eGQHNARhwOudHZ6vPec/fvFLHMdJ3qu1RmlFq9UmDEKUzp6beRZSJwBIii7/95c/M782R87OIQSESlGr16hUqpRLpb6BlAoVSkUrf9SEDxkhACISGo0Gq2vPE3ugO68LIZiYGEecCLKEEJiWSd7JI8UhWoiRIyEzBECkUoIg6LEBpxVjBAJpZCarfm5kigDoNZoJGQMWthAiyh9JCRn19U/DaCwdrfF8H9WnHmCYBpM3JjEN88y0RBYxEgRoDWEYoHT/FW6MsAoajScXgI5qA72XROS2jt7iB0aAAK01aPB8n5bb7uvljHLHROYJgChS9nyPvf39K1ecz5wXNAhaaVzXjdxUKREies3zfTzP76ueRgEjQUDcGbG69hzHyXUCL4lSip29XR4/fYzne5mt+56GkSEgCEO2Xm2xu7cblR87Vjdu3B1F4cOIEBAjDMPEBpyMls+KAfrdk4W0xcgQEAuvW4jRTgAG1IYjD0qjNShUVEOOr5GNnqHMExDXgON6cNwLZEhJ3slj2Ta2ZUWvddzROKcU/2+7Lp7vkXfyCVFaKar1Gu12O1X1lVkCYoFbpoVpmRTyBUpjY51eoCnK5TLFQhHLMo9aUbqXd+ef1orAD/B8j1zOSTKtoQrZ2Nzk/7/9K4eVSmokZI4AIaLeHsu2KJfK3Lm9xMLcPOPj48dWetwDNEz+J07wnbz37h2bWr3Gt99/n5oXlRkC4pZDyzQZGxtj+e49Vu4tM14ex+ys8jdNtvXrIQUwzWgUKs0kXiYIiHV73slz5/YS//LRR0xNTpKzB3fKdSM2pPEqH1agWunU21VSJSAWluM4zExN8+nHn7C4sIDjOAO75OI6sFZRsV4pRRAGBEGI53mYponj5JAiIpXYU4Kerularc7O7g5BmF7XRGoExNOQY8UxPvvkEz5cXmGsOBbp9z4rOBa07/lUa1UOKoccHBxycHhAo9nA83x838c0o8+0bZux4hiOk+t4RyJJW2ulaTSbbL/eZnd/D9/3L/nbHyEVAoQQ5OwcN2dn+ennP2H+1lw0GTPAl/c8j0q1wvrmBusbG+wfHBCEASpUhCpMVI+UEj+Q+L6PkJK9/f1klx2pKUUYhvhBgO/7qSf3Lp2AeAxp5d4yX3z+EybGJ/q2I0b5H596o86z1VWePHtKvVGPOtw6iTfTMrFtG8u0KJdL3BifIJ/PUywUyefzEamdSUu3Ews0m0129/bYP9inVq+/XwQIERVP5m7e4uc/+5JyqdzXyIYqpNlssbr2nMdPH7O/v4/baS2MV3LOzrF87x4fLq8kXdOGIRFCIjurvnvWLCYtUmUhrVaLtfUX/PXbv9FoNt4vG2BZVl8PR2tN222zs7vL3x/c5+WrrSRS7Z6QMaRkenqKf/viS8rlMnKYrumuyzbg5HJYlsX6xjruSze19sXUbIDq6OLYMwnDkGazyYNHD3n67Bn1Rj0RyknBiI7L6jjOUJ3T/RBF2Wbq1bRUCPA8j93dPWzbTnR9pVZl9fkq2zuvcdvumW2GSU7nRIQbzQOoJNEWe1uDdsh55w0uGpdKQCzs9c0NXu/sJDpaK4XqXOtWN6chCALa7Vai7zUapTSu26ZSrdJoNmk2mxQKBWanZ5icvNETW0jDYGpykhfr64Ti7BHYd4FUdkAQBD15/e5o9jTEJG6+3OT3f/wD46VxpIzcTNfzODg4oNludXqIQBqSyYkb/Oq//4eJ8fFju8U0Debn5vnhwX0833tH3/Z0pBaIDSvwQXA9j5dbW2xvbxMViDVKa1SojrWoCyE4rByyf7BPaWysx+WNJyrTQiZyQW+KOBURo5/BllISBCG1Wq2nsSvuKXrTyZyLwEi0pQxCt8E9q7oVhEHPa1JKCoUC4+XyUBOX7wIjTcAwiAr6Abu7u4RBb9QrTwRsl40rTwBE0W+1XicY4rCPy8Z7QQBESbh+UFoTBGHUAZwCrjwBSTZUafoPGVx3RbwTxIKPT1CZmprqmSHIgjq6cgTERX1pSGzLZmZ6mpV7yywuLJDL5Xrujz2ptHAlCIhXuxAC27IpFovMTE8zd/MWS7dvU8gXMM0BEzQ63Z0w0gR0q5moBFlk5e4yS7eXKJVKWKY5WPCQpC9830vLBo8uAXFdwM7luDkzy/Lde9y6eZPSWAnLsk7Nciql8IOAer3G377/jmq1mtqQ90gSkBjWySnuLC2xcneZfD5/ato57qYIgpBKpcLa+gvWXqyxu7eH5/vvV0XsbSClZLw8zpc//YKl27dxHOfU5qp4tbdaLZrNBq9eb/PoyROqtWpSlL+2AUNCSknOzvHpxx+zfG+57+EdcHTAh+/7VGs1Nl5u8mz1GfV6Hd8P8H0PdeJcobQwUgQAOE6OxflFnD5tLLHg226bjc1N1jfW2drept1uRXPGnYRd2kLvxsgQIKXsdFTMJdnLbmitabfbrG9u8OTZU7a2X+G5XpSy7qQhsiT4GCNDgBCCYqHAhysrPQGV1ppWu82PD3/khwd/p9lsJe2GWRR6N0aCACEEtm3z+Wf/ytytWz2dDJ7v8/jJY767/wONRiMTky/DYiSScXGEu7iwiG3Zx64ppTg8POT+wwc0m82REj6MyA6AqOxr9mncDYKAjc2Nc6/8k23s1xMyp+A0oYZh2Gkxj6pdw/T5CASGaXSG9qKOivd+QuYsKBW1o3Q3YkW5HJfDSiUaa7J6i+vJTLEgOeS7kC9wa3aWUqkECILAT4KzyybB/Orrb0QWDvA+C1FgFfScimiaJvNz80xNTUUTlNI4atKVonPEsYFt2xScPDkndzQ30GnUcj0P1/P48dHDpDnssjAyO6Bf4TxyTYv84uf/HqkpAeLEuTVCiOT17gO+TxZmrD4t8peBzBMQF1gK+QKFQqHndPR43uBtEYbpGGEJF/PL0O8SQoBtW9j2xU80KqVwXZeDw4NLT8x99fU3IvM7IEakQganmrv/91zvshvdx9oorWi32zx88ojtndepZEZHhoBQKXzfw/ePdoFS0YyY7wcEwZHxjOq8UReEhmOzZL4fDfPFwn/5aouXW9EgSBoBXGZ+Se80xHr+808/48aNG0hpoJWi3miwt79HpVLB9dwuAroDqw4ZnXPnuveDVroz4nr50zGx2s/cj3kOQpwPMjqzv3AkwGHTzINqB2kJH0ZIBcXjqtB7VlD3/7M+I2vI5O8JX2Wc9Dj7uhVZd0tHFf3kOjBzdU3CxWKQPE9NHV6TcDE4TY5n5m6vSXg7nCW/cwn32jgPj2EX7rlKkte7YTicR05vJdDrHXGEN12c/wQ6oAjChm/n0QAAAABJRU5ErkJggg=="> 놀이모아 소개</button>`;
   if(canEditCats()) html+=`<button type="button" class="cat-admin-btn" onclick="openCatAdmin()">✏️ 카테고리 편집${isAdmin()?' (관리자)':' (미리보기)'}</button>`;
-  if(canEditCats()) html+=`<button type="button" class="cat-admin-btn" onclick="openBookMgr()">📖 동화책 관리${isAdmin()?' (관리자)':' (미리보기)'}</button>`;
   d.groups.forEach((grp,gi)=>{
     html+=`<div class="cat-group"><div class="cgl">${groupIco(grp)} ${grp.g}</div><div class="cg-grid">`+
       grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
@@ -5483,7 +5418,7 @@ async function loadCommunity(){
   try{
     const {data}=await SB.from('community_posts').select('*').order('created_at',{ascending:false});
     window._commPosts=(data||[]).map(r=>({id:r.id, db:true, user_id:r.user_id, notice:!!r.is_notice,
-      title:r.title||'', body:r.body||'', date:fmtDate(r.created_at), attachments:r.attachments||[], category:r.category||'',
+      title:r.title||'', body:r.body||'', date:fmtDate(r.created_at), attachments:r.attachments||[], category:r.category||'', ref:r.ref||null,
       author:{name:r.author_name||'선생님', icon:r.author_icon||'', photo:r.author_avatar||'', color:'#86736b', init:(r.author_name||'선')[0]}}));
   }catch(e){ window._commPosts=[]; }
 }
@@ -5547,6 +5482,8 @@ const COMM_CATS_DEFAULT=[
   {g:'가정 통신', items:['가정통신문','행사 안내','참고 정보']}
 ];
 let _commCats=null, _commFilter='', _commWriteCat='';
+let _commWriteRef=null;   // '놀이이야기' 카테고리일 때 함께 연결한 '해당 놀이' 글(스냅샷: refId·title·thumb·author)
+const COMM_REF_CAT='놀이이야기';   // 이 카테고리를 고르면 '해당 놀이' 연결 섹션이 보여요
 function commCatGroups(){ return (_commCats&&_commCats.length)?_commCats:COMM_CATS_DEFAULT.map(g=>({g:g.g,items:g.items.slice()})); }
 function commCatParent(item){ for(const g of commCatGroups()){ if((g.items||[]).includes(item))return g.g; } return ''; }
 async function loadCommCats(){ if(!SB)return; try{const {data}=await SB.from('site_config').select('value').eq('key','commCats').maybeSingle(); if(data&&data.value&&Array.isArray(data.value.groups))_commCats=data.value.groups; }catch(e){} }
@@ -5569,9 +5506,38 @@ function renderCommWriteCats(){
     const row=document.createElement('div'); row.className='ccb-row';
     const lb=document.createElement('span'); lb.className='ccb-g'; lb.textContent=g.g; row.appendChild(lb);
     (g.items||[]).forEach(it=>{ const b=document.createElement('button'); b.type='button'; b.className='comm-wcat'+(_commWriteCat===it?' on':''); b.textContent=it;
-      b.onclick=()=>{ _commWriteCat=(_commWriteCat===it?'':it); renderCommWriteCats(); }; row.appendChild(b); });
+      b.onclick=()=>{ _commWriteCat=(_commWriteCat===it?'':it); renderCommWriteCats(); renderCommWriteRef(); }; row.appendChild(b); });
     box.appendChild(row);
   });
+}
+/* '놀이이야기' 카테고리일 때만 보이는 '해당 놀이' 연결 섹션 */
+function renderCommWriteRef(){
+  const sec=$('#commRefSec'); if(!sec)return;
+  const show=_commWriteCat===COMM_REF_CAT;
+  sec.style.display=show?'':'none';
+  if(!show){ _commWriteRef=null; return; }
+  const box=$('#commWriteRefSel'); if(!box)return;
+  if(!_commWriteRef){ box.innerHTML=''; return; }
+  const r=_commWriteRef;
+  box.innerHTML=`<div class="ref-item">${r.thumb?`<img class="ric" src="${esc(r.thumb)}" alt="">`:`<div class="ric">${LINK_ICO_RIC}</div>`}
+    <div class="rbody"><div class="rtt">${esc(r.title||'놀이')}</div><div class="rsub">${esc(r.author||'')} · 놀이모아 글</div></div>
+    <button type="button" class="rx" title="연결 해제">✕</button></div>`;
+  box.querySelector('.rx').onclick=()=>{ _commWriteRef=null; renderCommWriteRef(); };
+}
+function openCommRefPicker(){
+  openRefPicker(function(p){
+    const a=authorOf(p), thumb=(imagesOf(p)[0]||{}).img||p.img||'';
+    _commWriteRef={refId:postRefId(p), postId:p.db?p.id:null, title:(p.title||'놀이').replace(/^#/,''), author:(a&&a.name)||'선생님', thumb};
+    renderCommWriteRef();
+  }, true);   // true = 내가 올린 글만
+}
+function openCommRefPost(refId){ close_('commPostOverlay'); openRefTarget(refId); }
+/* 게시글(상세) 안에 보여줄 '해당 놀이' 카드 */
+function commRefCardHTML(p){
+  const r=p.ref; if(!r)return '';
+  return `<div class="pd-sec"><h4>${LINK_ICO} 해당 놀이</h4>
+    <div class="ref-link" onclick="openCommRefPost('${esc(r.refId||'')}')">${r.thumb?`<img class="ric" src="${esc(r.thumb)}" alt="">`:`<div class="ric">${LINK_ICO_RIC}</div>`}
+      <div class="rbody"><div class="rtt">${esc(r.title||'놀이')}</div><div class="rsub">${esc(r.author||'')} · 놀이모아 글 보기 ›</div></div></div></div>`;
 }
 let _commCatEdit=null;
 function openCommCatAdmin(){ if(!isAdmin()){toast('관리자만 사용할 수 있어요');return;} _commCatEdit=commCatGroups().map(g=>({g:g.g,items:g.items.slice()})); renderCommCatAdmin(); const ab=$('#commCatAddGroup'); if(ab)ab.onclick=()=>{ captureCommCatInputs(); _commCatEdit.push({g:'새 카테고리',items:[]}); renderCommCatAdmin(); }; swapOverlay('catOverlay','commCatAdminOverlay'); }
@@ -5680,7 +5646,7 @@ function openCommWrite(){
   const h=$('#commWriteHead'); if(h)h.textContent='자료 올리기';
   $('#commTitle').value=''; $('#commBody').value='';
   _commAtts=[]; renderCommAttachList();
-  _commWriteCat=''; renderCommWriteCats();
+  _commWriteCat=''; _commWriteRef=null; renderCommWriteCats(); renderCommWriteRef();
   const nr=$('#commNoticeRow'); if(nr)nr.style.display=isAdmin()?'flex':'none';
   const nc=$('#commNotice'); if(nc)nc.checked=false;
   open_('commWriteOverlay');
@@ -5692,7 +5658,7 @@ function openCommEdit(id){
   const h=$('#commWriteHead'); if(h)h.textContent='자료 수정';
   $('#commTitle').value=p.title||''; $('#commBody').value=p.body||'';
   _commAtts=(p.attachments||[]).map(a=>({name:a.name,size:a.size,url:a.url})); renderCommAttachList();
-  _commWriteCat=p.category||''; renderCommWriteCats();
+  _commWriteCat=p.category||''; _commWriteRef=p.ref||null; renderCommWriteCats(); renderCommWriteRef();
   const nr=$('#commNoticeRow'); if(nr)nr.style.display=isAdmin()?'flex':'none';
   const nc=$('#commNotice'); if(nc)nc.checked=!!p.notice;
   swapOverlay('commPostOverlay','commWriteOverlay');
@@ -5707,7 +5673,7 @@ async function commWriteDB(base, id){
   let row={...base};
   let res=await doIt(row);
   // 없는 컬럼을 하나씩 떼어내며 최대 2번까지 재시도 (category → attachments 순)
-  for(const col of ['category','attachments']){
+  for(const col of ['category','attachments','ref']){
     if(res.error && _isMissingColErr(res.error) && (col in row)){
       delete row[col]; res=await doIt(row);
     }
@@ -5724,11 +5690,11 @@ async function submitCommPost(){
   if(_commEditId){
     const p=commList().find(x=>String(x.id)===String(_commEditId));
     if(p){
-      if(!p.db){ p.title=title; p.body=body; p.notice=notice; p.category=_commWriteCat; p.attachments=_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})); close_('commWriteOverlay'); _commEditId=null; renderCommunity(); toast('수정했어요'); return; }
+      if(!p.db){ p.title=title; p.body=body; p.notice=notice; p.category=_commWriteCat; p.ref=_commWriteRef||null; p.attachments=_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})); close_('commWriteOverlay'); _commEditId=null; renderCommunity(); toast('수정했어요'); return; }
       _commPublishing=true; showUploading(true,'수정 내용을 저장하는 중이에요…');
       try{
         const atts=await uploadCommAttachments();
-        const {data,error}=await commWriteDB({title, body, is_notice:!!notice, category:_commWriteCat, attachments:atts}, p.id);
+        const {data,error}=await commWriteDB({title, body, is_notice:!!notice, category:_commWriteCat, attachments:atts, ref:_commWriteRef||null}, p.id);
         if(error)throw error;
         if(!data||!data.length){ toast('수정이 반영되지 않았어요. Supabase에서 최신 SQL(수정 권한)을 실행했는지 확인해주세요.'); return; }
         close_('commWriteOverlay'); _commEditId=null; await loadCommunity(); renderCommunity(); toast('수정했어요'); return;
@@ -5738,14 +5704,14 @@ async function submitCommPost(){
     _commEditId=null; // 대상이 없으면 새 글로 진행
   }
   if(!SB){
-    communityDemo.unshift({id:'c'+Date.now(), tid:'me', notice, title, body, category:_commWriteCat, date:'방금', attachments:_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})), author:myAuthorObj()});
+    communityDemo.unshift({id:'c'+Date.now(), tid:'me', notice, title, body, category:_commWriteCat, ref:_commWriteRef||null, date:'방금', attachments:_commAtts.map(a=>({name:a.name,size:a.size,url:a.url})), author:myAuthorObj()});
     close_('commWriteOverlay'); renderCommunity(); toast('등록했어요 (데모)'); return;
   }
   if(!authUser){ toast('로그인이 필요해요'); openAuth('login'); return; }
   _commPublishing=true; showUploading(true,'자료가 올라가는 중이에요…');
   try{
     const atts=await uploadCommAttachments();
-    const row={ user_id:authUser.id, title, body, is_notice:!!notice, category:_commWriteCat, attachments:atts,
+    const row={ user_id:authUser.id, title, body, is_notice:!!notice, category:_commWriteCat, attachments:atts, ref:_commWriteRef||null,
       author_name:profile.nick, author_icon:profile.icon, author_avatar:profile.photo };
     const {error}=await commWriteDB(row, null); if(error)throw error;
     close_('commWriteOverlay'); await loadCommunity(); renderCommunity();
@@ -5769,6 +5735,7 @@ function openCommPost(id){
     <h3 style="color:var(--coral-tx);font-size:18px;margin:8px 0 12px">${esc(p.title||'')}</h3>
     <div style="font-size:14px;line-height:1.75;white-space:pre-wrap;word-break:break-word">${linkifyTags(p.body||'')}</div>
     ${commAttachHTML(p.attachments)}
+    ${commRefCardHTML(p)}
     ${(commCanEdit(p)||commCanDel(p))?`<div style="margin-top:18px;display:flex;gap:8px;justify-content:flex-end">
       ${commCanEdit(p)?`<button class="btn-line" onclick="openCommEdit('${p.id}')">✏️ 수정</button>`:''}
       ${commCanDel(p)?`<button class="btn-line del" onclick="deleteCommPost('${p.id}')">${ICO.trash} 삭제</button>`:''}
@@ -6026,176 +5993,6 @@ function renderPopTags(){
   tags.forEach(tag=>{const s=document.createElement('span');s.textContent='#'+noSpace(tag);s.onclick=()=>filterByLabel(tag);box.appendChild(s);});
 }
 
-/* ================= 동화책 연계 ================= */
-let _dbBooks=[];   // 실제(Supabase)로 등록된 책 목록
-let _bmNew=[];      // 책 관리 화면에서 아직 저장 안 한 새 행(임시)
-let _writeBookId=null;   // 지금 작성 중인 글에 연결한 책 id
-// 데모(미리보기) 전용 예시 — 실제 서비스에선 보이지 않음
-const demoBooksSeed=[
-  {id:'demo-book-1', title:'미용실 안 갈 거야', author:'지혜', publisher:'아람', year:'2025', cover_url:'', link:'', created_by:'demo'}
-];
-function allBooks(){ return SB ? _dbBooks : _dbBooks.concat(demoBooksSeed); }
-function bookById(id){ return id ? allBooks().find(b=>b.id===id) : null; }
-async function loadBooks(){
-  if(!SB){ return; }
-  try{ const {data}=await SB.from('books').select('*').order('created_at',{ascending:false}); _dbBooks=data||[]; }catch(e){ _dbBooks=[]; }
-}
-/* 글쓰기 창: 선택된 책 미리보기 칩 */
-function renderBookSel(){
-  const box=$('#bookSel'); if(!box)return;
-  const b=bookById(_writeBookId);
-  if(!b){ box.innerHTML=''; return; }
-  const cover=b.cover_url?`<img src="${esc(b.cover_url)}" alt="">`:'<div class="bsel-ic">📖</div>';
-  const meta=[b.author,b.publisher,b.year].filter(Boolean).join(' · ');
-  box.innerHTML=`<div class="bsel-chip">${cover}<div class="rbody"><div class="rtt">${esc(b.title||'동화책')}</div>${meta?`<div class="rsub">${esc(meta)}</div>`:''}</div><button type="button" class="bsel-x" title="연결 해제">✕</button></div>`;
-  const xb=box.querySelector('.bsel-x'); if(xb)xb.onclick=()=>{ _writeBookId=null; renderBookSel(); };
-}
-function openBookPicker(){
-  const s=$('#bookSearch'); if(s)s.value='';
-  const f=$('#bookAddForm'); if(f)f.style.display='none';
-  clearBookForm();
-  renderBookPick();
-  open_('bookPickOverlay');
-}
-function renderBookPick(){
-  const box=$('#bookPickList'); if(!box)return; box.innerHTML='';
-  const q=(($('#bookSearch')||{}).value||'').trim().toLowerCase();
-  let list=allBooks();
-  if(q) list=list.filter(b=>((b.title||'')+' '+(b.author||'')).toLowerCase().includes(q));
-  list=list.slice(0,40);
-  if(!list.length){ box.innerHTML='<div class="empty" style="padding:14px 4px">'+(q?'검색 결과가 없어요. 아래에서 새로 등록해보세요.':'아직 등록된 책이 없어요. 아래에서 새로 등록해보세요.')+'</div>'; return; }
-  list.forEach(b=>{
-    const meta=[b.author,b.publisher,b.year].filter(Boolean).join(' · ');
-    const el=document.createElement('div'); el.className='refpick-item';
-    el.innerHTML=`${b.cover_url?`<img src="${esc(b.cover_url)}" alt="">`:'<div class="refpick-item-ic" style="width:46px;height:62px;border-radius:7px;background:#f6ddd8;display:grid;place-items:center;flex:0 0 auto">📖</div>'}
-      <div class="rbody"><div class="rtt">${esc(b.title||'책')}</div>${meta?`<div class="rsub">${esc(meta)}</div>`:''}</div>`;
-    el.onclick=()=>pickBook(b);
-    box.appendChild(el);
-  });
-}
-function pickBook(b){ _writeBookId=b.id; close_('bookPickOverlay'); renderBookSel(); try{markDirty();}catch(e){} }
-function toggleBookAddForm(){ const f=$('#bookAddForm'); if(f)f.style.display=f.style.display==='none'?'block':'none'; }
-let _bfCoverData='';
-function clearBookForm(){
-  _bfCoverData='';
-  ['bfTitle','bfAuthor','bfPublisher','bfYear','bfLink'].forEach(id=>{ const el=$('#'+id); if(el)el.value=''; });
-  const pv=$('#bfCoverPrev'); if(pv)pv.innerHTML='📖';
-}
-async function addNewBook(){
-  const title=(($('#bfTitle')||{}).value||'').trim();
-  if(!title){ toast('책 제목을 입력해주세요'); return; }
-  const author=(($('#bfAuthor')||{}).value||'').trim();
-  const publisher=(($('#bfPublisher')||{}).value||'').trim();
-  const year=(($('#bfYear')||{}).value||'').trim();
-  let link=(($('#bfLink')||{}).value||'').trim();
-  if(link && !/^https?:\/\//i.test(link)) link='https://'+link;
-  let cover_url='';
-  try{
-    if(_bfCoverData){
-      if(SB && authUser){ const path=`${authUser.id}/books/${Date.now()}.jpg`; cover_url=await putStoragePhoto(await makeThumbBlob(_bfCoverData), path); }
-      else { cover_url=_bfCoverData; }
-    }
-  }catch(e){}
-  let newBook;
-  if(SB && authUser){
-    try{
-      const {data,error}=await SB.from('books').insert({title,author,publisher,year,cover_url,link,created_by:authUser.id}).select().single();
-      if(error)throw error;
-      newBook=data;
-    }catch(e){ toast('책 등록 실패: '+(e.message||e)); return; }
-  } else {
-    newBook={id:'local'+Date.now(), title, author, publisher, year, cover_url, link, created_by:'me'};
-  }
-  _dbBooks.unshift(newBook);
-  _writeBookId=newBook.id;
-  close_('bookPickOverlay'); renderBookSel();
-  toast('책을 등록하고 연결했어요');
-}
-(function(){ const cf=document.getElementById('bfCoverFile'); if(cf)cf.addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f)return;
-  const r=new FileReader(); r.onload=()=>{ _bfCoverData=r.result; const pv=$('#bfCoverPrev'); if(pv)pv.innerHTML=`<img src="${r.result}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`; };
-  r.readAsDataURL(f);
-}); })();
-/* ===== (관리자) 동화책 관리 — 책을 미리 등록해두는 화면 ===== */
-function openBookMgr(){ if(!canEditCats()){ toast('관리자만 사용할 수 있어요'); return; } _bmNew=[]; renderBookMgr(); swapOverlay('catOverlay','bookMgrOverlay'); }
-function addBookMgrRow(){ _bmNew.unshift({_tmpId:'tmp'+Date.now(), title:'',author:'',publisher:'',year:'',cover_url:'',link:''}); renderBookMgr(); }
-function bmFindRow(key){ return _bmNew.find(x=>x._tmpId===key) || allBooks().find(x=>x.id===key); }
-function renderBookMgr(){
-  const box=$('#bookMgrList'); if(!box)return; box.innerHTML='';
-  const rows=_bmNew.concat(allBooks());
-  if(!rows.length){ box.innerHTML='<div class="empty">등록된 책이 없어요. 위의 + 새 책 추가로 등록해보세요.</div>'; return; }
-  rows.forEach(b=>{
-    const key=b.id||b._tmpId;
-    const el=document.createElement('div'); el.className='bm-row';
-    el.innerHTML=`
-      <div class="bm-cover" data-key="${key}">${b.cover_url?`<img src="${esc(b.cover_url)}" alt="">`:'📖'}</div>
-      <input type="file" class="bm-coverfile" data-key="${key}" accept="image/*" hidden>
-      <div class="bm-fields">
-        <input class="bm-in" data-k="title" data-key="${key}" placeholder="책 제목 *" value="${esc(b.title||'')}">
-        <div style="display:flex;gap:6px">
-          <input class="bm-in" data-k="author" data-key="${key}" placeholder="저자" value="${esc(b.author||'')}">
-          <input class="bm-in" data-k="publisher" data-key="${key}" placeholder="출판사" value="${esc(b.publisher||'')}">
-          <input class="bm-in" data-k="year" data-key="${key}" placeholder="연도" style="width:70px;flex:0 0 70px" value="${esc(b.year||'')}">
-        </div>
-        <input class="bm-in" data-k="link" data-key="${key}" placeholder="구매 링크 (선택)" value="${esc(b.link||'')}">
-      </div>
-      <div class="bm-actions">
-        <button type="button" class="bm-cover-btn" data-key="${key}">사진</button>
-        <button type="button" class="bm-save" data-key="${key}">저장</button>
-        <button type="button" class="bm-del" data-key="${key}">삭제</button>
-      </div>`;
-    box.appendChild(el);
-  });
-  wireBookMgr();
-}
-function wireBookMgr(){
-  const box=$('#bookMgrList'); if(!box)return;
-  box.querySelectorAll('.bm-in').forEach(inp=>{ inp.onchange=()=>{ const row=bmFindRow(inp.dataset.key); if(row) row[inp.dataset.k]=inp.value; }; });
-  box.querySelectorAll('.bm-coverfile').forEach(cf=>{ cf.onchange=e=>{ const f=e.target.files[0]; if(!f)return;
-    const r=new FileReader(); r.onload=()=>{ const row=bmFindRow(cf.dataset.key); if(row){ row.cover_url=r.result; row._coverChanged=true; } renderBookMgr(); }; r.readAsDataURL(f); }; });
-  box.querySelectorAll('.bm-cover-btn').forEach(b=>{ b.onclick=()=>{ const inp=box.querySelector('.bm-coverfile[data-key="'+b.dataset.key+'"]'); if(inp)inp.click(); }; });
-  box.querySelectorAll('.bm-save').forEach(b=>{ b.onclick=()=>saveBookMgrRow(b.dataset.key); });
-  box.querySelectorAll('.bm-del').forEach(b=>{ b.onclick=()=>delBookMgrRow(b.dataset.key); });
-}
-async function saveBookMgrRow(key){
-  const row=bmFindRow(key); if(!row)return;
-  if(!(row.title||'').trim()){ toast('책 제목을 입력해주세요'); return; }
-  let link=(row.link||'').trim(); if(link && !/^https?:\/\//i.test(link)) link='https://'+link; row.link=link;
-  let cover_url=row.cover_url||'';
-  try{
-    if(row._coverChanged && cover_url && SB && authUser){
-      const path=`${authUser.id}/books/${Date.now()}.jpg`;
-      cover_url=await putStoragePhoto(await makeThumbBlob(cover_url), path);
-    }
-  }catch(e){}
-  const payload={title:row.title.trim(), author:(row.author||'').trim(), publisher:(row.publisher||'').trim(), year:(row.year||'').trim(), cover_url, link};
-  if(row.id){
-    if(SB){ try{ const {error}=await SB.from('books').update(payload).eq('id',row.id); if(error)throw error; }catch(e){ toast('저장 실패: '+(e.message||e)); return; } }
-    Object.assign(row,payload); row._coverChanged=false;
-    toast('저장했어요');
-  } else {
-    if(SB && authUser){
-      try{ const {data,error}=await SB.from('books').insert(Object.assign({created_by:authUser.id},payload)).select().single(); if(error)throw error;
-        _dbBooks.unshift(data); _bmNew=_bmNew.filter(x=>x._tmpId!==key);
-      }catch(e){ toast('등록 실패: '+(e.message||e)); return; }
-    } else {
-      const nb=Object.assign({id:'local'+Date.now()},payload,{created_by:'me'});
-      _dbBooks.unshift(nb); _bmNew=_bmNew.filter(x=>x._tmpId!==key);
-    }
-    toast('책을 등록했어요');
-  }
-  renderBookMgr();
-}
-function delBookMgrRow(key){
-  if(String(key).indexOf('tmp')===0){ _bmNew=_bmNew.filter(x=>x._tmpId!==key); renderBookMgr(); return; }
-  if(!confirm('이 책을 목록에서 삭제할까요? 이미 연결된 글에서도 책 정보가 사라져요.'))return;
-  (async()=>{
-    if(SB){ try{ const {error}=await SB.from('books').delete().eq('id',key); if(error)throw error; }catch(e){ toast('삭제 실패: '+(e.message||e)); return; } }
-    _dbBooks=_dbBooks.filter(x=>x.id!==key);
-    renderBookMgr(); toast('삭제했어요');
-  })();
-}
-
 /* ================= 참고 · 출처 ================= */
 let postRefs=[];  // 작성 중인 글의 참고/출처 목록
 const REF_RELS=['참고했어요','출처'];   // '이 놀이와 연결돼요'는 놀이흐름 기능으로 대체 (제거)
@@ -6271,7 +6068,7 @@ function renderRefList(){
     const el=document.createElement('div'); el.className='ref-item';
     const icon = r.type==='post'
       ? (r.thumb?`<img class="ric" src="${r.thumb}" alt="">`:'<div class="ric">🎨</div>')
-      : '<div class="ric">🔗</div>';
+      : `<div class="ric">${LINK_ICO_RIC}</div>`;
     const title = r.type==='post'? esc(r.title) : esc(r.label||r.url);
     const sub = r.type==='post'? esc(r.author)+' · 놀이모아 글' : esc(r.url);
     el.innerHTML=`${icon}
@@ -6282,19 +6079,6 @@ function renderRefList(){
     box.appendChild(el);
   });
 }
-/* 상세 페이지: 이 글에 연결된 동화책 카드 */
-function bookOf(p){ return p&&p.book_id ? bookById(p.book_id) : null; }
-function bookCardHTML(p){
-  const b=bookOf(p); if(!b) return '';
-  const cover=b.cover_url?`<img class="ric" src="${esc(b.cover_url)}" alt="">`:'<div class="ric">📖</div>';
-  const meta=[b.author,b.publisher,b.year].filter(Boolean).join(' · ');
-  let link=(b.link||'').trim(); if(link && !/^https?:\/\//i.test(link)) link='https://'+link;
-  const body=`${cover}<div class="rbody"><div class="rtt">${esc(b.title||'동화책')}</div>${meta?`<div class="rsub">${esc(meta)}</div>`:''}<span class="prod-buy" style="margin-top:5px;display:inline-block">${link?'구매하기 ↗':'링크 준비중'}</span></div>`;
-  const card=link?`<a class="ref-link book-card" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${body}</a>`:`<div class="ref-link book-card">${body}</div>`;
-  return `<div class="pd-sec"><h4>📖 함께 읽은 동화책</h4>${card}</div>`;
-}
-/* 같은 책을 연결한 다른 글들 */
-function bookRelated(p){ if(!p||!p.book_id) return []; return allPosts().filter(q=>q!==p&&canSeePost(q)&&q.book_id===p.book_id); }
 /* 상세 페이지: 참고·출처 카드 렌더 (내가 건 연결만 · 양방향 자동표시는 놀이흐름으로 대체) */
 function refsHTML(p){
   const refs=p.refs||[];
@@ -6307,10 +6091,10 @@ function refsHTML(p){
       return `<div class="ref-link" onclick="openRefTarget('${esc(r.refId||'')}')">${icon}
         <div class="rbody">${rel}<div class="rtt">${esc(r.title||'놀이')}</div><div class="rsub">${esc(r.author||'')} · 놀이모아 글 보기 ›</div></div></div>`;
     }
-    return `<a class="ref-link" href="${esc(r.url)}" target="_blank" rel="noopener noreferrer"><div class="ric">🔗</div>
+    return `<a class="ref-link" href="${esc(r.url)}" target="_blank" rel="noopener noreferrer"><div class="ric">${LINK_ICO_RIC}</div>
       <div class="rbody">${rel}<div class="rtt">${esc(r.label||r.url)}</div><div class="rsub">${esc(r.url)} ›</div></div></a>`;
   }).join('');
-  return `<div class="pd-sec"><h4>🔗 참고 · 출처</h4><div class="ref-cards">${cards}</div></div>`;
+  return `<div class="pd-sec"><h4>${LINK_ICO} 참고 · 출처</h4><div class="ref-cards">${cards}</div></div>`;
 }
 /* 상세 페이지: 사진에 태그된 상품(구매 물품)들을 한곳에 자동 정리 */
 function productsHTML(p){
@@ -7525,6 +7309,9 @@ const FLOW_ICO='<svg class="flow-ico" viewBox="0 0 24 24" fill="none" stroke="cu
 const EXPAND_ICO='<svg class="flow-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
 /* 폴더 아이콘 (흑백·깔끔) */
 const FOLDER_ICO='<svg class="folder-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.4.6l1.4 1.4H19a2 2 0 0 1 2 2v6.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+/* 참고·출처/해당 놀이 등 '다른 글에 연결됨'을 나타내는 흑백 깔끔 체인 아이콘 */
+const LINK_ICO='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+const LINK_ICO_RIC='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
 function _escJs(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function renderFlowTypes(){
   const box=$('#flowTypes'); if(!box)return; box.innerHTML='';
