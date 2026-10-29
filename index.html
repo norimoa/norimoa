@@ -791,6 +791,12 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .comm-wcat{border:1px solid #e7dcd6;background:#fafafb;color:#6b5c52;border-radius:14px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer}
   .comm-wcat.on{background:var(--coral);color:#fff;border-color:var(--coral)}
   .comm-cat-badge{display:inline-block;background:#f4ede7;color:#7a6a60;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px}
+  .comm-title-row{display:flex;align-items:center;gap:8px}
+  .comm-title-row h3{flex:1;min-width:0}
+  .comm-ref-thumbs{display:flex;flex:0 0 auto;margin-bottom:5px}
+  .comm-ref-thumbs img{width:28px;height:28px;border-radius:7px;object-fit:cover;border:2px solid #fff;box-shadow:0 0 0 1px #eadfd8;margin-left:-8px;background:#f6ddd8}
+  .comm-ref-thumbs img:first-child{margin-left:0}
+  .crt-more{width:28px;height:28px;border-radius:7px;background:#f3eeeb;color:var(--sub);font-size:10.5px;font-weight:700;display:grid;place-items:center;margin-left:-8px;border:2px solid #fff;flex:0 0 auto}
   .cca-group{border:1px solid #eadfd8;border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff}
   .cca-group.dragover{border-color:var(--coral);background:#fff6f8}
   .cca-group.dragging{opacity:.5}
@@ -1088,8 +1094,8 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .attach-item .an{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .attach-item .asz{color:var(--sub);font-size:11.5px;white-space:nowrap}
   .attach-item .ax{border:none;background:none;color:#c33;font-size:14px;cursor:pointer}
-  .attach-item .ax2{border:none;background:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;flex:0 0 auto;padding:2px}
-  .attach-item .ax2 svg{width:15px;height:15px}
+  .attach-item .ax2{border:none;background:#f3eee9;color:#6b5c4f;cursor:pointer;display:flex;align-items:center;gap:3px;flex:0 0 auto;padding:5px 9px;border-radius:8px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .attach-item .ax2 svg{width:13px;height:13px}
   .attach-list{display:flex;flex-direction:column;gap:8px}
   .attach-chip{display:flex;align-items:center;gap:9px;border:1px solid #e7dcd6;background:#fcf4f1;border-radius:11px;padding:12px 14px;font-size:13.5px;color:#555}
   .attach-chip b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1744,7 +1750,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0819z</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0820d</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
@@ -1956,7 +1962,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
       <textarea id="commBody" class="comm-textarea" style="min-height:200px" placeholder="내용을 입력하세요 (링크·#해시태그도 됩니다)"></textarea>
       <input type="file" id="commAttachInput" multiple hidden>
       <div style="margin-top:10px"><button type="button" class="fa-btn" onclick="document.getElementById('commAttachInput').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> 파일 첨부 <span style="color:var(--sub);font-weight:400">· 이미지·PDF·한글(hwp)·워드 등</span></button>
-      <div id="commPdfMzHint" style="display:none;margin-top:6px;font-size:12px;color:var(--sub);line-height:1.5">PDF 파일로 첨부하면 모자이크 기능을 사용할 수 있어요? 가리고 싶은 곳을 바로 모자이크할 수 있어요</div></div>
+      <div id="commPdfMzHint" style="display:none;margin-top:6px;font-size:12px;color:var(--sub);line-height:1.5">PDF로 첨부하면 자동으로 얼굴을 찾아 모자이크해요 · 첨부 후 '모자이크 수정' 버튼을 누르면 가리고 싶은 곳을 직접 고를 수 있어요</div></div>
       <div id="commAttachList" style="margin-top:8px"></div>
       <label id="commNoticeRow" class="comm-notice-row" style="display:none">
         <input type="checkbox" id="commNotice"> <span>📢 공지로 등록 (관리자)</span>
@@ -2133,6 +2139,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
       <input id="refSearch" type="search" name="nolimoa-refsearch" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" placeholder="놀이 제목·해시태그·선생님 이름 검색" oninput="renderRefPick()" style="width:100%;border:1px solid #e7dcd6;border-radius:20px;padding:11px 15px;font-size:13.5px;background:#fafafb;margin-bottom:12px">
       <div id="refPickList"></div>
     </div>
+    <div class="up-foot" id="refPickFoot" style="display:none"><button onclick="close_('refPickOverlay')">완료</button></div>
   </div>
 </div>
 
@@ -2228,7 +2235,10 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
       </div>
       <div style="font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg> 빈 곳을 <b>드래그</b>하면 가릴 부분을 추가하고, 지우고 싶은 모자이크를 <b>누르면</b> 하나씩 지워져요. 회전·자르기로 사진도 다듬을 수 있어요.</div>
     </div>
-    <div class="up-foot"><button onclick="ieApply()">✓ 적용</button></div>
+    <div class="up-foot"><div style="display:flex;gap:8px">
+      <button id="ieBackBtn" class="btn g" style="display:none;flex:1;width:auto" onclick="ieNavBack()">← 이전</button>
+      <button id="ieMainBtn" style="flex:1;width:auto" onclick="ieMainAction()">✓ 적용</button>
+    </div></div>
   </div>
 </div>
 
@@ -5466,7 +5476,7 @@ async function addCommAttachments(list){
 function renderCommAttachList(){
   const box=$('#commAttachList'); if(!box)return; box.innerHTML='';
   _commAtts.forEach((a,i)=>{ const el=document.createElement('div'); el.className='attach-item';
-    el.innerHTML=`<span>${isImgAtt(a)?ICO.image:ICO.file}</span><span class="an">${esc(a.name)}</span><span class="asz">${a.size?fmtSize(a.size):''}</span>${a.pdfPages?`<button type="button" class="ax2" title="모자이크 직접 수정">${ICO.edit}</button>`:''}<button class="ax" title="삭제">✕</button>`;
+    el.innerHTML=`<span>${isImgAtt(a)?ICO.image:ICO.file}</span><span class="an">${esc(a.name)}</span><span class="asz">${a.size?fmtSize(a.size):''}</span>${a.pdfPages?`<button type="button" class="ax2" title="모자이크 직접 수정">${ICO.edit}모자이크 수정</button>`:''}<button class="ax" title="삭제">✕</button>`;
     const editBtn=el.querySelector('.ax2'); if(editBtn)editBtn.onclick=()=>openCommPdfMosaicEdit(i);
     el.querySelector('.ax').onclick=()=>{ _commAtts.splice(i,1); renderCommAttachList(); };
     box.appendChild(el); });
@@ -5490,6 +5500,8 @@ function commCanEdit(p){ return p.db ? !!(authUser&&p.user_id===authUser.id) : (
 let _commEditId=null;
 function commCard(p){
   const a=p.author||{};
+  const refs=normalizeRefs(p.ref).filter(r=>r.thumb);
+  const refThumbs=refs.length?`<div class="comm-ref-thumbs" title="연결된 놀이 ${refs.length}개">${refs.slice(0,4).map(r=>`<img src="${esc(r.thumb)}" alt="">`).join('')}${refs.length>4?`<span class="crt-more">+${refs.length-4}</span>`:''}</div>`:'';
   const el=document.createElement('div'); el.className='comm-card'+(p.notice?' notice':'');
   el.onclick=()=>openCommPost(p.id);
   el.innerHTML=`
@@ -5499,7 +5511,7 @@ function commCard(p){
       ${p.notice?'<span class="comm-badge">📢 공지</span>':''}
     </div>
     ${p.category?`<span class="comm-cat-badge">${esc(p.category)}</span>`:''}
-    <h3>${esc(p.title||'(제목 없음)')}</h3>
+    <div class="comm-title-row"><h3>${esc(p.title||'(제목 없음)')}</h3>${refThumbs}</div>
     <div class="comm-body">${linkifyTags(p.body||'')}</div>`;
   return el;
 }
@@ -5555,12 +5567,17 @@ function renderCommWriteRef(){
   box.querySelectorAll('.rx').forEach(btn=>{ btn.onclick=()=>{ _commWriteRef.splice(+btn.dataset.i,1); renderCommWriteRef(); }; });
 }
 function openCommRefPicker(){
-  openRefPicker(function(p){
-    const a=authorOf(p), thumb=(imagesOf(p)[0]||{}).img||p.img||'', rid=postRefId(p);
-    if(_commWriteRef.some(r=>r.refId===rid)){ toast('이미 연결한 놀이예요'); return; }
-    _commWriteRef.push({refId:rid, postId:p.db?p.id:null, title:(p.title||'놀이').replace(/^#/,''), author:(a&&a.name)||'선생님', thumb});
+  openRefPicker(function(p, nowOn){
+    const rid=postRefId(p);
+    if(nowOn){
+      if(_commWriteRef.some(r=>r.refId===rid))return;
+      const a=authorOf(p), thumb=(imagesOf(p)[0]||{}).img||p.img||'';
+      _commWriteRef.push({refId:rid, postId:p.db?p.id:null, title:(p.title||'놀이').replace(/^#/,''), author:(a&&a.name)||'선생님', thumb});
+    } else {
+      _commWriteRef=_commWriteRef.filter(r=>r.refId!==rid);
+    }
     renderCommWriteRef();
-  }, true);   // true = 내가 올린 글만
+  }, true, true, _commWriteRef.map(r=>r.refId));   // ownOnly=true, multi=true, 이미 고른 것들은 체크 표시로
 }
 function openCommRefPost(refId){ close_('commPostOverlay'); openRefTarget(refId); }
 /* 게시글(상세) 안에 보여줄 '해당 놀이' 카드(여러 개) */
@@ -6054,8 +6071,14 @@ function refLinkPending(){
   return true;
 }
 function clearRefLinkWarn(){ const w=$('#refLinkWarn'); if(w)w.style.display='none'; const ab=$('#refAddBtn'); if(ab)ab.classList.remove('pulse-btn'); }
-let _refPickCb=null, _refPickOwnOnly=false;
-function openRefPicker(cb, ownOnly){ _refPickCb=(typeof cb==='function')?cb:null; _refPickOwnOnly=!!ownOnly; const s=$('#refSearch'); if(s){ s.value=''; s.placeholder = ownOnly ? '놀이 제목·해시태그 검색' : '놀이 제목·해시태그·선생님 이름 검색'; } renderRefPick(); open_('refPickOverlay'); }
+let _refPickCb=null, _refPickOwnOnly=false, _refPickMulti=false, _refPickSelectedIds=new Set();
+function openRefPicker(cb, ownOnly, multi, selectedIds){
+  _refPickCb=(typeof cb==='function')?cb:null; _refPickOwnOnly=!!ownOnly;
+  _refPickMulti=!!multi; _refPickSelectedIds=new Set(selectedIds||[]);
+  const s=$('#refSearch'); if(s){ s.value=''; s.placeholder = ownOnly ? '놀이 제목·해시태그 검색' : '놀이 제목·해시태그·선생님 이름 검색'; }
+  const foot=$('#refPickFoot'); if(foot)foot.style.display=_refPickMulti?'':'none';
+  renderRefPick(); open_('refPickOverlay');
+}
 function isMinePost(p){ return p ? (p.db ? !!(SB&&authUser&&p.user_id===authUser.id) : p.tid==='me') : false; }
 function refPickCandidates(){
   // 실제 글 우선 + 데모, 지금 수정 중인 글은 제외
@@ -6072,16 +6095,25 @@ function renderRefPick(){
   if(!list.length){box.innerHTML='<div class="empty" style="padding:14px 4px">'+(_refPickOwnOnly&&!q?'아직 내가 올린 놀이글이 없어요.<br>놀이를 먼저 올리면 흐름에 추가할 수 있어요.':'검색 결과가 없어요.')+'</div>';return;}
   list.forEach(p=>{
     const a=authorOf(p), thumb=(imagesOf(p)[0]||{}).img||p.img||'';
-    const el=document.createElement('div'); el.className='refpick-item';
+    const on=_refPickMulti && _refPickSelectedIds.has(postRefId(p));
+    const el=document.createElement('div'); el.className='refpick-item'+(on?' picked':'');
     el.innerHTML=`${thumb?`<img src="${thumb}" alt="">`:'<div class="refpick-item-ic" style="width:46px;height:46px;border-radius:9px;background:#f6ddd8;display:grid;place-items:center">🎨</div>'}
       <div class="rbody"><div class="rtt" style="font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc((p.title||'놀이').replace(/^#/,''))}</div>
-      <div class="rsub" style="font-size:11.5px;color:var(--sub)">${esc((a&&a.name)||'선생님')}</div></div>`;
+      <div class="rsub" style="font-size:11.5px;color:var(--sub)">${esc((a&&a.name)||'선생님')}</div></div>${_refPickMulti?`<div class="rp-check">${on?'✓':'＋'}</div>`:''}`;
     el.onclick=()=>pickRefPost(p);
     box.appendChild(el);
   });
 }
 function postRefId(p){ return p.db?('db:'+p.id):('demo:'+(p.title||'')); }
 function pickRefPost(p){
+  if(_refPickMulti){
+    const rid=postRefId(p);
+    const nowOn=!_refPickSelectedIds.has(rid);
+    if(nowOn)_refPickSelectedIds.add(rid); else _refPickSelectedIds.delete(rid);
+    if(_refPickCb)_refPickCb(p, nowOn);
+    renderRefPick();
+    return;
+  }
   if(_refPickCb){ const cb=_refPickCb; _refPickCb=null; close_('refPickOverlay'); cb(p); return; }
   const id=postRefId(p);
   if(postRefs.some(r=>r.type==='post'&&r.refId===id)){toast('이미 추가된 놀이예요');close_('refPickOverlay');return;}
@@ -6347,20 +6379,31 @@ async function mosaicPdfFile(file){
 let _commPdfEdit=null;
 function openCommPdfMosaicEdit(i){
   const a=_commAtts[i]; if(!a||!a.pdfPages||!a.pdfPages.length)return;
-  _commPdfEdit={attIdx:i, pageIdx:0, results:[]};
+  _commPdfEdit={attIdx:i, pageIdx:0};
   stepCommPdfMosaicEdit();
+}
+/* 지금 보고 있는 페이지의 모자이크 박스(수정한 내용)를 pg.boxes에 저장(아직 굽지는 않음) */
+function commPdfEditSaveCurrentBoxes(){
+  const st=_commPdfEdit; if(!st||!_ie)return;
+  const a=_commAtts[st.attIdx]; if(!a)return;
+  const pg=a.pdfPages[st.pageIdx]; if(pg)pg.boxes=_ie.boxes.map(b=>({...b}));
 }
 function stepCommPdfMosaicEdit(){
   const st=_commPdfEdit; if(!st)return;
   const a=_commAtts[st.attIdx]; if(!a){_commPdfEdit=null;return;}
   const pages=a.pdfPages;
-  if(st.pageIdx>=pages.length){ finishCommPdfMosaicEdit(); return; }
   const pg=pages[st.pageIdx];
   openImgEdit(pg.raw, {
     boxes:(pg.boxes||[]).map(b=>({...b})), mosaicOn:true,
     title:`PDF 모자이크 수정 (${st.pageIdx+1}/${pages.length}페이지)`,
     status:'빈 곳을 드래그해 가릴 부분을 추가하거나, 모자이크를 눌러 지워보세요',
-    onApply:(url)=>{ pg.boxes=_ie.boxes.map(b=>({...b})); st.results.push(url); st.pageIdx++; stepCommPdfMosaicEdit(); }
+    nav:{
+      hasPrev: st.pageIdx>0,
+      hasNext: st.pageIdx<pages.length-1,
+      onBack:()=>{ commPdfEditSaveCurrentBoxes(); st.pageIdx--; stepCommPdfMosaicEdit(); },
+      onNext:()=>{ commPdfEditSaveCurrentBoxes(); st.pageIdx++; stepCommPdfMosaicEdit(); }
+    },
+    onApply:()=>{ commPdfEditSaveCurrentBoxes(); finishCommPdfMosaicEdit(); }
   });
 }
 async function finishCommPdfMosaicEdit(){
@@ -6368,7 +6411,8 @@ async function finishCommPdfMosaicEdit(){
   const a=_commAtts[st.attIdx]; if(!a)return;
   showUploading(true,'수정한 내용으로 PDF를 다시 만드는 중이에요…');
   try{
-    const file=await buildPdfFromImages(st.results, a.pdfPages.map(p=>p.wmm), a.pdfPages.map(p=>p.hmm), a.pdfOrigName||a.name);
+    const baked=[]; for(const pg of a.pdfPages) baked.push(await bakePdfPage(pg));
+    const file=await buildPdfFromImages(baked, a.pdfPages.map(p=>p.wmm), a.pdfPages.map(p=>p.hmm), a.pdfOrigName||a.name);
     file._pdfPages=a.pdfPages;
     a.file=file; a.url=URL.createObjectURL(file); a.size=file.size;
     toast('모자이크 수정을 반영했어요');
@@ -7138,10 +7182,14 @@ function openImgEdit(src, opts){
       _ie.img=im; ieFit(im);
       _ie.boxes=(opts.boxes||[]).map(b=>({...b})); _ie.mosaicOn=opts.mosaicOn!==false; _ie.delMode=false;
       _ie.drag=null; _ie.cropMode=false; _ie.cropRect=null; _ie.cropping=false; _ie.onApply=opts.onApply||null;
+      _ie.nav=opts.nav||null;
       const mz=$('#ieMz'); if(mz)mz.checked=_ie.mosaicOn;
       const cb=$('#ieCropBar'); if(cb)cb.style.display='none';
       const tt=$('#ieTitleTxt'); if(tt)tt.textContent=opts.title||'사진 수정';
       const st=$('#ieStatus'); if(st)st.textContent=opts.status||(_ie.boxes.length?'빈 곳을 눌러(드래그해) 더 가릴 수 있어요 · 빈 곳 드래그로 추가':'빈 곳을 드래그해 가릴 부분을 추가하거나, 회전·자르기로 다듬어 보세요.');
+      const backBtn=$('#ieBackBtn'), mainBtn=$('#ieMainBtn');
+      if(backBtn)backBtn.style.display=(_ie.nav&&_ie.nav.hasPrev)?'':'none';
+      if(mainBtn){ mainBtn.textContent=(_ie.nav&&_ie.nav.hasNext)?'다음 →':'✓ 적용'; }
       renderCanvasP(_ie);
       open_('imgEditOverlay');
     };
@@ -7150,7 +7198,10 @@ function openImgEdit(src, opts){
   };
   load(true);
 }
-function closeImgEdit(){ close_('imgEditOverlay'); _ie.drag=null; _ie.cropMode=false; _ie.cropping=false; _ie.onApply=null; }
+function ieNavBack(){ if(_ie.nav && _ie.nav.onBack) _ie.nav.onBack(); }
+function ieNavNext(){ if(_ie.nav && _ie.nav.onNext) _ie.nav.onNext(); }
+function ieMainAction(){ if(_ie.nav && _ie.nav.hasNext) ieNavNext(); else ieApply(); }
+function closeImgEdit(){ close_('imgEditOverlay'); _ie.drag=null; _ie.cropMode=false; _ie.cropping=false; _ie.onApply=null; _ie.nav=null; }
 async function ieRedetect(){
   const st=$('#ieStatus'); if(st)st.textContent='🤖 얼굴 인식 중…';
   const clean=document.createElement('canvas'); clean.width=_ie.cv.width; clean.height=_ie.cv.height;
