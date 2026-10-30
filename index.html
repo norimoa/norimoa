@@ -791,8 +791,8 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .comm-wcat{border:1px solid #e7dcd6;background:#fafafb;color:#6b5c52;border-radius:14px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer}
   .comm-wcat.on{background:var(--coral);color:#fff;border-color:var(--coral)}
   .comm-cat-badge{display:inline-block;background:#f4ede7;color:#7a6a60;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px}
-  .comm-title-row{display:flex;align-items:center;gap:8px}
-  .comm-title-row h3{flex:1;min-width:0}
+  .comm-title-row{display:flex;flex-direction:column;gap:4px}
+  .comm-title-row h3{flex:none;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0}
   .comm-ref-thumbs{display:flex;flex:0 0 auto;gap:4px;margin-bottom:5px}
   .comm-ref-thumbs img{width:56px;height:56px;border-radius:10px;object-fit:cover;background:#f6ddd8;box-shadow:0 0 0 1px #eadfd8}
   .crt-more{width:56px;height:56px;border-radius:10px;background:#f3eeeb;color:var(--sub);font-size:12px;font-weight:700;display:grid;place-items:center;flex:0 0 auto}
@@ -1749,7 +1749,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <a onclick="nav('terms')">이용약관</a><span>·</span>
     <a href="mailto:tweecys@naver.com">문의: tweecys@naver.com</a>
   </div>
-  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0820f</span></div>
+  <div class="foot-copy">© 2026 놀이모아 · 운영: 놀이모아 운영팀 <span style="opacity:.45;font-size:11px">v0820g</span></div>
 </footer>
 
 <!-- ============ BOTTOM NAV ============ -->
