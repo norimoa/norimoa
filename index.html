@@ -1401,9 +1401,9 @@
     </div>
     <div class="panel" id="weekPopPanel">
       <h4>🔥 이번 주 인기</h4>
-      <div class="rank" onclick="filterByLabel('채소')"><span class="n">1</span><span class="ic">🥦</span><span class="t">#채소</span><span class="h">♥ 3.8k</span></div>
-      <div class="rank" onclick="filterByLabel('얼음')"><span class="n">2</span><span class="ic">🧊</span><span class="t">#얼음</span><span class="h">♥ 4.2k</span></div>
-      <div class="rank" onclick="filterByLabel('수박 수영장')"><span class="n">3</span><span class="ic">🍉</span><span class="t">#수박 수영장</span><span class="h">♥ 5.2k</span></div>
+      <div class="rank" onclick="filterByLabel('채소')"><span class="n">1</span><span class="t">#채소</span><span class="h">♥ 3.8k</span></div>
+      <div class="rank" onclick="filterByLabel('얼음')"><span class="n">2</span><span class="t">#얼음</span><span class="h">♥ 4.2k</span></div>
+      <div class="rank" onclick="filterByLabel('수박 수영장')"><span class="n">3</span><span class="t">#수박 수영장</span><span class="h">♥ 5.2k</span></div>
     </div>
     <div class="panel" id="topTeachersPanel"></div>
   </aside>
@@ -3934,7 +3934,7 @@ function renderWeekPop(){
   let html='<h4>🔥 이번 주 인기</h4>';
   if(!top.length){ html+='<div class="empty" style="padding:8px 0">아직 인기 태그가 없어요</div>'; }
   else top.forEach((t,i)=>{ const sum=(window._dbPosts||[]).filter(p=>(p.tags||[]).includes(t)).reduce((a,p)=>a+(p.like||0),0);
-    html+=`<div class="rank" onclick="filterByLabel('${tagQ(t)}')"><span class="n">${i+1}</span><span class="ic">🏷️</span><span class="t">#${esc(noSpace(t))}</span><span class="h">♥ ${sum.toLocaleString()}</span></div>`; });
+    html+=`<div class="rank" onclick="filterByLabel('${tagQ(t)}')"><span class="n">${i+1}</span><span class="t">#${esc(noSpace(t))}</span><span class="h">♥ ${sum.toLocaleString()}</span></div>`; });
   panel.innerHTML=html;
 }
 /* 이 달의 인기 선생님: 조회수 합산 상위 5명 (좋아요·댓글·저장 제외) */
