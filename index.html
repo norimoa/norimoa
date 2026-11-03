@@ -245,15 +245,20 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .ai-status{align-items:flex-start}
   .ai-status .ais-t{line-height:1.5}
   .ai-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-  .ai-controls .pedit{display:none}
-  /* 휴대폰 사진 카드: '사진 편집 · 아래 사진과 콜라주 · 구매 링크 추가' 세 버튼만 한 줄로 */
+  /* 사진 안 오른쪽 아래: [사진 편집(휴대폰만)] [환경구성이면 체크] */
+  .ph-tools{position:absolute;right:8px;bottom:8px;z-index:6;display:flex;align-items:center;gap:6px}
+  .ph-tools .env-check{position:static}
+  .ph-edit{display:none;align-items:center;gap:5px;background:rgba(255,255,255,.93);border:1px solid #e7dcd6;border-radius:9px;
+    padding:5px 10px;font-size:12px;font-weight:700;color:var(--coral-tx);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.14)}
+  .ph-edit .b-ico{width:14px;height:14px}
+  .mob-simple .ph-edit{display:inline-flex}
+  /* 휴대폰 사진 카드: 사진 아래엔 '아래 사진과 콜라주 · 구매 링크 추가'만 한 줄로 */
   .mob-simple .ai-controls{flex-wrap:nowrap;gap:6px}
   .mob-simple .ai-controls .rotate,.mob-simple .ai-controls .crop,.mob-simple .ai-controls .redetect,
   .mob-simple .ai-controls .clearface,.mob-simple .ai-controls .switch,.mob-simple .crop-bar{display:none!important}
-  .mob-simple .ai-controls .pedit,.mob-simple .ai-controls .collage,.mob-simple .ai-controls .addspot{
+  .mob-simple .ai-controls .collage,.mob-simple .ai-controls .addspot{
     display:inline-flex;align-items:center;justify-content:center;gap:4px;flex:1 1 0;min-width:0;
     padding:10px 4px;font-size:12.5px;line-height:1.25;text-align:center;word-break:keep-all}
-  .mob-simple .ai-controls .collage{flex-grow:1.35}
   .mob-simple .ai-controls .b-ico{flex:0 0 auto}
   .crop-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;background:#fcf4f1;border:1px solid #eed9cf;border-radius:10px;padding:9px 11px}
   .crop-bar .crop-hint{flex:1;min-width:120px;color:#8a7168;font-size:12.5px;font-weight:600}
@@ -6535,7 +6540,7 @@ function buildPhotoCard(ph, skipDetect){
         <button class="btn g delphoto" title="삭제" aria-label="삭제">${ICO.trash}</button>
       </div>
     </div>
-    <div class="up-photo"><canvas></canvas><div class="markers" style="pointer-events:none"></div><label class="env-check" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox" class="envon"> 환경구성이면 체크</label></div>
+    <div class="up-photo"><canvas></canvas><div class="markers" style="pointer-events:none"></div><div class="ph-tools"><button type="button" class="ph-edit pedit"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg> 사진 편집</button><label class="env-check" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox" class="envon"> 환경구성이면 체크</label></div></div>
     <div class="ai-status">🤖 얼굴 인식 중…</div>
     <div class="crop-bar" style="display:none">
       <span class="crop-hint">✂️ 잘라낼 부분을 사진에서 드래그하세요</span>
@@ -6543,7 +6548,6 @@ function buildPhotoCard(ph, skipDetect){
       <button class="btn g cropcancel">취소</button>
     </div>
     <div class="ai-controls">
-      <button class="btn g pedit"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg> 사진 편집</button>
       <button class="btn g rotate" title="회전" aria-label="회전"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
       <button class="btn g crop" title="자르기" aria-label="자르기"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg></button>
       <button class="btn g collage"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="2"/><path d="M8 21h11a2 2 0 0 0 2-2V8"/></svg> 아래 사진과 콜라주</button>
@@ -6922,7 +6926,10 @@ async function runDetectP(ph){
   }catch(e){found=[];}
   ph.boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
   renderCanvasP(ph);
-  ph.status.innerHTML=ph.boxes.length?`${CHK_ICO}<span class="ais-t">얼굴 ${ph.boxes.length}개 모자이크<br>빈 곳을 눌러(드래그해) 더 가릴 수 있어요</span>`:'얼굴을 못 찾았어요. 가릴 곳을 눌러(또는 드래그해) 직접 가려주세요.';
+  const phone=isPhoneDevice();
+  ph.status.innerHTML=ph.boxes.length
+    ? `${CHK_ICO}<span class="ais-t">얼굴 ${ph.boxes.length}개 모자이크<br>${phone?'더 가릴 곳은 사진 편집을 눌러 모자이크해 주세요':'빈 곳을 눌러(드래그해) 더 가릴 수 있어요'}</span>`
+    : (phone?'얼굴을 못 찾았어요. 사진 편집을 눌러 직접 모자이크해 주세요.':'얼굴을 못 찾았어요. 가릴 곳을 눌러(또는 드래그해) 직접 가려주세요.');
 }
 // 삭제 모드에서 각 모자이크 오른쪽 위에 뜨는 ✕ 배지의 위치·크기
 function delBadge(ph,b){ const cv=ph.cv, r=Math.max(8, cv.width*0.024);
@@ -7121,8 +7128,8 @@ function splitCollage(ph){
   photos.splice(i,0,...made);
   made.forEach(p=>{ buildPhotoCard(p, true);   // skipDetect: 조각의 모자이크를 그대로 유지
     if(p.status) p.status.innerHTML = p.boxes.length
-      ? `${CHK_ICO}<span class="ais-t">얼굴 ${p.boxes.length}개 모자이크<br>빈 곳을 눌러(드래그해) 더 가릴 수 있어요</span>`
-      : '가릴 곳을 눌러(또는 드래그해) 직접 가려주세요.'; });
+      ? `${CHK_ICO}<span class="ais-t">얼굴 ${p.boxes.length}개 모자이크<br>${isPhoneDevice()?'더 가릴 곳은 사진 편집을 눌러 모자이크해 주세요':'빈 곳을 눌러(드래그해) 더 가릴 수 있어요'}</span>`
+      : (isPhoneDevice()?'사진 편집을 눌러 가릴 곳을 직접 모자이크해 주세요.':'가릴 곳을 눌러(또는 드래그해) 직접 가려주세요.'); });
   const list=$('#photoList'); if(list)photos.forEach(p=>{ if(p.el)list.appendChild(p.el); });
   updatePhotoOrder(); renderWritePhotoStrip(); markDirty&&markDirty();
   toast(`콜라주를 ${made.length}장으로 나눴어요`);
