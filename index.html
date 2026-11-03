@@ -664,6 +664,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   #folderOverlay{z-index:80}
   #newFolderOverlay,#pickerOverlay,#coverPickOverlay{z-index:85}
   #editOverlay{z-index:88}
+  #editPhotosOverlay{z-index:90}
   #imgEditOverlay{z-index:95}
   /* 모바일 확대 모자이크 편집 */
   .mz-overlay{z-index:9500;padding:0;background:rgba(15,12,12,.72)}
@@ -701,6 +702,10 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .edit-img .ecap{margin-top:10px}
   .ei-photo{position:relative;cursor:pointer;border-radius:10px;overflow:hidden;display:block}
   .ei-photo img{width:100%;max-height:200px;object-fit:cover;border-radius:10px;display:block}
+  .edit-img .ei-photo img{max-height:none;object-fit:contain}   /* 업로드 카드처럼 사진 전체 보이기 */
+  .wp-add{flex:0 0 auto;width:96px;height:96px;border-radius:12px;border:2px dashed #e2cfc6;background:#fcf6f3;color:var(--coral-tx);
+    font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+  .wp-add span{font-size:22px;line-height:1}
   .ei-photo .ei-edit{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.6);color:#fff;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:8px}
   .ei-photo:hover .ei-edit{background:var(--coral)}
   .ei-photo .ei-no{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:700;border-radius:7px;padding:1px 8px}
@@ -2144,13 +2149,6 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
         <div id="refList" style="margin-top:10px"></div>
       </div>
 
-      <!-- 사진별 설명·상품태그 (수정할 때만 표시) -->
-      <div class="sec" id="writeImagesSec" style="display:none">
-        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="sl-t">사진 · 설명 · 상품 태그</span> <span class="hint">사진을 눌러 수정 · 휴지통으로 삭제 · 아래에서 추가</span></div>
-        <div id="writeImages"></div>
-        <input type="file" id="editAddPhoto" accept="image/*" multiple hidden>
-        <button type="button" class="fa-btn" onclick="document.getElementById('editAddPhoto').click()">＋ 사진 추가</button>
-      </div>
     </div>
     <label class="priv-row"><input type="checkbox" id="postPrivChk" onchange="_postPriv=this.checked"><span class="pr-t"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>나만 보기</span><span class="pr-h">다른 사람에겐 안 보이고, 나만 볼 수 있어요 (나중에 언제든 바꿀 수 있어요)</span></label>
     <div class="up-foot" style="display:flex;gap:10px">
@@ -2298,6 +2296,27 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
       <button class="mz-tool" onclick="mzRotate()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span>회전</span></button>
       <button class="mz-tool" data-mode="mosaic" onclick="mzSetMode('mosaic')"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/><rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>모자이크</span></button>
     </div>
+  </div>
+</div>
+
+<!-- ============ 글 수정: 사진 편집 창 (업로드 1단계처럼 사진 카드 목록) ============ -->
+<div class="overlay" id="editPhotosOverlay" onclick="if(event.target===this)closeEditPhotos()">
+  <div class="modal up-modal big-modal">
+    <div class="modal-head">
+      <button class="x" onclick="closeEditPhotos()" title="글 수정으로">‹</button>
+      <b>사진 편집</b>
+      <button class="x" onclick="closeEditPhotos()">×</button>
+    </div>
+    <div class="up-body">
+      <!-- 사진별 설명·상품태그 (글 수정 → 위쪽 사진을 누르면 열림) -->
+      <div class="sec" id="writeImagesSec">
+        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="sl-t">사진 · 설명 · 상품 태그</span> <span class="hint">사진 편집으로 모자이크·자르기·회전 · 휴지통으로 삭제 · 아래에서 추가</span></div>
+        <div id="writeImages"></div>
+        <input type="file" id="editAddPhoto" accept="image/*" multiple hidden>
+        <button type="button" class="fa-btn" onclick="document.getElementById('editAddPhoto').click()">＋ 사진 추가</button>
+      </div>
+    </div>
+    <div class="up-foot"><button onclick="closeEditPhotos()">완료</button></div>
   </div>
 </div>
 
@@ -3976,7 +3995,7 @@ function renderEditImages(){
         <button class="espot-del" data-i="${idx}" data-s="${si}">✕</button>
       </div>`).join('');
     const markersHtml=im.spots.map((s,si)=>`<span class="ei-marker" data-i="${idx}" data-s="${si}" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%">${si+1}</span>`).join('');
-    const card=document.createElement('div');card.className='photo-card edit-img';card.dataset.i=idx;
+    const card=document.createElement('div');card.className='photo-card edit-img mob-simple';card.dataset.i=idx;
     card.innerHTML=`
       <div class="photo-head">
         <div class="ph-left"><span class="drag-handle" title="끌어서 순서 변경">⠿</span><span class="pnum">${(idx+1)+'번째 사진'}</span></div>
@@ -3987,9 +4006,9 @@ function renderEditImages(){
           <button type="button" class="btn g ei-del-btn" data-i="${idx}" title="삭제" aria-label="삭제">${ICO.trash}</button>
         </div>
       </div>
-      <div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt="">${markersHtml}<span class="ei-edit">${ICO.edit} 사진 수정</span><label class="env-check ei-env" data-i="${idx}" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox"> 환경구성이면 체크</label></div>
+      <div class="ei-photo" data-i="${idx}" title="사진을 눌러 모자이크·자르기 수정"><img src="${im.img}" alt="">${markersHtml}<div class="ph-tools"><button type="button" class="ph-edit ei-pedit" data-i="${idx}"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg> 사진 편집</button><label class="env-check ei-env" data-i="${idx}" title="게시판·교실 환경구성 사진이면 체크하세요"><input type="checkbox"> 환경구성이면 체크</label></div></div>
       <div class="ai-controls">
-        <button type="button" class="btn g ei-edit-btn" data-i="${idx}"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> 사진 수정 (모자이크·자르기·회전)</button>
+        
         ${idx<_editImages.length-1?`<button type="button" class="btn g ei-collage" data-i="${idx}"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="2"/><path d="M8 21h11a2 2 0 0 0 2-2V8"/></svg> 아래 사진과 콜라주</button>`:''}
         <button type="button" class="add-spot addspot2" data-i="${idx}">＋ 구매 링크 추가</button>
       </div>
@@ -4012,7 +4031,7 @@ function renderEditImages(){
     l.addEventListener('click',e=>e.stopPropagation());
     cb.addEventListener('change',e=>{ e.stopPropagation(); _editImages[idx].env=e.target.checked; });
   });
-  box.querySelectorAll('.ei-photo, .ei-edit-btn').forEach(el=>el.onclick=()=>openEditImage(+el.dataset.i));
+  box.querySelectorAll('.ei-photo').forEach(el=>el.onclick=()=>openEditImage(+el.dataset.i));
   box.querySelectorAll('.ei-del-btn').forEach(b=>b.onclick=()=>deleteEditImage(+b.dataset.i));
   box.querySelectorAll('.ei-cover').forEach(b=>b.onclick=()=>setCoverPhoto(_editImages, +b.dataset.i, renderEditImages));
   box.querySelectorAll('.ei-up').forEach(b=>b.onclick=()=>moveEditImage(+b.dataset.i,-1));
@@ -4033,6 +4052,7 @@ function renderEditImages(){
   box.querySelectorAll('.espot-mall-custom').forEach(inp=>inp.addEventListener('input',e=>{
     _editImages[+e.target.dataset.i].spots[+e.target.dataset.s].mall=e.target.value.trim();}));
   box.querySelectorAll('.espot-del').forEach(b=>b.onclick=()=>{_editImages[+b.dataset.i].spots.splice(+b.dataset.s,1);renderEditImages();});
+  renderWritePhotoStrip();   // 위쪽 사진 줄도 함께 갱신
   box.querySelectorAll('.addspot2').forEach(b=>b.onclick=()=>{
     const im=_editImages[+b.dataset.i]; const n=im.spots.length;
     im.spots.push({x:35+(n%4)*12, y:35+(Math.floor(n/4)%3)*14, name:'',mall:'',url:''}); // 새 동그라미가 겹치지 않게 살짝 어긋나게
@@ -4060,8 +4080,18 @@ function enableEiMarkerDrag(m){
 }
 /* 글 수정 화면에서 사진 클릭 → 모자이크·자르기·회전 편집 */
 function openEditImage(idx){
-  const im=_editImages[idx]; if(!im)return;
-  openImgEdit(im.img, { boxes:[], mosaicOn:true, onApply:(url)=>{ _editImages[idx].img=url; renderEditImages(); } });
+  const it=_editImages[idx]; if(!it)return;
+  const load=(cors)=>{ const im=new Image();
+    if(cors && /^https?:/i.test(it.img)) im.crossOrigin='anonymous';   // 저장된(원격) 사진도 캔버스로 다시 저장할 수 있게
+    im.onload=()=>openMobileMosaic({ img:im, boxes:[], _onApply:(z)=>{
+      if(!z.imgChanged && !z.boxes.length) return true;              // 바뀐 게 없으면 그대로
+      let url; try{ url=cleanPhotoDataURL({img:z.img, cv:{width:z.cv.width,height:z.cv.height}, boxes:z.boxes, mosaicOn:true}, 0.9); }
+      catch(e){ toast('이 사진은 저장하지 못했어요. 잠시 후 다시 시도해 주세요'); return false; }
+      const cur=_editImages[idx]; if(cur) cur.img=url;
+      renderEditImages(); toast('사진을 수정했어요'); return true; } });
+    im.onerror=()=>{ if(cors) load(false); else toast('사진을 불러오지 못했어요'); };
+    im.src=it.img; };
+  load(true);
 }
 /* 수정 화면: 사진 삭제 */
 function deleteEditImage(idx){
@@ -4096,7 +4126,7 @@ async function mergeEditCollage(idx){
   const keep=_editImages[idx];
   _editImages.splice(idx,2,{img:c.toDataURL('image/jpeg',0.9), desc:keep.desc||'', env:keep.env===true, spots:[]});
   renderEditImages();
-  toast('아래 사진과 콜라주로 합쳤어요 · 모자이크는 🖼️ 사진 수정에서 하면 돼요');
+  toast('아래 사진과 콜라주로 합쳤어요 · 모자이크는 사진 편집에서 하면 돼요');
 }
 /* 이미지(dataURL)에 얼굴 자동 모자이크를 입혀 깨끗한 dataURL로 반환 */
 async function autoMosaicDataURL(src){
@@ -6860,6 +6890,7 @@ async function mzAutoDetect(){ if(!_mz)return; const z=_mz;
   if(hint&&z.mode==='mosaic') hint.innerHTML=found.length?`얼굴 ${found.length}개를 가렸어요 · 더 가릴 곳은 손가락으로 드래그하세요`:'얼굴을 찾지 못했어요 · 가릴 곳을 손가락으로 드래그하세요';
 }
 function applyMobileMosaic(){ if(!_mz)return; const z=_mz, ph=z.src;
+  if(ph._onApply){ if(ph._onApply(z)!==false) closeMobileMosaic(); return; }   // 글 수정 화면의 사진
   let lostSpots=false;
   if(z.imgChanged){
     lostSpots=!!(ph.spots&&ph.spots.length);
@@ -8331,14 +8362,16 @@ function goWrite(){
 function renderWritePhotoStrip(){
   const sec=$('#writePhotoStripSec'), strip=$('#writePhotoStrip');
   if(!sec||!strip)return;
-  if(_editPost||!photos.length){ sec.style.display='none'; strip.innerHTML=''; return; }
+  const editing=!!_editPost, arr=editing?(_editImages||[]):photos;   // 글 수정도 업로드 2단계와 같은 사진 줄
+  if(!arr.length){ sec.style.display='none'; strip.innerHTML=''; return; }
   sec.style.display='';
-  const lab=sec.querySelector('.hint'); if(lab)lab.textContent='드래그로 순서 변경 · 누르면 편집 · 분홍 번호가 대표사진이에요';
+  const lab=sec.querySelector('.hint'); if(lab)lab.textContent=editing?'드래그로 순서 변경 · 누르면 사진 편집·설명 수정 · 분홍 번호가 대표사진이에요':'드래그로 순서 변경 · 누르면 편집 · 분홍 번호가 대표사진이에요';
   strip.innerHTML='';
-  const ci=coverIndexOf(photos);
-  photos.forEach((ph,idx)=>{
+  const ci=coverIndexOf(arr);
+  arr.forEach((ph,idx)=>{
     let src='';
-    try{ src=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,.8):(ph.img&&ph.img.src)||''; }catch(e){ src=(ph.img&&ph.img.src)||''; }
+    if(editing){ src=(ph.thumb&&ph.thumbSrc===ph.img)?ph.thumb:(ph.img||''); }
+    else try{ src=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,.8):(ph.img&&ph.img.src)||''; }catch(e){ src=(ph.img&&ph.img.src)||''; }
     const hasSpot=(ph.spots&&ph.spots.length)?'<span class="wp-badge" title="구매 링크 있음">🛒</span>':'';
     const d=document.createElement('div');
     d.className='wp-thumb'+(idx===ci?' is-cover':'');
@@ -8347,6 +8380,8 @@ function renderWritePhotoStrip(){
     d.innerHTML=`<span class="wp-no">${idx+1}</span>${hasSpot}${src?`<img src="${src}" alt="">`:''}<span class="wp-edit">✎ 편집</span>`;
     strip.appendChild(d);
   });
+  if(editing){ const add=document.createElement('button'); add.type='button'; add.className='wp-add'; add.title='사진 추가';
+    add.innerHTML='<span>＋</span>사진 추가'; add.onclick=()=>document.getElementById('editAddPhoto').click(); strip.appendChild(add); }
   enableWriteStripDrag(strip);
 }
 /* 2단계 사진 미리보기 줄: 드래그로 사진 순서 변경 + 탭으로 편집 */
@@ -8371,7 +8406,8 @@ function enableWriteStripDrag(strip){
       try{thumb.releasePointerCapture(e.pointerId);}catch(_){}
       dragEl=null;
       if(wasMoved){ applyWriteStripOrder(strip); }
-      else{ const idx=photos.indexOf(el._ph); if(idx>=0) editWritePhoto(idx); } };
+      else{ const arr=_editPost?_editImages:photos, idx=arr.indexOf(el._ph);
+        if(idx>=0){ if(_editPost) openEditPhotos(idx); else editWritePhoto(idx); } } };
     thumb.addEventListener('pointerup',finish);
     thumb.addEventListener('pointercancel',finish);
   });
@@ -8379,12 +8415,24 @@ function enableWriteStripDrag(strip){
 /* 미리보기 DOM 순서 → photos 배열 재정렬 (1단계 카드 순서도 함께 반영) */
 function applyWriteStripOrder(strip){
   const order=[...strip.querySelectorAll('.wp-thumb')].map(t=>t._ph).filter(Boolean);
+  if(_editPost){ if(order.length!==_editImages.length)return; _editImages.splice(0,_editImages.length,...order); renderEditImages(); return; }
   if(order.length!==photos.length)return;
   photos.splice(0,photos.length,...order);
   const list=$('#photoList'); if(list)photos.forEach(p=>{if(p.el)list.appendChild(p.el);});
   updatePhotoOrder();
   renderWritePhotoStrip();
 }
+/* 글 수정: 위쪽 사진을 누르면 '사진 편집' 창을 열고 그 사진으로 스크롤 */
+function openEditPhotos(idx){
+  renderEditImages(); open_('editPhotosOverlay');
+  const card=document.querySelector(`#writeImages .photo-card[data-i="${idx}"]`);
+  if(card) setTimeout(()=>{
+    try{ card.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ card.scrollIntoView(); }
+    card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+    setTimeout(()=>card.classList.remove('flash'),1500);
+  },140);
+}
+function closeEditPhotos(){ close_('editPhotosOverlay'); renderWritePhotoStrip(); }
 /* 미리보기 사진을 누르면 → 사진 편집 단계로 돌아가 그 사진으로 스크롤 */
 function editWritePhoto(idx){
   backToPhotos();
