@@ -680,7 +680,8 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .mz-sub{display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 14px 4px;background:#1b1717}
   .mz-subbtns{display:flex;gap:10px;justify-content:center}
   .mz-sub[data-mode="mosaic"] .mz-for-crop,.mz-sub[data-mode="crop"] .mz-for-mosaic{display:none}
-  .mz-chip{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:#fff;border-radius:999px;padding:8px 20px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .mz-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:#fff;border-radius:999px;padding:8px 20px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .mz-chip svg{width:16px;height:16px;flex:0 0 auto}
   .mz-chip.p{background:#f3b8ae;border-color:#f3b8ae;color:#3a2a25}
   .mz-tools{display:flex;justify-content:space-around;align-items:flex-start;padding:10px 8px calc(12px + env(safe-area-inset-bottom,0px));background:#1b1717}
   .mz-tool{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:76px;border:none;background:none;color:#cfc6c2;font-size:12.5px;font-weight:600;padding:6px 10px;cursor:pointer}
@@ -2275,8 +2276,8 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <div class="mz-sub" id="mzSub" style="display:none">
       <div class="mz-hint" id="mzHint"></div>
       <div class="mz-subbtns mz-for-mosaic">
-        <button class="mz-chip" onclick="mzResetMosaic()">재설정</button>
-        <button class="mz-chip" onclick="mzAutoDetect()">자동인식</button>
+        <button class="mz-chip" onclick="mzResetMosaic()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>재설정</button>
+        <button class="mz-chip" onclick="mzAutoDetect()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 14.5a3 3 0 0 0 6 0"/><line x1="9" y1="10" x2="9" y2="10.6"/><line x1="15" y1="10" x2="15" y2="10.6"/></svg>자동인식</button>
       </div>
       <div class="mz-subbtns mz-for-crop">
         <button class="mz-chip" onclick="mzSetMode('')">취소</button>
