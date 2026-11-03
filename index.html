@@ -781,6 +781,15 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .notice-admin{margin-top:2px}
   .issue-mgr-btn{border:1px solid #eec6c9;background:var(--pink-bg);color:var(--coral-tx);border-radius:9px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:6px}
   /* 이슈 관리 */
+  .imgr-posts{margin-top:10px;border-top:1px dashed #eadfd8;padding-top:9px;display:flex;flex-direction:column;gap:6px}
+  .imgr-posts-h{font-size:12.5px;font-weight:800;color:#8a7a6f}
+  .imgr-posts-h span{font-weight:600;color:var(--sub)}
+  .imgr-post{display:flex;align-items:center;gap:8px;padding:5px 6px 5px 8px;border:1px solid #f0e6e0;border-radius:10px;background:#fffdfc}
+  .imgr-post.over{opacity:.55}
+  .imgr-post .no{width:18px;flex:0 0 auto;color:#8a7a6f;font-size:12px;font-weight:700;text-align:center}
+  .imgr-post img,.imgr-post .ph{width:36px;height:36px;border-radius:8px;object-fit:cover;flex:0 0 auto;background:#f6ddd8}
+  .imgr-post .tt{flex:1;min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .imgr-out{color:#b04a4a;font-size:13px;font-weight:700}
   .imgr-item{border:1px solid #eadfd8;border-radius:12px;padding:11px 13px;margin-bottom:10px;background:#fff}
   .imgr-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .imgr-head b{font-size:14.5px}
@@ -4971,12 +4980,12 @@ function openIssueMgr(){ if(!isAdmin())return; renderIssueMgr(); open_('issueMgr
 function renderIssueMgr(){
   const box=$('#issueMgrList'); if(!box)return; box.innerHTML='';
   const list=window._adminIssues||[];
+  const UP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>';
+  const DN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
   // 보이는 순서 바꾸기 (내 이슈 + 자동 이슈 모두)
   try{ renderIssues(); }catch(e){}
   if(_issues.length>1){
     const h0=document.createElement('div'); h0.className='imgr-sec-h'; h0.textContent='보이는 순서 (화살표로 위·아래 이동 · 맨 위 이슈가 처음에 보여요)'; box.appendChild(h0);
-    const UP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>';
-    const DN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
     _issues.forEach((iss,i)=>{
       const r=document.createElement('div'); r.className='imgr-ord';
       r.innerHTML=`<span class="no">${i+1}</span><span class="lb">${esc(iss.icon||'📌')} ${esc(iss.label)}</span><span class="tp">${iss.admin?'내 이슈':'자동'}</span>`+
@@ -5001,6 +5010,27 @@ function renderIssueMgr(){
         <button class="fa-btn" data-act="pick">＋ 글 고르기</button>
         <button class="fa-btn imgr-del" data-act="del">삭제</button>
       </div>`;
+    // 담은 글 목록: ▲▼로 메인에 보이는 순서 바꾸기, ✕로 빼기
+    const ids=a.post_ids||[];
+    if(ids.length){
+      const byId={}; allPosts().forEach(p=>{ if(p.id)byId[p.id]=p; });
+      const pl=document.createElement('div'); pl.className='imgr-posts';
+      pl.innerHTML=`<div class="imgr-posts-h">담은 놀이 순서 <span>· 메인에는 위에서부터 ${Math.min(6,ids.length)}개까지 보여요</span></div>`;
+      ids.forEach((pid,i)=>{
+        const p=byId[pid], r=document.createElement('div'); r.className='imgr-post'+(i>=6?' over':'');
+        let th=''; try{ th=p?coverThumb(p):''; }catch(e){}
+        r.innerHTML=`<span class="no">${i+1}</span>`+
+          (th?`<img src="${th}" alt="">`:'<span class="ph"></span>')+
+          `<span class="tt">${p?esc((p.title||'놀이').replace(/^#/,'')):'찾을 수 없는 글 (삭제됨)'}</span>`+
+          `<button class="imgr-mv" data-d="-1" aria-label="위로" title="위로"${i===0?' disabled':''}>${UP}</button>`+
+          `<button class="imgr-mv" data-d="1" aria-label="아래로" title="아래로"${i===ids.length-1?' disabled':''}>${DN}</button>`+
+          `<button class="imgr-mv imgr-out" aria-label="이 주제에서 빼기" title="이 주제에서 빼기">✕</button>`;
+        r.querySelectorAll('.imgr-mv[data-d]').forEach(b=>b.onclick=()=>moveIssuePost(a.id, i, +b.dataset.d));
+        r.querySelector('.imgr-out').onclick=()=>removeIssuePost(a.id, pid);
+        pl.appendChild(r);
+      });
+      el.appendChild(pl);
+    }
     el.querySelector('[data-act=save]').onclick=()=>renameFeaturedIssue(a.id, el.querySelector('.imgr-ic').value, el.querySelector('.imgr-lb').value);
     el.querySelector('[data-act=pick]').onclick=()=>openIssuePick(a.id);
     el.querySelector('[data-act=del]').onclick=()=>deleteFeaturedIssue(a.id);
@@ -5031,6 +5061,25 @@ function renderIssueMgr(){
       box.appendChild(el);
     });
   }
+}
+/* 직접 담은 주제의 놀이 순서 저장 (바로 화면에 반영하고, 저장에 실패하면 되돌림) */
+async function saveIssuePostIds(id, arr){
+  const a=(window._adminIssues||[]).find(x=>x.id===id); if(!a||!isAdmin())return;
+  const prev=(a.post_ids||[]).slice();
+  a.post_ids=arr; renderIssueMgr(); renderIssues();
+  try{ const {error}=await SB.from('featured_issues').update({post_ids:arr}).eq('id',id); if(error)throw error; }
+  catch(e){ a.post_ids=prev; renderIssueMgr(); renderIssues(); toast('저장 실패: '+(e.message||e)); }
+}
+function moveIssuePost(id, i, d){
+  const a=(window._adminIssues||[]).find(x=>x.id===id); if(!a)return;
+  const arr=(a.post_ids||[]).slice(), j=i+d; if(j<0||j>=arr.length)return;
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+  saveIssuePostIds(id, arr);
+}
+function removeIssuePost(id, pid){
+  const a=(window._adminIssues||[]).find(x=>x.id===id); if(!a)return;
+  saveIssuePostIds(id, (a.post_ids||[]).filter(x=>x!==pid));
+  toast('이 주제에서 뺐어요');
 }
 async function renameFeaturedIssue(id, icon, label){
   if(!isAdmin())return; icon=(icon||'📌').trim()||'📌'; label=(label||'').trim(); if(!label){toast('이슈 이름을 입력하세요');return;}
