@@ -245,6 +245,16 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .ai-status{align-items:flex-start}
   .ai-status .ais-t{line-height:1.5}
   .ai-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .ai-controls .pedit{display:none}
+  /* 휴대폰 사진 카드: '사진 편집 · 아래 사진과 콜라주 · 구매 링크 추가' 세 버튼만 한 줄로 */
+  .mob-simple .ai-controls{flex-wrap:nowrap;gap:6px}
+  .mob-simple .ai-controls .rotate,.mob-simple .ai-controls .crop,.mob-simple .ai-controls .redetect,
+  .mob-simple .ai-controls .clearface,.mob-simple .ai-controls .switch,.mob-simple .crop-bar{display:none!important}
+  .mob-simple .ai-controls .pedit,.mob-simple .ai-controls .collage,.mob-simple .ai-controls .addspot{
+    display:inline-flex;align-items:center;justify-content:center;gap:4px;flex:1 1 0;min-width:0;
+    padding:10px 4px;font-size:12.5px;line-height:1.25;text-align:center;word-break:keep-all}
+  .mob-simple .ai-controls .collage{flex-grow:1.35}
+  .mob-simple .ai-controls .b-ico{flex:0 0 auto}
   .crop-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;background:#fcf4f1;border:1px solid #eed9cf;border-radius:10px;padding:9px 11px}
   .crop-bar .crop-hint{flex:1;min-width:120px;color:#8a7168;font-size:12.5px;font-weight:600}
   .btn{border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600}
@@ -658,15 +668,19 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .mz-btn{border:none;border-radius:10px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer}
   .mz-cancel{background:rgba(255,255,255,.14);color:#fff}
   .mz-apply{background:var(--coral,#e8739a);color:#fff}
-  .mz-hint{color:#e8dede;font-size:12.5px;text-align:center;padding:8px 14px;background:#241f1f;line-height:1.5}
+  .mz-hint{color:#e8dede;font-size:13px;text-align:center;line-height:1.5}
   .mz-hint b{color:#fff}
   .mz-viewport{flex:1;position:relative;overflow:hidden;touch-action:none;background:#0e0b0b}
   #mzCanvas{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;touch-action:none}
-  .mz-tools{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));background:#241f1f}
-  .mz-tool{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;border-radius:12px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer}
-  .mz-tool.on{background:var(--coral,#e8739a);border-color:var(--coral,#e8739a)}
-  .mz-switch{gap:8px}
-  .mz-switch input{width:16px;height:16px}
+  .mz-sub{display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 14px 4px;background:#1b1717}
+  .mz-subbtns{display:flex;gap:10px;justify-content:center}
+  .mz-sub[data-mode="mosaic"] .mz-for-crop,.mz-sub[data-mode="crop"] .mz-for-mosaic{display:none}
+  .mz-chip{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:#fff;border-radius:999px;padding:8px 20px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .mz-chip.p{background:#f3b8ae;border-color:#f3b8ae;color:#3a2a25}
+  .mz-tools{display:flex;justify-content:space-around;align-items:flex-start;padding:10px 8px calc(12px + env(safe-area-inset-bottom,0px));background:#1b1717}
+  .mz-tool{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:76px;border:none;background:none;color:#cfc6c2;font-size:12.5px;font-weight:600;padding:6px 10px;cursor:pointer}
+  .mz-tool svg{width:26px;height:26px}
+  .mz-tool.on{color:#f3b8ae}
   .mz-taphint{font-size:12px;color:var(--coral-tx,#c04c78);background:#fdeef4;border:1px dashed #f0c2d4;border-radius:9px;padding:7px 10px;margin:8px 0 2px;text-align:center;font-weight:600}
   #detailOverlay{z-index:100}   /* 사진 크게보기(라이트박스)는 폴더·상세 등 어떤 창 위에서 열려도 맨 앞에 오도록 */
   .edit-img{border:1px solid #efe7e2;border-radius:12px;padding:12px;margin-bottom:14px}
@@ -2249,15 +2263,25 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   <div class="mz-shell">
     <div class="mz-top">
       <button class="mz-btn mz-cancel" onclick="closeMobileMosaic()">취소</button>
-      <div class="mz-title">모자이크 편집</div>
-      <button class="mz-btn mz-apply" onclick="applyMobileMosaic()">적용</button>
+      <div class="mz-title">사진 편집</div>
+      <button class="mz-btn mz-apply" onclick="applyMobileMosaic()">확인</button>
     </div>
-    <div class="mz-hint" id="mzHint">손가락 두 개로 <b>확대·이동</b>, 한 손가락으로 가릴 곳을 <b>드래그</b>하세요</div>
     <div class="mz-viewport" id="mzViewport"><canvas id="mzCanvas"></canvas></div>
+    <div class="mz-sub" id="mzSub" style="display:none">
+      <div class="mz-hint" id="mzHint"></div>
+      <div class="mz-subbtns mz-for-mosaic">
+        <button class="mz-chip" onclick="mzResetMosaic()">재설정</button>
+        <button class="mz-chip" onclick="mzAutoDetect()">자동인식</button>
+      </div>
+      <div class="mz-subbtns mz-for-crop">
+        <button class="mz-chip" onclick="mzSetMode('')">취소</button>
+        <button class="mz-chip p" onclick="mzApplyCrop()">자르기 적용</button>
+      </div>
+    </div>
     <div class="mz-tools">
-      <button class="mz-tool" id="mzResetBtn" onclick="mzResetView()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg> 화면맞춤</button>
-      <button class="mz-tool" id="mzDelBtn" onclick="mzToggleDel()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 지우기</button>
-      <label class="mz-tool mz-switch"><input type="checkbox" id="mzMz" checked onchange="mzToggleMosaic(this.checked)"> 모자이크 미리보기</label>
+      <button class="mz-tool" data-mode="crop" onclick="mzSetMode('crop')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg><span>자르기</span></button>
+      <button class="mz-tool" onclick="mzRotate()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span>회전</span></button>
+      <button class="mz-tool" data-mode="mosaic" onclick="mzSetMode('mosaic')"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/><rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>모자이크</span></button>
     </div>
   </div>
 </div>
@@ -6519,6 +6543,7 @@ function buildPhotoCard(ph, skipDetect){
       <button class="btn g cropcancel">취소</button>
     </div>
     <div class="ai-controls">
+      <button class="btn g pedit"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg> 사진 편집</button>
       <button class="btn g rotate" title="회전" aria-label="회전"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
       <button class="btn g crop" title="자르기" aria-label="자르기"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg></button>
       <button class="btn g collage"><svg class="b-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="2"/><path d="M8 21h11a2 2 0 0 0 2-2V8"/></svg> 아래 사진과 콜라주</button>
@@ -6535,6 +6560,7 @@ function buildPhotoCard(ph, skipDetect){
       <button type="button" class="fmt-size-btn fmt-color-btn" onmousedown="event.preventDefault()" onclick="openColorPalette(this)" title="글씨 색상"><span class="fmt-color-dot"></span> <span class="cv">▾</span></button>
     </div>
     <div class="photo-desc rich" contenteditable="true" data-ph="이 사진 설명을 적어주세요"></div>`;
+  if(isPhoneDevice()) card.classList.add('mob-simple');   // 휴대폰: 사진 아래엔 세 버튼만, 나머지는 '사진 편집' 화면에서
   $('#photoList').appendChild(card);
   ph.el=card;
   enableDragSort($('#photoList'), '.photo-card', ordered=>{
@@ -6550,6 +6576,7 @@ function buildPhotoCard(ph, skipDetect){
   const maxW=PHOTO_MAXW,sc=Math.min(1,maxW/ph.img.width);
   ph.cv.width=ph.img.width*sc;ph.cv.height=ph.img.height*sc;
   { const dEl=card.querySelector('.photo-desc'); if(ph.desc)dEl.innerHTML=marksToRich(ph.desc); dEl.addEventListener('input',()=>{ph.desc=richToMarks(dEl);markDirty();}); }
+  card.querySelector('.pedit').onclick=()=>openMobileMosaic(ph);
   card.querySelector('.redetect').onclick=()=>runDetectP(ph);
   card.querySelector('.clearface').onclick=()=>{ if(!ph.boxes.length){ph.status.textContent='지울 모자이크가 없어요.';return;} ph.delMode=!ph.delMode; if(!ph.delMode)ph.cv.style.cursor=''; renderCanvasP(ph); ph.status.textContent=ph.delMode?'지울 모자이크의 ✕를 누르세요 (끝나면 버튼을 다시 눌러요)':'삭제를 마쳤어요.'; };
   const mzChk=card.querySelector('.mzon'); mzChk.checked=ph.mosaicOn!==false;
@@ -6566,12 +6593,10 @@ function buildPhotoCard(ph, skipDetect){
   card.querySelector('.cropcancel').onclick=()=>cancelCrop(ph);
   // 얼굴 박스: 눌러서 켜고 끄기 + 빈 곳 드래그로 추가 (자르기 모드면 자르기 영역 지정)
   ph.cv.style.touchAction='none'; // 터치로 캔버스를 드래그해도 화면이 스크롤되지 않게
-  // 모바일: 사진을 탭하면 '확대 모자이크 편집'을 크게 열어 정밀하게 (자르기/삭제/구매표시 모드는 제외)
+  // 모바일: 사진을 탭해도 '사진 편집' 화면이 열려요 (구매표시 모드는 제외)
   if(isPhoneDevice()){
     ph.cv.style.cursor='zoom-in';
     ph.cv.addEventListener('click',()=>{ if(!ph.cropMode && !ph.delMode && !ph.addSpotMode) openMobileMosaic(ph); });
-    const th=document.createElement('div'); th.className='mz-taphint'; th.textContent='사진을 탭하면 크게 열려요 — 확대해서 가릴 곳을 손가락으로 드래그하세요';
-    if(ph.cv.parentNode) ph.cv.parentNode.parentNode.insertBefore(th, ph.cv.parentNode.nextSibling);
   }
   ph.cv.addEventListener('pointerdown',e=>{const p=posP(ph,e);
     if(isPhoneDevice() && !ph.cropMode && !ph.delMode && !ph.addSpotMode) return; // 모바일 일반모드: 탭→확대편집 (아래 인라인 드래그 건너뜀)
@@ -6647,21 +6672,41 @@ function addOrGrowCircle(ph,d){
 /* ===== 모바일 전용: 확대(핀치 줌·이동) + 드래그 모자이크 편집 =====
    손가락 1개 = 가릴 곳 드래그/탭, 손가락 2개 = 확대·이동. 적용하면 원래 사진 카드에 반영. */
 let _mz=null;
-function openMobileMosaic(ph){
+const MZ_HINT={ mosaic:'모자이크로 가릴 곳을 손가락으로 드래그하세요',
+  crop:'남길 부분을 손가락으로 드래그한 뒤 <b>자르기 적용</b>을 누르세요' };
+function _mzSizeCanvas(){ const cv=_mz.cv, im=_mz.img, sc=Math.min(1, PHOTO_MAXW/im.width);
+  cv.width=Math.round(im.width*sc); cv.height=Math.round(im.height*sc);
+  cv.style.width=cv.width+'px'; cv.style.height=cv.height+'px'; }
+/* 사진 편집 화면 열기: 아래 도구(자르기·회전·모자이크)를 골라 편집하고, '확인'을 누르면 사진 카드에 반영 */
+function openMobileMosaic(ph, mode){
   if(!ph||!ph.img) return;
   const cv=document.getElementById('mzCanvas'); if(!cv) return;
-  const ctx=cv.getContext('2d');
-  const sc=Math.min(1, PHOTO_MAXW/ph.img.width);
-  cv.width=Math.round(ph.img.width*sc); cv.height=Math.round(ph.img.height*sc);
-  cv.style.width=cv.width+'px'; cv.style.height=cv.height+'px';
-  _mz={ cv, ctx, img:ph.img, boxes:(ph.boxes||[]).map(b=>({...b})), mosaicOn:ph.mosaicOn!==false,
-        delMode:false, scale:1, baseScale:1, tx:0, ty:0, pointers:new Map(), drag:null, pinch:null, src:ph };
-  const mz=document.getElementById('mzMz'); if(mz)mz.checked=_mz.mosaicOn;
-  const db=document.getElementById('mzDelBtn'); if(db)db.classList.remove('on');
-  const hint=document.getElementById('mzHint'); if(hint)hint.innerHTML='손가락 두 개로 <b>확대·이동</b>, 한 손가락으로 가릴 곳을 <b>드래그</b>하세요';
-  mzWire();
+  _mz={ cv, ctx:cv.getContext('2d'), img:ph.img, boxes:(ph.boxes||[]).map(b=>({...b})), mosaicOn:true,
+        delMode:false, mode:'', imgChanged:false, cropRect:null,
+        scale:1, baseScale:1, tx:0, ty:0, pointers:new Map(), drag:null, pinch:null, src:ph };
+  _mzSizeCanvas();
+  // 카드 캔버스 좌표 → 편집 캔버스 좌표
+  if(ph.cv&&ph.cv.width&&ph.cv.height){ const kx=cv.width/ph.cv.width, ky=cv.height/ph.cv.height;
+    if(kx!==1||ky!==1) _mz.boxes.forEach(b=>{b.x*=kx;b.y*=ky;b.w*=kx;b.h*=ky;}); }
+  mzWire(); mzSetMode(mode||'');
   open_('mzOverlay');
-  requestAnimationFrame(()=>{ mzFit(); renderCanvasP(_mz); mzApplyTransform(); });
+  requestAnimationFrame(()=>{ mzFit(); mzRender(); mzApplyTransform(); });
+}
+/* 도구 선택: 같은 도구를 다시 누르면 닫혀요 */
+function mzSetMode(m){ if(!_mz)return;
+  if(m && _mz.mode===m) m='';
+  _mz.mode=m; _mz.cropRect=null; _mz.drag=null;
+  document.querySelectorAll('#mzOverlay .mz-tool[data-mode]').forEach(b=>b.classList.toggle('on', b.dataset.mode===m));
+  const sub=document.getElementById('mzSub'); if(sub){ sub.style.display=m?'':'none'; sub.dataset.mode=m; }
+  const hint=document.getElementById('mzHint'); if(hint)hint.innerHTML=MZ_HINT[m]||'';
+  mzRender();
+  requestAnimationFrame(()=>{ if(_mz){ mzFit(); mzApplyTransform(); } });   // 아래 칸 높이가 바뀌면 사진을 다시 맞춤
+}
+function mzRender(){ if(!_mz)return; renderCanvasP(_mz);
+  const cr=_mz.cropRect; if(_mz.mode!=='crop'||!cr)return;
+  const c=_mz.ctx, cv=_mz.cv, x=Math.min(cr.x0,cr.x1), y=Math.min(cr.y0,cr.y1), w=Math.abs(cr.x1-cr.x0), h=Math.abs(cr.y1-cr.y0);
+  c.save(); c.fillStyle='rgba(0,0,0,.5)'; c.beginPath(); c.rect(0,0,cv.width,cv.height); c.rect(x,y,w,h); c.fill('evenodd');
+  c.strokeStyle='#fff'; c.lineWidth=Math.max(2,2/_mz.scale); c.setLineDash([6/_mz.scale,4/_mz.scale]); c.strokeRect(x,y,w,h); c.restore();
 }
 function mzFit(){ if(!_mz)return; const vp=document.getElementById('mzViewport'); const vw=vp.clientWidth, vh=vp.clientHeight, cv=_mz.cv;
   _mz.baseScale=Math.min(vw/cv.width, vh/cv.height)||1; _mz.scale=_mz.baseScale;
@@ -6682,7 +6727,8 @@ function mzDown(e){ if(!_mz)return; e.preventDefault();
   if(_mz.pointers.size===2){ _mz.drag=null; const m=_mzMid(); _mz.pinch={dist:m.dist, mid:m.mid, scale:_mz.scale, tx:_mz.tx, ty:_mz.ty}; return; }
   if(_mz.pointers.size===1){
     const p=posP(_mz,e);
-    if(_mz.delMode){ const idx=_mz.boxes.findIndex(b=>hitBadge(_mz,b,p)); if(idx>=0){ _mz.boxes.splice(idx,1); renderCanvasP(_mz); } _mz.drag=null; return; }
+    if(_mz.mode==='crop'){ _mz.cropRect={x0:p.x,y0:p.y,x1:p.x,y1:p.y}; _mz.drag={crop:true}; return; }
+    if(_mz.mode!=='mosaic'){ _mz.drag=null; return; }   // 도구를 고르기 전에는 확대·이동만
     const hit=_mz.boxes.find(b=>boxHit(b,p));
     _mz.drag={x:p.x,y:p.y,cur:p,moved:false,grow:(hit&&hit.shape==='circle')?hit:null, rectHit:!!(hit&&hit.shape!=='circle')};
   }
@@ -6696,6 +6742,7 @@ function mzMove(e){ if(!_mz||!_mz.pointers.has(e.pointerId))return; _mz.pointers
     _mz.scale=ns; _mz.tx=m.mid.x-cx*ns; _mz.ty=m.mid.y-cy*ns; mzApplyTransform(); return;
   }
   if(!_mz.drag)return;
+  if(_mz.drag.crop){ const p=posP(_mz,e); _mz.cropRect.x1=p.x; _mz.cropRect.y1=p.y; mzRender(); return; }
   _mz.drag.cur=posP(_mz,e);
   if(Math.abs(_mz.drag.cur.x-_mz.drag.x)>6||Math.abs(_mz.drag.cur.y-_mz.drag.y)>6)_mz.drag.moved=true;
   renderCanvasP(_mz);
@@ -6706,22 +6753,86 @@ function mzUp(e){ if(!_mz)return; _mz.pointers.delete(e.pointerId);
   if(_mz.pointers.size<2)_mz.pinch=null;
   if(_mz.pointers.size===0 && _mz.drag){
     const d=_mz.drag; _mz.drag=null;
+    if(d.crop){ mzRender(); return; }
     if(!d.moved){ if(!d.rectHit) addOrGrowCircle(_mz,d); }
     else { const x=Math.min(d.x,d.cur.x),y=Math.min(d.y,d.cur.y),w=Math.abs(d.cur.x-d.x),h=Math.abs(d.cur.y-d.y);
       if(w>10&&h>10)_mz.boxes.push({x,y,w,h,on:true}); }
     renderCanvasP(_mz);
   }
 }
-function mzToggleDel(){ if(!_mz)return; _mz.delMode=!_mz.delMode;
-  const b=document.getElementById('mzDelBtn'); if(b)b.classList.toggle('on',_mz.delMode);
-  const hint=document.getElementById('mzHint'); if(hint)hint.innerHTML=_mz.delMode?'지울 모자이크의 <b>✕</b>를 누르세요':'손가락 두 개로 <b>확대·이동</b>, 한 손가락으로 가릴 곳을 <b>드래그</b>하세요';
-  renderCanvasP(_mz); }
-function mzToggleMosaic(on){ if(!_mz)return; _mz.mosaicOn=on; renderCanvasP(_mz); }
-function applyMobileMosaic(){ if(!_mz)return; const ph=_mz.src;
-  ph.boxes=_mz.boxes.map(b=>({...b})); ph.mosaicOn=_mz.mosaicOn; ph.delMode=false;
-  if(ph.cv){ try{renderCanvasP(ph);}catch(_){}}
-  const mzc=ph.el&&ph.el.querySelector('.mzon'); if(mzc)mzc.checked=ph.mosaicOn;
-  if(ph.status)ph.status.textContent=ph.boxes.length?`모자이크 ${ph.boxes.length}곳 · 사진을 탭하면 다시 편집`:'가린 곳이 없어요 · 사진을 탭해 편집';
+/* 회전·자르기 결과로 사진을 바꾸고, 모자이크 위치도 비율(0~1)로 옮겨 다시 맞춤 */
+function _mzSwapImage(c, norm, after){
+  const im=new Image();
+  im.onload=()=>{ if(!_mz)return;
+    _mz.img=im; _mz.imgChanged=true; _mzSizeCanvas();
+    const W=_mz.cv.width, H=_mz.cv.height;
+    _mz.boxes=norm.map(b=>{ const o={...b, x:b.fx*W, y:b.fy*H, w:b.fw*W, h:b.fh*H};
+      if(o.shape==='circle'){ const r=Math.min(o.w,o.h); o.w=r; o.h=r; }
+      delete o.fx; delete o.fy; delete o.fw; delete o.fh; return o; });
+    if(after)after();
+    mzFit(); mzApplyTransform(); mzRender(); };
+  im.src=c.toDataURL('image/jpeg',0.92);
+}
+function mzRotate(){ if(!_mz)return;
+  const im=_mz.img, w=im.width, h=im.height, W=_mz.cv.width, H=_mz.cv.height;
+  const c=document.createElement('canvas'); c.width=h; c.height=w;
+  const cx=c.getContext('2d'); cx.translate(h/2,w/2); cx.rotate(Math.PI/2); cx.drawImage(im,-w/2,-h/2);
+  // 시계 방향 90°: (x, y) → (H - y - h, x)
+  const norm=_mz.boxes.map(b=>({...b, fx:1-(b.y+b.h)/H, fy:b.x/W, fw:b.h/H, fh:b.w/W}));
+  _mz.cropRect=null;
+  _mzSwapImage(c, norm);
+}
+function mzApplyCrop(){ if(!_mz)return; const cr=_mz.cropRect, cv=_mz.cv;
+  const x0=cr?Math.max(0,Math.min(cr.x0,cr.x1)):0, y0=cr?Math.max(0,Math.min(cr.y0,cr.y1)):0;
+  const x1=cr?Math.min(cv.width,Math.max(cr.x0,cr.x1)):0, y1=cr?Math.min(cv.height,Math.max(cr.y0,cr.y1)):0;
+  const w=x1-x0, h=y1-y0;
+  if(!cr||w<10||h<10){ toast('남길 부분을 손가락으로 드래그해 주세요'); return; }
+  const kx=_mz.img.width/cv.width, ky=_mz.img.height/cv.height;
+  const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(w*kx)); c.height=Math.max(1,Math.round(h*ky));
+  c.getContext('2d').drawImage(_mz.img, x0*kx, y0*ky, w*kx, h*ky, 0, 0, c.width, c.height);
+  const norm=_mz.boxes.map(b=>{
+    const bx0=Math.max(b.x,x0), by0=Math.max(b.y,y0), bx1=Math.min(b.x+b.w,x1), by1=Math.min(b.y+b.h,y1);
+    if(bx1-bx0<4||by1-by0<4) return null;                       // 잘려 나간 모자이크는 버림
+    if(b.shape==='circle') return {...b, fx:(b.x-x0)/w, fy:(b.y-y0)/h, fw:b.w/w, fh:b.h/h};
+    return {...b, fx:(bx0-x0)/w, fy:(by0-y0)/h, fw:(bx1-bx0)/w, fh:(by1-by0)/h};
+  }).filter(Boolean);
+  _mzSwapImage(c, norm, ()=>mzSetMode(''));
+  toast('사진을 잘랐어요');
+}
+function mzResetMosaic(){ if(!_mz)return; _mz.boxes=[]; mzRender();
+  const hint=document.getElementById('mzHint'); if(hint)hint.innerHTML=MZ_HINT.mosaic; }
+async function mzAutoDetect(){ if(!_mz)return; const z=_mz;
+  const hint=document.getElementById('mzHint'); if(hint)hint.textContent='얼굴을 찾는 중이에요…';
+  const t=document.createElement('canvas'); t.width=z.cv.width; t.height=z.cv.height;
+  t.getContext('2d').drawImage(z.img,0,0,t.width,t.height);      // 모자이크 없는 원본으로 인식
+  let found=[];
+  try{
+    if(await ensureFaceApi()){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35});
+      const dets=await faceapi.detectAllFaces(t,opt); found=dets.map(d=>({x:d.box.x,y:d.box.y,w:d.box.width,h:d.box.height}));}
+    else if('FaceDetector' in window){const fd=new FaceDetector({fastMode:true});
+      const f=await fd.detect(t); found=f.map(o=>({x:o.boundingBox.x,y:o.boundingBox.y,w:o.boundingBox.width,h:o.boundingBox.height}));}
+  }catch(e){found=[];}
+  if(_mz!==z) return;                                             // 그사이 창을 닫았으면 무시
+  z.boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
+  mzRender();
+  if(hint&&z.mode==='mosaic') hint.innerHTML=found.length?`얼굴 ${found.length}개를 가렸어요 · 더 가릴 곳은 손가락으로 드래그하세요`:'얼굴을 찾지 못했어요 · 가릴 곳을 손가락으로 드래그하세요';
+}
+function applyMobileMosaic(){ if(!_mz)return; const z=_mz, ph=z.src;
+  let lostSpots=false;
+  if(z.imgChanged){
+    lostSpots=!!(ph.spots&&ph.spots.length);
+    ph.img=z.img; ph.spots=[]; ph.cropMode=false; ph.cropRect=null; ph.cropping=false;
+    if(ph.parts){ ph.parts=null; const st=ph.el&&ph.el.querySelector('.collage-parts'); if(st)st.remove(); } // 회전·자르기하면 콜라주는 한 장으로 고정
+    if(ph.cv){ const sc=Math.min(1,PHOTO_MAXW/z.img.width); ph.cv.width=z.img.width*sc; ph.cv.height=z.img.height*sc; }
+  }
+  const kx=ph.cv?ph.cv.width/z.cv.width:1, ky=ph.cv?ph.cv.height/z.cv.height:1;   // 편집 캔버스 → 카드 캔버스 좌표
+  ph.boxes=z.boxes.map(b=>({...b, x:b.x*kx, y:b.y*ky, w:b.w*kx, h:b.h*ky}));
+  ph.mosaicOn=true; ph.delMode=false;
+  if(ph.cv){ try{renderCanvasP(ph);}catch(_){} try{renderSpotsP(ph);}catch(_){} }
+  const mzc=ph.el&&ph.el.querySelector('.mzon'); if(mzc)mzc.checked=true;
+  if(ph.status)ph.status.textContent=ph.boxes.length?`모자이크 ${ph.boxes.length}곳`:'';
+  if(lostSpots) toast('사진을 바꿔서 구매 링크 표시가 지워졌어요 · 다시 추가해 주세요');
+  try{ renderWritePhotoStrip(); }catch(_){}
   markDirty&&markDirty();
   closeMobileMosaic();
 }
