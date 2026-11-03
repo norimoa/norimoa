@@ -1,0 +1,16 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.norimoa.app",
+      "sha256_cert_fingerprints": [
+        "98:C1:F2:A1:40:26:FD:E4:B1:00:EE:CB:3F:E7:56:6C:94:3C:6D:7C:D5:82:79:C3:51:21:2F:76:DE:8B:BE:98",
+        "13:64:C6:13:F0:3D:E1:F3:32:32:BA:10:88:D3:B4:00:02:90:5B:E3:12:1A:3C:5A:EC:4E:64:87:C8:41:C5:5E",
+        "40:10:16:03:38:0C:59:91:9A:A7:89:ED:CD:96:FE:48:F4:9A:6C:6B:3A:DC:06:8C:BE:F3:51:FC:82:DD:54:5A"
+      ]
+    }
+  }
+]
