@@ -4088,19 +4088,32 @@ function enableEiMarkerDrag(m){
   m.addEventListener('click',e=>e.stopPropagation()); // 사진 클릭(모자이크 편집)과 분리
 }
 /* 글 수정 화면에서 사진 클릭 → 모자이크·자르기·회전 편집 */
-function openEditImage(idx){
+function loadImgCors(src){ return new Promise(res=>{ const go=(cors)=>{ const im=new Image();
+    if(cors && /^https?:/i.test(src)) im.crossOrigin='anonymous';
+    im.onload=()=>res(im); im.onerror=()=>{ if(cors) go(false); else res(null); }; im.src=src; }; go(true); }); }
+async function openEditImage(idx){
   const it=_editImages[idx]; if(!it)return;
-  const load=(cors)=>{ const im=new Image();
-    if(cors && /^https?:/i.test(it.img)) im.crossOrigin='anonymous';   // 저장된(원격) 사진도 캔버스로 다시 저장할 수 있게
-    im.onload=()=>openMobileMosaic({ img:im, boxes:[], _onApply:(z)=>{
-      if(!z.imgChanged && !z.boxes.length) return true;              // 바뀐 게 없으면 그대로
-      let url; try{ url=cleanPhotoDataURL({img:z.img, cv:{width:z.cv.width,height:z.cv.height}, boxes:z.boxes, mosaicOn:true}, 0.9); }
-      catch(e){ toast('이 사진은 저장하지 못했어요. 잠시 후 다시 시도해 주세요'); return false; }
-      const cur=_editImages[idx]; if(cur) cur.img=url;
-      renderEditImages(); toast('사진을 수정했어요'); return true; } });
-    im.onerror=()=>{ if(cors) load(false); else toast('사진을 불러오지 못했어요'); };
-    im.src=it.img; };
-  load(true);
+  const im=await loadImgCors(it.img); if(!im){ toast('사진을 불러오지 못했어요'); return; }
+  // 콜라주: 낱장(조각) 사진도 불러와 두었다가, 모자이크를 조각마다 똑같이 넣음
+  const partSrcs=(it.parts&&it.parts.length>1)?it.parts.map(pt=>typeof pt==='string'?pt:(pt&&pt.img)||''):null;
+  const partImgs=partSrcs?await Promise.all(partSrcs.map(loadImgCors)):null;
+  openMobileMosaic({ img:im, boxes:[], _onApply:(z)=>{
+    if(!z.imgChanged && !z.boxes.length) return true;              // 바뀐 게 없으면 그대로
+    let url; try{ url=cleanPhotoDataURL({img:z.img, cv:{width:z.cv.width,height:z.cv.height}, boxes:z.boxes, mosaicOn:true}, 0.9); }
+    catch(e){ toast('이 사진은 저장하지 못했어요. 잠시 후 다시 시도해 주세요'); return false; }
+    const cur=_editImages[idx]; if(!cur) return true;
+    cur.img=url;
+    if(cur.parts && cur.parts.length>1){
+      if(z.imgChanged || !partImgs || partImgs.some(x=>!x)) cur.parts=undefined;   // 돌리거나 자르면 낱장은 더 이상 맞지 않음 → 합친 사진 한 장으로
+      else {
+        try{
+          const lay=collageLayout(partImgs.map(partCanvasSize)), W=z.cv.width, H=z.cv.height;
+          const per=splitBoxesToParts(z.boxes.map(b=>({...b, fx:b.x/W, fy:b.y/H, fw:b.w/W, fh:b.h/H})), lay.items);
+          cur.parts=cur.parts.map((pt,i)=>per[i].length?renderPartCanvas({img:partImgs[i], boxes:per[i], mosaicOn:true}).toDataURL('image/jpeg',0.92):pt);
+        }catch(e){ cur.parts=undefined; }   // 낱장을 다시 만들 수 없으면, 모자이크 안 된 낱장이 보이지 않게 합친 사진만 남김
+      }
+    }
+    renderEditImages(); toast('사진을 수정했어요'); return true; } });
 }
 /* 수정 화면: 사진 삭제 */
 function deleteEditImage(idx){
@@ -4196,6 +4209,13 @@ async function saveEdit(){
           let th; try{ th=await putStoragePhoto(await makeThumbBlob(im.img), path.replace(/\.jpg$/,'_t.jpg')); }catch(e){}
           im.img=url; im.thumb=th; im.thumbSrc=url;
         }catch(e){ toast('사진 업로드 실패: '+(e.message||e)); return; }
+      }
+      if(im&&Array.isArray(im.parts)){   // 모자이크를 새로 넣은 콜라주 낱장도 저장소에 올림
+        for(let q=0;q<im.parts.length;q++){ const pt=im.parts[q];
+          if(typeof pt==='string'&&pt.startsWith('data:')){
+            try{ im.parts[q]=await putStoragePhoto(await (await fetch(pt)).blob(), `${authUser.id}/${Date.now()}_e${k}_p${q}.jpg`); }
+            catch(e){ toast('사진 업로드 실패: '+(e.message||e)); return; }
+          } }
       }
     }
   }
@@ -6780,6 +6800,16 @@ function openMobileMosaic(ph, mode){
   if(ph.cv&&ph.cv.width&&ph.cv.height){ const kx=cv.width/ph.cv.width, ky=cv.height/ph.cv.height;
     if(kx!==1||ky!==1) _mz.boxes.forEach(b=>{b.x*=kx;b.y*=ky;b.w*=kx;b.h*=ky;}); }
   { const pb=document.getElementById('mzPanBtn'); if(pb)pb.classList.remove('on'); }
+  // 콜라주(새 글): 원본 조각을 이어 붙인 화면에, 조각마다 해 둔 모자이크를 그대로 올려 이어서 고치게 함
+  if(ph.parts && ph.parts.length>1 && !ph._onApply){
+    const raw=collageRawCanvas(ph.parts); _mz.img=raw.canvas; _mz.collage=raw.lay; _mzSizeCanvas();
+    const norm=[];
+    ph.parts.forEach((pt,i)=>{ const L=raw.lay.items[i], span=L.b-L.a;
+      (pt.boxes||[]).forEach(b=>norm.push({...b, fx:L.a+(b.x/L.w)*span, fy:b.y/L.h, fw:(b.w/L.w)*span, fh:b.h/L.h})); });
+    if(ph.cv&&ph.cv.width) (ph.boxes||[]).forEach(b=>norm.push({...b, fx:b.x/ph.cv.width, fy:b.y/ph.cv.height, fw:b.w/ph.cv.width, fh:b.h/ph.cv.height}));
+    const W=cv.width, H=cv.height;
+    _mz.boxes=norm.map(b=>{ const o={...b, x:b.fx*W, y:b.fy*H, w:b.fw*W, h:b.fh*H}; delete o.fx; delete o.fy; delete o.fw; delete o.fh; return o; });
+  }
   mzWire(); mzUndoState(); mzSetMode(mode||'');
   open_('mzOverlay');
   requestAnimationFrame(()=>{ mzFit(); mzRender(); mzApplyTransform(); });
@@ -6940,6 +6970,17 @@ async function mzAutoDetect(){ if(!_mz)return; const z=_mz;
 }
 function applyMobileMosaic(){ if(!_mz)return; const z=_mz, ph=z.src;
   if(ph._onApply){ if(ph._onApply(z)!==false) closeMobileMosaic(); return; }   // 글 수정 화면의 사진
+  // 콜라주: 모자이크를 조각별로 나눠 넣고 다시 합침 (낱장으로 크게 볼 때도 모자이크가 보이게)
+  if(z.collage && !z.imgChanged && ph.parts && ph.parts.length>1){
+    const W=z.cv.width, H=z.cv.height;
+    const per=splitBoxesToParts(z.boxes.map(b=>({...b, fx:b.x/W, fy:b.y/H, fw:b.w/W, fh:b.h/H})), z.collage.items);
+    ph.parts.forEach((pt,i)=>{ pt.boxes=per[i]; pt.mosaicOn=true; });
+    ph.boxes=[]; ph.mosaicOn=true; ph.delMode=false;
+    compositeCollage(ph); buildCollageStrip(ph);
+    const n=z.boxes.length; if(ph.status)ph.status.textContent=n?`모자이크 ${n}곳`:'';
+    try{ renderWritePhotoStrip(); }catch(_){}
+    markDirty&&markDirty(); closeMobileMosaic(); return;
+  }
   let lostSpots=false;
   if(z.imgChanged){
     lostSpots=!!(ph.spots&&ph.spots.length);
@@ -7212,6 +7253,38 @@ function partDataURL(part){
   const cv=renderPartCanvas(part);
   try{ drawWatermark(cv.getContext('2d'), cv.width, cv.height); }catch(e){}
   return cv.toDataURL('image/jpeg',0.92);
+}
+/* 콜라주 배치: 조각마다 합친 사진 안에서 차지하는 가로 범위(0~1). compositeCollage와 같은 계산 */
+function partCanvasSize(img){ const sc=Math.min(1,PHOTO_MAXW/img.width); return {w:Math.round(img.width*sc), h:Math.round(img.height*sc)}; }
+function collageLayout(sizes){
+  const H=Math.min.apply(null,sizes.map(z=>z.h))||sizes[0].h, gap=6;
+  const ws=sizes.map(z=>Math.round(z.w*(H/z.h)));
+  const total=ws.reduce((a,b)=>a+b,0)+gap*(sizes.length-1);
+  let x=0; const items=sizes.map((z,i)=>{ const r={a:x/total, b:(x+ws[i])/total, w:z.w, h:z.h, px:x, pw:ws[i]}; x+=ws[i]+gap; return r; });
+  return {items, total, H};
+}
+/* 모자이크 없는 원본 조각들로 합친 캔버스 (사진 편집 화면에서 조각별 모자이크를 다시 고칠 수 있게) */
+function collageRawCanvas(parts){
+  const lay=collageLayout(parts.map(p=>partCanvasSize(p.img)));
+  const c=document.createElement('canvas'); c.width=lay.total; c.height=lay.H;
+  const cx=c.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,c.width,c.height);
+  parts.forEach((p,i)=>{ const L=lay.items[i]; cx.drawImage(p.img, L.px, 0, L.pw, lay.H); });
+  return {canvas:c, lay};
+}
+/* 합친 사진 위의 모자이크(0~1 비율)를 조각별 모자이크(조각 캔버스 좌표)로 나눔 */
+function splitBoxesToParts(norm, items){
+  const per=items.map(()=>[]);
+  norm.forEach(b=>{
+    const nx0=b.fx, nx1=b.fx+b.fw, ny0=Math.max(0,b.fy), ny1=Math.min(1,b.fy+b.fh); if(ny1-ny0<=0)return;
+    items.forEach((L,i)=>{
+      const ix0=Math.max(nx0,L.a), ix1=Math.min(nx1,L.b); if(ix1-ix0<=0.002)return;
+      const span=L.b-L.a, whole=nx0>=L.a&&nx1<=L.b&&b.fy>=0&&b.fy+b.fh<=1;
+      const o={x:(ix0-L.a)/span*L.w, y:ny0*L.h, w:(ix1-ix0)/span*L.w, h:(ny1-ny0)*L.h, on:b.on!==false};
+      if(b.shape==='circle'&&whole){ const r=Math.min(o.w,o.h); o.shape='circle'; o.w=r; o.h=r; }
+      per[i].push(o);
+    });
+  });
+  return per;
 }
 /* 조각들을 순서대로 가로로 이어붙여 사진 캔버스에 다시 그리기 */
 function compositeCollage(ph){
