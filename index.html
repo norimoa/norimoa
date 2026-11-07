@@ -553,6 +553,8 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .reply .av.sm{width:26px;height:26px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:11px;flex:0 0 auto}
   .reply .rb b{font-size:12.5px}.reply .rb .when{color:var(--sub);font-size:11px;margin-left:5px}
   .reply .rb p{font-size:12.5px;margin-top:2px;line-height:1.5}
+  .reply .rb .reply-btn{margin-top:0;padding-top:2px}
+  .mention{color:var(--coral-tx);font-weight:700;margin-right:2px}
   .reply-input{display:flex;gap:8px;margin-top:6px}
   .reply-input input{flex:1;border:1px solid #e7dcd6;border-radius:16px;padding:8px 12px;font-size:12.5px;background:#fafafb;font-family:inherit}
   .reply-input button{border:none;background:var(--coral);color:#fff;border-radius:14px;padding:8px 12px;font-size:12px;font-weight:700}
@@ -3423,7 +3425,8 @@ async function loadComments(p){
     const {data}=await SB.from('comments').select('*').eq('post_id',p.id).order('created_at',{ascending:true});
     const rows=data||[], mk=r=>({id:r.id,userId:r.user_id,name:r.author_name,icon:r.author_icon,photo:r.author_avatar,init:(r.author_name||'선')[0],color:'#86736b',when:whenText(r.created_at),text:r.text,replies:[]});
     const top=rows.filter(r=>!r.parent_id).map(mk), byId={}; top.forEach(c=>byId[c.id]=c);
-    rows.filter(r=>r.parent_id).forEach(r=>{const par=byId[r.parent_id];if(par)par.replies.push(mk(r));});
+    const rootOf={}; top.forEach(c=>rootOf[c.id]=c);
+    rows.filter(r=>r.parent_id).forEach(r=>{const par=rootOf[r.parent_id];if(par){par.replies.push(mk(r)); rootOf[r.id]=par;}});   // 답글의 답글도 같은 댓글 아래로
     p.comments=top;
   }catch(e){ if(!p.comments)p.comments=[]; }
 }
@@ -4559,8 +4562,10 @@ function renderComments(p){
   const box=$('#cmtList');if(!box)return;box.innerHTML='';
   if(!p.comments.length){box.innerHTML='<div class="empty" style="padding:14px 4px">아직 댓글이 없어요. 첫 댓글을 남겨보세요!</div>';return;}
   p.comments.forEach((c,ci)=>{
+    const names=[c.name].concat((c.replies||[]).map(r=>r.name)).filter(Boolean);
     const replies=(c.replies||[]).map((rp,ri)=>`<div class="reply"><div class="av sm" style="${avStyle(rp)}">${avInner(rp)}</div>
-      <div class="rb"><b>${esc(rp.name)}</b> <span class="when">${rp.when}</span>${canDelComment(rp)?`<button class="cmt-del" onclick="delReply(${ci},${ri})" title="답글 삭제">${ICO.trash} 삭제</button>`:''}<p>${esc(rp.text)}</p></div></div>`).join('');
+      <div class="rb"><b>${esc(rp.name)}</b> <span class="when">${rp.when}</span>${canDelComment(rp)?`<button class="cmt-del" onclick="delReply(${ci},${ri})" title="답글 삭제">${ICO.trash} 삭제</button>`:''}<p>${mentionHtml(rp.text,names)}</p>
+        <button class="reply-btn" onclick="replyToReply(${ci},${ri})">${ICO.reply} 답글</button></div></div>`).join('');
     const el=document.createElement('div');el.className='cmt-row';
     el.innerHTML=`<div class="av" style="${avStyle(c)}">${avInner(c)}</div>
       <div class="cb"><b>${c.name}</b><span class="when">${c.when}</span><p>${esc(c.text)}</p>
@@ -4572,6 +4577,12 @@ function renderComments(p){
       </div>`;
     box.appendChild(el);
   });
+}
+/* 답글 맨 앞의 '@닉네임'을 강조 (이 댓글 묶음에 있는 이름만) */
+function mentionHtml(text,names){
+  const t=String(text||''); if(t[0]!=='@') return esc(t);
+  const n=(names||[]).slice().sort((a,b)=>b.length-a.length).find(x=>t.startsWith('@'+x));
+  return n ? `<span class="mention">@${esc(n)}</span>${esc(t.slice(n.length+1))}` : esc(t);
 }
 /* 내가 쓴 댓글/답글인지 (실모드: 내 user_id / 데모: mine 플래그) */
 function canDelComment(c){ return SB ? !!(authUser && c && c.userId===authUser.id) : !!(c && c.mine); }
@@ -4601,15 +4612,32 @@ async function delReply(ci,ri){
   }
   renderComments(p); toast('답글을 삭제했어요');
 }
-function toggleReply(ci){const el=$('#ri'+ci);if(el)el.style.display=el.style.display==='none'?'flex':'none';}
+function toggleReply(ci){const el=$('#ri'+ci);if(!el)return;
+  const opening=el.style.display==='none'; el.style.display=opening?'flex':'none';
+  el.dataset.to=''; el.dataset.toName='';
+  const inp=el.querySelector('input'); if(inp){ inp.placeholder='답글 달기…'; if(opening){ inp.removeAttribute('readonly'); inp.focus(); } } }
+/* 답글에 답글: 같은 댓글 아래에 달고, 입력칸에 '@닉네임'을 미리 넣어 누구에게 답하는지 보이게 */
+function replyToReply(ci,ri){
+  const p=_currentPost; const c=p&&p.comments&&p.comments[ci]; const rp=c&&(c.replies||[])[ri]; if(!rp)return;
+  const el=$('#ri'+ci); if(!el)return; el.style.display='flex';
+  el.dataset.to=rp.userId||''; el.dataset.toName=rp.name||'';
+  const inp=el.querySelector('input'); if(!inp)return;
+  inp.removeAttribute('readonly');
+  const tag='@'+(rp.name||'')+' ';
+  if(!inp.value.startsWith(tag)) inp.value=tag+inp.value.replace(/^@\S+\s*/,'');
+  inp.placeholder=`${rp.name||''}님에게 답글…`;
+  inp.focus(); try{ inp.setSelectionRange(inp.value.length,inp.value.length); }catch(e){}
+}
 async function addReply(ci){
   const el=$('#ri'+ci);if(!el)return;const inp=el.querySelector('input');const v=inp.value.trim();if(!v||!_currentPost)return;
   const p=_currentPost, c=p.comments[ci];
+  const to=(el.dataset.to && v.startsWith('@'+(el.dataset.toName||'')))?el.dataset.to:'';   // '@닉네임'을 지웠으면 댓글 쓴 사람에게만
   if(SB){
     if(!authUser){toast('로그인 후 답글을 남길 수 있어요');return;}
     inp.value='';
-    try{ await SB.from('comments').insert({post_id:p.id,user_id:authUser.id,parent_id:c.id,text:v,author_name:profile.nick,author_icon:profile.icon||'',author_avatar:profile.photo||''});
-      createNotif(c.userId,'comment',p.id,v); }catch(e){}
+    try{ await SB.from('comments').insert({post_id:p.id,user_id:authUser.id,parent_id:c.id,text:v,author_name:profile.nick,author_icon:profile.icon||'',author_avatar:profile.photo||''});   // 답글의 답글도 같은 댓글 아래에 (한 단계 들여쓰기)
+      createNotif(c.userId,'comment',p.id,v);
+      if(to && to!==c.userId) createNotif(to,'comment',p.id,v); }catch(e){}
     await loadComments(p); renderComments(p); return;
   }
   c.replies=c.replies||[];
