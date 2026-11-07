@@ -1461,7 +1461,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .cat-group{margin-bottom:22px}
   .cgl{font-size:13px;color:#948b83;font-weight:700;margin-bottom:11px;display:flex;align-items:center;gap:6px}
   .cg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  .cg-item{background:#f5f2ee;border:1px solid #eee7e1;border-radius:12px;padding:13px 8px;font-size:13px;color:#555;font-weight:500}
+  .cg-item{background:#f5f2ee;border:1px solid #eee7e1;border-radius:12px;padding:13px 8px;font-size:13px;color:#555;font-weight:500;word-break:keep-all;overflow-wrap:anywhere}   /* 띄어쓰기에서 줄바꿈 ('찾아오는 / 체험학습'), 아주 긴 한 단어만 중간에서 */
   .cg-item:hover{background:var(--coral);color:#fff;border-color:var(--coral)}
 
   .folder-more{display:none}
