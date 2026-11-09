@@ -8292,7 +8292,7 @@ function lsGet(k){ try{return JSON.parse(localStorage.getItem(k)||'null');}catch
 function lsSet(k,v){ try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;} }
 function loadDrafts(){ const d=lsGet(DRAFT_KEY); return Array.isArray(d)?d:[]; }
 /* 작은 썸네일 dataURL (임시저장 목록·기기 저장용 — 원본 사진은 계정(서버)에 보관) */
-function draftThumb(src){
+function draftThumb(src, boxes){
   return new Promise(res=>{
     if(!src){ res(''); return; }
     const im=new Image();
@@ -8300,7 +8300,13 @@ function draftThumb(src){
       const maxW=180, sc=Math.min(1, maxW/(im.width||maxW));
       const c=document.createElement('canvas');
       c.width=Math.max(1,Math.round((im.width||maxW)*sc)); c.height=Math.max(1,Math.round((im.height||maxW)*sc));
-      c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      const cx=c.getContext('2d'); cx.drawImage(im,0,0,c.width,c.height);
+      (boxes||[]).filter(b=>b&&b.on!==false).forEach(b=>{   // 원본으로 저장된 사진은 모자이크 자리를 뭉개서 썸네일에도 얼굴이 안 보이게
+        const x=Math.max(0,Math.round(b.fx*c.width)), y=Math.max(0,Math.round(b.fy*c.height));
+        const w=Math.min(c.width-x,Math.round(b.fw*c.width)), h=Math.min(c.height-y,Math.round(b.fh*c.height)); if(w<=0||h<=0)return;
+        const t=document.createElement('canvas'); t.width=Math.max(1,Math.round(w/6)); t.height=Math.max(1,Math.round(h/6));
+        t.getContext('2d').drawImage(c,x,y,w,h,0,0,t.width,t.height);
+        cx.imageSmoothingEnabled=false; cx.drawImage(t,0,0,t.width,t.height,x,y,w,h); cx.imageSmoothingEnabled=true; });
       res(c.toDataURL('image/jpeg',0.5));
     }catch(e){ res(''); } };
     im.onerror=()=>res('');
@@ -8309,7 +8315,8 @@ function draftThumb(src){
 }
 /* 무거운 사진을 뺀 '가벼운' 임시저장본(기기 저장용). 원본 사진은 서버 drafts 에 보관 → 기기 저장공간 초과 방지 */
 async function draftToLight(full){
-  const thumb=await draftThumb((full.photos&&full.photos[0]&&full.photos[0].img)||'');
+  const p0=full.photos&&full.photos[0];
+  const thumb=await draftThumb((p0&&p0.img)||'', p0&&p0.v===2&&!p0.parts?p0.boxes:null);
   const light={}; Object.keys(full).forEach(k=>{ if(k!=='photos') light[k]=full[k]; });
   light.photoCount=(full.photos||[]).length; light.thumb=thumb; light.server=true;
   return light;
@@ -8324,10 +8331,22 @@ function lsSetDraftsSafe(list){
 async function saveDraft(){
   const title=($('#pTitle').value||'').trim();
   const body=richToMarks($('#pBody')) + buildTripTag() + buildFlowTag();
-  // 사진: 현재 화면(모자이크 반영본) + 설명 + 구매표시 저장
+  // 사진: 모자이크 없는 원본 + 모자이크 위치(0~1 비율)를 따로 저장 → 이어쓸 때 모자이크를 지우거나 고칠 수 있게 (v2)
+  //       콜라주는 낱장마다 원본 + 모자이크 위치. 'img'는 목록 썸네일용(콜라주는 합친 모습)
+  const normB=(bs,w,h)=>(bs||[]).map(b=>({fx:b.x/w, fy:b.y/h, fw:b.w/w, fh:b.h/h, shape:b.shape==='circle'?'circle':undefined, on:b.on!==false}));
+  const rawURL=(img,w,h,q)=>{ const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(w)); c.height=Math.max(1,Math.round(h)); c.getContext('2d').drawImage(img,0,0,c.width,c.height); return c.toDataURL('image/jpeg',q); };
   const photoData=photos.map(ph=>{
+    const base={ desc:(ph.desc||'').trim(), env:ph.env===true, cover:ph.cover===true, spots:(ph.spots||[]).filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url})) };
+    try{
+      if(ph.parts && ph.parts.length>1){
+        const parts=ph.parts.map(pt=>{ const z=partCanvasSize(pt.img); return {img:rawURL(pt.img,z.w,z.h,0.7), boxes:normB(pt.boxes,z.w,z.h)}; });
+        let img=''; try{ img=cleanPhotoDataURL(ph,0.5); }catch(e){}
+        return {...base, v:2, img, parts};
+      }
+      if(ph.cv && ph.cv.width) return {...base, v:2, img:rawURL(ph.img,ph.cv.width,ph.cv.height,0.7), boxes:normB(ph.boxes,ph.cv.width,ph.cv.height), mosaicOn:ph.mosaicOn!==false};
+    }catch(e){ /* 원본을 꺼낼 수 없으면 예전 방식(모자이크 입힌 그림)으로 */ }
     let img=''; try{ img=(ph.cv&&ph.cv.width)?cleanPhotoDataURL(ph,0.7):((ph.img&&ph.img.src)||''); }catch(e){ img=(ph.img&&ph.img.src)||''; }
-    return { img, desc:(ph.desc||'').trim(), env:ph.env===true, spots:(ph.spots||[]).filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url})) };
+    return {...base, img};
   });
   const draft={
     id:_currentDraftId || ('d'+Date.now()),
@@ -8481,17 +8500,31 @@ async function resumeDraft(id){
   const list=d.photos||[];
   if(!list.length){ toast('저장된 사진이 없어 새 사진을 올려주세요'); $('#uploadOverlay').classList.add('on'); return; }
   // 모든 이미지를 먼저 로드한 뒤, 저장된 '순서 그대로' 카드 생성
-  const imgs=await Promise.all(list.map(pd=>new Promise(res=>{
-    const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=pd.img;
-  })));
+  const loadOne=src=>new Promise(res=>{ if(!src){res(null);return;} const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src; });
+  const imgs=await Promise.all(list.map(pd=>loadOne(pd.img)));
+  const partImgs=await Promise.all(list.map(pd=>(pd.v===2&&pd.parts&&pd.parts.length>1)?Promise.all(pd.parts.map(pt=>loadOne(pt.img))):Promise.resolve(null)));
+  const denB=(bs,w,h)=>(bs||[]).map(b=>{ const o={x:b.fx*w, y:b.fy*h, w:b.fw*w, h:b.fh*h, on:b.on!==false};
+    if(b.shape==='circle'){ const r=Math.min(o.w,o.h); o.shape='circle'; o.w=r; o.h=r; } return o; });
   imgs.forEach((im,i)=>{
-    if(!im)return;
-    const pd=list[i];
-    const ph={img:im,boxes:[],spots:(pd.spots||[]).map(s=>({...s})),desc:pd.desc||'',env:pd.env===true,mosaicOn:false,addSpotMode:false,_restored:true};
-    photos.push(ph); buildPhotoCard(ph,true);
-    const ta=ph.el&&ph.el.querySelector('.photo-desc'); if(ta)ta.value=ph.desc;
+    const pd=list[i], pis=partImgs[i];
+    const ph={img:im,boxes:[],spots:(pd.spots||[]).map(s=>({...s})),desc:pd.desc||'',env:pd.env===true,cover:pd.cover===true,mosaicOn:false,addSpotMode:false,_restored:true};
+    let n=0;
+    if(pis && pis.every(Boolean)){   // 콜라주(v2): 낱장 원본 + 모자이크로 다시 합침
+      ph.parts=pd.parts.map((pt,k)=>{ const z=partCanvasSize(pis[k]); const bs=denB(pt.boxes,z.w,z.h); n+=bs.length; return {img:pis[k], boxes:bs, mosaicOn:true}; });
+      ph.img=collageRawCanvas(ph.parts).canvas; ph.mosaicOn=true;
+      photos.push(ph); buildPhotoCard(ph,true); compositeCollage(ph); buildCollageStrip(ph);
+    } else {
+      if(!im)return;
+      if(pd.v===2){   // 원본 + 모자이크 위치 → 모자이크를 다시 고칠 수 있음
+        const sc=Math.min(1,PHOTO_MAXW/im.width);
+        ph.boxes=denB(pd.boxes, im.width*sc, im.height*sc); ph.mosaicOn=pd.mosaicOn!==false; n=ph.boxes.length;
+      }
+      photos.push(ph); buildPhotoCard(ph,true);
+    }
+    if(pd.v===2 && ph.status) ph.status.textContent=n?`모자이크 ${n}곳 · 사진 편집에서 고칠 수 있어요`:'임시저장에서 불러온 사진이에요';
     renderSpotsP(ph);
   });
+  updatePhotoOrder();
   $('#photoTop').style.display='block'; $('#drop').style.display='none';
   $('#uploadOverlay').classList.remove('on');
   goWrite();
