@@ -6821,7 +6821,7 @@ function openMobileMosaic(ph, mode){
   if(!ph||!ph.img) return;
   const cv=document.getElementById('mzCanvas'); if(!cv) return;
   _mz={ cv, ctx:cv.getContext('2d'), img:ph.img, boxes:(ph.boxes||[]).map(b=>({...b})), mosaicOn:true,
-        delMode:false, mode:'', imgChanged:false, cropRect:null, pan:false, hist:[],
+        delMode:false, mode:'', imgChanged:false, cropRect:null, pan:false, hist:[], _wm:!ph._onApply && !ph._baked,   // 편집 화면에만 로고 미리보기 (카드에선 버튼에 가려짐)
         scale:1, baseScale:1, tx:0, ty:0, pointers:new Map(), drag:null, pinch:null, src:ph };
   _mzSizeCanvas();
   // 카드 캔버스 좌표 → 편집 캔버스 좌표
@@ -6856,7 +6856,7 @@ function mzSetMode(m){ if(!_mz)return;
 function mzShowHint(m){ const hint=document.getElementById('mzHint'); if(!hint)return;
   const phone=isPhoneDevice();
   hint.innerHTML=(MZ_HINT[m]||'').replace('손가락으로', phone?'손가락으로':'마우스로');
-  const tip=hint.querySelector('.mz-tip'); if(tip)tip.textContent=phone?'두 손가락으로 벌리거나 오므리면 확대·축소돼요':'마우스 휠이나 ＋/－ 버튼으로 확대·축소할 수 있어요'; }
+  const tip=hint.querySelector('.mz-tip'); if(tip)tip.textContent='모자이크를 톡 누르면 지워져요 · '+(phone?'두 손가락으로 확대·축소':'마우스 휠로 확대·축소'); }
 function mzRender(){ if(!_mz)return; renderCanvasP(_mz);
   const cr=_mz.cropRect; if(_mz.mode!=='crop'||!cr)return;
   const c=_mz.ctx, cv=_mz.cv, x=Math.min(cr.x0,cr.x1), y=Math.min(cr.y0,cr.y1), w=Math.abs(cr.x1-cr.x0), h=Math.abs(cr.y1-cr.y0);
@@ -6901,9 +6901,9 @@ function mzDown(e){ if(!_mz)return;
     const p=posP(_mz,e);
     if(_mz.mode==='crop'){ _mz.cropRect={x0:p.x,y0:p.y,x1:p.x,y1:p.y}; _mz.drag={crop:true}; return; }
     if(_mz.mode!=='mosaic'){ _mz.drag=null; return; }   // 도구를 고르기 전에는 확대·이동만
-    const hit=_mz.boxes.find(b=>boxHit(b,p));
+    const hit=_mz.boxes.slice().reverse().find(b=>boxHit(b,p));   // 위에 그려진 것부터
     const inside=p.x>=0&&p.y>=0&&p.x<=_mz.cv.width&&p.y<=_mz.cv.height;
-    _mz.drag={x:p.x,y:p.y,cur:p,moved:false,inside,grow:(hit&&hit.shape==='circle')?hit:null, rectHit:!!(hit&&hit.shape!=='circle')};
+    _mz.drag={x:p.x,y:p.y,cur:p,moved:false,inside,hit:hit||null};
   }
 }
 function mzMove(e){ if(!_mz||!_mz.pointers.has(e.pointerId))return; _mz.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -6929,7 +6929,10 @@ function mzUp(e){ if(!_mz)return; _mz.pointers.delete(e.pointerId);
     const d=_mz.drag; _mz.drag=null;
     if(d.pan) return;
     if(d.crop){ mzRender(); return; }
-    if(!d.moved){ if(!d.rectHit && d.inside){ mzPush(); addOrGrowCircle(_mz,d); } }   // 사진 바깥을 톡 누른 건 무시
+    if(!d.moved){
+      if(d.hit){ mzPush(); _mz.boxes=_mz.boxes.filter(b=>b!==d.hit); toast('모자이크를 지웠어요 · 되돌리기로 살릴 수 있어요'); }   // 모자이크를 톡 → 지우기
+      else if(d.inside){ mzPush(); addOrGrowCircle(_mz,{...d,grow:null}); }   // 빈 곳을 톡 → 동그란 모자이크 (사진 바깥은 무시)
+    }
     else { const x=Math.min(d.x,d.cur.x),y=Math.min(d.y,d.cur.y),w=Math.abs(d.cur.x-d.x),h=Math.abs(d.cur.y-d.y);
       if(w>10&&h>10){ mzPush(); _mz.boxes.push({x,y,w,h,on:true}); } }
     renderCanvasP(_mz);
@@ -6940,6 +6943,7 @@ function _mzSwapImage(c, norm, after){
   const im=new Image();
   im.onload=()=>{ if(!_mz)return;
     _mz.img=im; _mz.imgChanged=true; _mz.hist=[]; mzUndoState(); _mzSizeCanvas();
+    _mz._wm=true;   // 자르거나 돌린 뒤에도 로고는 오른쪽 아래에 다시 찍힘 → 미리보기에도 표시
     const W=_mz.cv.width, H=_mz.cv.height;
     _mz.boxes=norm.map(b=>{ const o={...b, x:b.fx*W, y:b.fy*H, w:b.fw*W, h:b.fh*H};
       if(o.shape==='circle'){ const r=Math.min(o.w,o.h); o.w=r; o.h=r; }
@@ -7005,6 +7009,7 @@ function applyMobileMosaic(){ if(!_mz||_mz.applying)return;
   // 자르는 중에 '확인'을 눌렀으면 자르기를 먼저 적용한 뒤 저장
   if(mzCropReady()){ _mz.applying=true; mzApplyCrop(()=>{ if(_mz){ _mz.applying=false; applyMobileMosaic(); } }); return; }
   const z=_mz, ph=z.src;
+  ph._editSeq=(ph._editSeq||0)+1;   // 얼굴 인식이 늦게 끝나도 이 편집을 덮어쓰지 않게
   if(ph._onApply){ if(ph._onApply(z)!==false) closeMobileMosaic(); return; }   // 글 수정 화면의 사진
   // 콜라주: 모자이크를 조각별로 나눠 넣고 다시 합침 (낱장으로 크게 볼 때도 모자이크가 보이게)
   if(z.collage && !z.imgChanged && ph.parts && ph.parts.length>1){
@@ -7112,6 +7117,7 @@ function removePhoto(ph){markDirty();const i=photos.indexOf(ph);if(i>=0)photos.s
 
 async function runDetectP(ph){
   ph.status.textContent='🤖 얼굴 인식 중…';ph.boxes=[];let found=[];
+  const seq=ph._detSeq=(ph._detSeq||0)+1, editAt=ph._editSeq||0;   // 인식 중에 사진 편집을 했는지 확인용
   try{
     if(await ensureFaceApi()){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35});
       const dets=await faceapi.detectAllFaces(ph.cv,opt);
@@ -7119,7 +7125,15 @@ async function runDetectP(ph){
     else if('FaceDetector' in window){const fd=new FaceDetector({fastMode:true});
       const f=await fd.detect(ph.cv);found=f.map(o=>({x:o.boundingBox.x,y:o.boundingBox.y,w:o.boundingBox.width,h:o.boundingBox.height}));}
   }catch(e){found=[];}
-  ph.boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
+  if(ph._detSeq!==seq) return;   // 그사이 다시 인식을 시작했으면 이 결과는 버림
+  const auto=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
+  // 인식이 끝나기 전에 사진을 편집했다면, 편집한 모자이크는 그대로 두고 찾은 얼굴만 더함 (덮어쓰지 않음)
+  ph.boxes=((ph._editSeq||0)!==editAt)?(ph.boxes||[]).concat(auto):auto;
+  if(_mz && _mz.src===ph && auto.length && ph.cv && ph.cv.width){   // 사진 편집 창이 열려 있으면 거기에도 바로 보여줌
+    const k=_mz.cv.width/ph.cv.width; mzPush();
+    auto.forEach(b=>_mz.boxes.push({...b, x:b.x*k, y:b.y*k, w:b.w*k, h:b.h*k})); mzRender();
+    toast(`얼굴 ${auto.length}개를 찾아 모자이크했어요`);
+  }
   renderCanvasP(ph);
   const phone=true;   // 웹·휴대폰 모두 '사진 편집'으로 안내
   ph.status.innerHTML=ph.boxes.length
@@ -7138,6 +7152,7 @@ function renderCanvasP(ph){
     if(b.shape==='circle'){c.beginPath();c.arc(b.x+b.w/2,b.y+b.h/2,b.w/2,0,Math.PI*2);c.stroke();}
     else c.strokeRect(b.x,b.y,b.w,b.h);});
   c.setLineDash([]);
+  if(ph._wm){ try{ drawWatermark(c, cv.width, cv.height); }catch(e){} }   // 화면 미리보기용 로고 (저장할 때 실제로 찍히는 자리)
   if(ph.delMode) ph.boxes.forEach(b=>{ const g=delBadge(ph,b);
     c.beginPath();c.arc(g.cx,g.cy,g.r,0,Math.PI*2);c.fillStyle='rgba(90,90,98,.92)';c.fill();
     c.strokeStyle='#fff';c.lineWidth=Math.max(2,g.r*0.2);c.lineCap='round';
@@ -8515,7 +8530,7 @@ async function resumeDraft(id){
     if(b.shape==='circle'){ const r=Math.min(o.w,o.h); o.shape='circle'; o.w=r; o.h=r; } return o; });
   imgs.forEach((im,i)=>{
     const pd=list[i], pis=partImgs[i];
-    const ph={img:im,boxes:[],spots:(pd.spots||[]).map(s=>({...s})),desc:pd.desc||'',env:pd.env===true,cover:pd.cover===true,mosaicOn:false,addSpotMode:false,_restored:true};
+    const ph={img:im,boxes:[],spots:(pd.spots||[]).map(s=>({...s})),desc:pd.desc||'',env:pd.env===true,cover:pd.cover===true,mosaicOn:false,addSpotMode:false,_restored:true,_baked:pd.v!==2};   // 예전 임시저장본은 로고가 이미 찍혀 있음
     let n=0;
     if(pis && pis.every(Boolean)){   // 콜라주(v2): 낱장 원본 + 모자이크로 다시 합침
       ph.parts=pd.parts.map((pt,k)=>{ const z=partCanvasSize(pis[k]); const bs=denB(pt.boxes,z.w,z.h); n+=bs.length; return {img:pis[k], boxes:bs, mosaicOn:true}; });
