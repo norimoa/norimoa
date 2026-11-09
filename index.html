@@ -4096,6 +4096,21 @@ function loadImgCors(src){ return new Promise(res=>{ const go=(cors)=>{ const im
     im.onload=()=>res(im); im.onerror=()=>{ if(cors) go(false); else res(null); }; im.src=src; }; go(true); }); }
 async function openEditImage(idx){
   const it=_editImages[idx]; if(!it)return;
+  // 이 화면에서 새로 추가한 사진은 원본 + 모자이크 위치로 열어서, 자동 모자이크도 지우거나 고칠 수 있게
+  if(it.raw){
+    const rim=await loadImgCors(it.raw); if(!rim){ toast('사진을 불러오지 못했어요'); return; }
+    const sc=Math.min(1,PHOTO_MAXW/rim.width), W=rim.width*sc, H=rim.height*sc;
+    const boxes=(it.boxes||[]).map(b=>({x:b.fx*W, y:b.fy*H, w:b.fw*W, h:b.fh*H, on:b.on!==false, shape:b.shape}));
+    openMobileMosaic({ img:rim, boxes, cv:{width:W,height:H}, _raw:true, _onApply:(z)=>{
+      let url; try{ url=cleanPhotoDataURL({img:z.img, cv:{width:z.cv.width,height:z.cv.height}, boxes:z.boxes, mosaicOn:true}, 0.9); }
+      catch(e){ toast('이 사진은 저장하지 못했어요. 잠시 후 다시 시도해 주세요'); return false; }
+      const cur=_editImages[idx]; if(!cur) return true;
+      cur.img=url;
+      if(z.imgChanged){ const c=document.createElement('canvas'); c.width=z.cv.width; c.height=z.cv.height; c.getContext('2d').drawImage(z.img,0,0,c.width,c.height); cur.raw=c.toDataURL('image/jpeg',0.92); }
+      cur.boxes=z.boxes.map(b=>({fx:b.x/z.cv.width, fy:b.y/z.cv.height, fw:b.w/z.cv.width, fh:b.h/z.cv.height, on:b.on!==false, shape:b.shape==='circle'?'circle':undefined}));
+      renderEditImages(); toast('사진을 수정했어요'); return true; } });
+    return;
+  }
   const im=await loadImgCors(it.img); if(!im){ toast('사진을 불러오지 못했어요'); return; }
   // 콜라주: 낱장(조각) 사진도 불러와 두었다가, 모자이크를 조각마다 똑같이 넣음
   const partSrcs=(it.parts&&it.parts.length>1)?it.parts.map(pt=>typeof pt==='string'?pt:(pt&&pt.img)||''):null;
@@ -4173,6 +4188,22 @@ async function autoMosaicDataURL(src){
     im.src=src;
   });
 }
+/* 얼굴 자동 모자이크 + 원본: {img: 모자이크·로고 입힌 사진, raw: 원본(같은 크기), boxes: 모자이크 위치(0~1)} */
+async function autoMosaicInfo(src){
+  const im=await new Promise(res=>{ const x=new Image(); x.onload=()=>res(x); x.onerror=()=>res(null); x.src=src; });
+  if(!im) return {img:src, raw:null, boxes:[]};
+  const sc=Math.min(1,PHOTO_MAXW/im.width);
+  const cv=document.createElement('canvas'); cv.width=Math.round(im.width*sc); cv.height=Math.round(im.height*sc);
+  cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+  let found=[];
+  try{
+    if(await ensureFaceApi()){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35}); const dets=await faceapi.detectAllFaces(cv,opt); found=dets.map(d=>({x:d.box.x,y:d.box.y,w:d.box.width,h:d.box.height}));}
+    else if('FaceDetector' in window){const fd=new FaceDetector({fastMode:true}); const f=await fd.detect(cv); found=f.map(o=>({x:o.boundingBox.x,y:o.boundingBox.y,w:o.boundingBox.width,h:o.boundingBox.height}));}
+  }catch(e){}
+  const boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
+  let img=src; try{ img=cleanPhotoDataURL({img:im, cv, mosaicOn:true, boxes},0.92); }catch(e){}
+  return {img, raw:cv.toDataURL('image/jpeg',0.92), boxes:boxes.map(b=>({fx:b.x/cv.width, fy:b.y/cv.height, fw:b.w/cv.width, fh:b.h/cv.height, on:true}))};
+}
 /* 수정 화면: 사진 추가 (얼굴 자동 모자이크 적용) */
 async function addEditPhotos(fileList){
   const files=[...(fileList||[])].filter(f=>f.type.startsWith('image/'));
@@ -4182,8 +4213,8 @@ async function addEditPhotos(fileList){
   for(const f of files){
     const raw=await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>res('');r.readAsDataURL(f);});
     if(!raw)continue;
-    const img=await autoMosaicDataURL(raw);
-    _editImages.push({img, desc:'', spots:[]});
+    const am=await autoMosaicInfo(raw);
+    _editImages.push({img:am.img, raw:am.raw, boxes:am.boxes, desc:'', spots:[]});   // 원본+모자이크 위치도 보관 → 사진 편집에서 지우거나 고칠 수 있게
   }
   renderEditImages();
   toast('사진을 추가했어요. 얼굴을 더 가리려면 사진을 눌러 수정하세요.');
@@ -6821,7 +6852,7 @@ function openMobileMosaic(ph, mode){
   if(!ph||!ph.img) return;
   const cv=document.getElementById('mzCanvas'); if(!cv) return;
   _mz={ cv, ctx:cv.getContext('2d'), img:ph.img, boxes:(ph.boxes||[]).map(b=>({...b})), mosaicOn:true,
-        delMode:false, mode:'', imgChanged:false, cropRect:null, pan:false, hist:[], _wm:!ph._onApply && !ph._baked,   // 편집 화면에만 로고 미리보기 (카드에선 버튼에 가려짐)
+        delMode:false, mode:'', imgChanged:false, cropRect:null, pan:false, hist:[], _wm:(!ph._onApply || ph._raw) && !ph._baked,   // 편집 화면에만 로고 미리보기 (카드에선 버튼에 가려짐)
         scale:1, baseScale:1, tx:0, ty:0, pointers:new Map(), drag:null, pinch:null, src:ph };
   _mzSizeCanvas();
   // 카드 캔버스 좌표 → 편집 캔버스 좌표
@@ -6987,7 +7018,7 @@ function mzApplyCrop(next){ if(!_mz)return; const cr=_mz.cropRect, cv=_mz.cv;
 function mzPush(){ if(!_mz)return; _mz.hist.push(_mz.boxes.map(b=>({...b}))); if(_mz.hist.length>50)_mz.hist.shift(); mzUndoState(); }
 function mzUndoState(){ const b=document.getElementById('mzUndoBtn'); if(b)b.disabled=!(_mz&&_mz.hist.length); }
 function mzUndo(){ if(!_mz||!_mz.hist.length)return; _mz.boxes=_mz.hist.pop(); mzRender(); mzUndoState(); }
-function mzResetMosaic(){ if(!_mz)return; if(_mz.boxes.length)mzPush(); _mz.boxes=[]; mzRender(); mzShowHint(_mz.mode); }
+function mzResetMosaic(){ if(!_mz)return; if(_mz.boxes.length)mzPush(); _mz.boxes=[]; _mz.resetDone=true; mzRender(); mzShowHint(_mz.mode); }   // 재설정: 아직 끝나지 않은 얼굴 인식 결과도 다시 넣지 않음
 async function mzAutoDetect(){ if(!_mz)return; const z=_mz;
   const hint=document.getElementById('mzHint'); if(hint)hint.textContent='얼굴을 찾는 중이에요…';
   const t=document.createElement('canvas'); t.width=z.cv.width; t.height=z.cv.height;
@@ -7010,6 +7041,7 @@ function applyMobileMosaic(){ if(!_mz||_mz.applying)return;
   if(mzCropReady()){ _mz.applying=true; mzApplyCrop(()=>{ if(_mz){ _mz.applying=false; applyMobileMosaic(); } }); return; }
   const z=_mz, ph=z.src;
   ph._editSeq=(ph._editSeq||0)+1;   // 얼굴 인식이 늦게 끝나도 이 편집을 덮어쓰지 않게
+  if(z.resetDone) ph._detSeq=(ph._detSeq||0)+1;   // 재설정하고 확인했으면, 늦게 끝나는 얼굴 인식 결과는 버림
   if(ph._onApply){ if(ph._onApply(z)!==false) closeMobileMosaic(); return; }   // 글 수정 화면의 사진
   // 콜라주: 모자이크를 조각별로 나눠 넣고 다시 합침 (낱장으로 크게 볼 때도 모자이크가 보이게)
   if(z.collage && !z.imgChanged && ph.parts && ph.parts.length>1){
@@ -7129,7 +7161,7 @@ async function runDetectP(ph){
   const auto=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
   // 인식이 끝나기 전에 사진을 편집했다면, 편집한 모자이크는 그대로 두고 찾은 얼굴만 더함 (덮어쓰지 않음)
   ph.boxes=((ph._editSeq||0)!==editAt)?(ph.boxes||[]).concat(auto):auto;
-  if(_mz && _mz.src===ph && auto.length && ph.cv && ph.cv.width){   // 사진 편집 창이 열려 있으면 거기에도 바로 보여줌
+  if(_mz && _mz.src===ph && !_mz.resetDone && auto.length && ph.cv && ph.cv.width){   // 사진 편집 창이 열려 있으면 거기에도 바로 보여줌 (재설정했으면 안 넣음)
     const k=_mz.cv.width/ph.cv.width; mzPush();
     auto.forEach(b=>_mz.boxes.push({...b, x:b.x*k, y:b.y*k, w:b.w*k, h:b.h*k})); mzRender();
     toast(`얼굴 ${auto.length}개를 찾아 모자이크했어요`);
