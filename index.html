@@ -708,6 +708,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .wp-add{flex:0 0 auto;width:96px;height:96px;border-radius:12px;border:2px dashed #e2cfc6;background:#fcf6f3;color:var(--coral-tx);
     font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
   .wp-add span{font-size:22px;line-height:1}
+  .ei-add-top{margin:0 0 12px}
   .ei-photo .ei-edit{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.6);color:#fff;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:8px}
   .ei-photo:hover .ei-edit{background:var(--coral)}
   .ei-photo .ei-no{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:700;border-radius:7px;padding:1px 8px}
@@ -951,6 +952,20 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   @media(max-width:980px){ .drag-handle{font-size:23px;padding:6px 10px;color:#a89c92} }   /* 모바일: 손끝으로 끌기 쉽게 크게 (순서는 ▲▼로도 가능) */
   .photo-card.dragging{opacity:.55;box-shadow:0 10px 26px rgba(0,0,0,.18);position:relative;z-index:3}
   .pmove .delphoto{padding:0 12px}
+  /* 사진 카드 윗줄: 삭제 버튼도 ▲▼와 같은 크기, 좁은 화면에선 버튼 묶음이 다음 줄로 (카드 밖으로 안 튀어나오게) */
+  .photo-head{gap:8px;flex-wrap:wrap;row-gap:8px}
+  .ph-left{min-width:0}
+  .pmove{flex:0 0 auto;margin-left:auto;align-items:center}
+  .pmove .btn.delphoto,.pmove .btn.ei-del-btn{height:32px;min-width:32px;padding:0 10px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .pmove .btn.delphoto svg,.pmove .btn.ei-del-btn svg{margin:0}
+  @media(max-width:480px){
+    .photo-head .pnum{font-size:12px;padding:4px 9px}
+    .drag-handle{font-size:20px;padding:4px 5px}
+    .pmove{gap:5px}
+    .mmove{width:30px;height:30px}
+    .mmove.mcover,.mmove.ei-cover{padding:0 8px}
+    .pmove .btn.delphoto,.pmove .btn.ei-del-btn{height:30px;min-width:30px;width:30px;padding:0}
+  }
   .photo-desc{width:100%;margin-top:10px;border:1px solid #e7dcd6;border-radius:10px;padding:11px;
     font-size:13.5px;font-family:inherit;background:#fafafb;min-height:54px;resize:vertical}
   .photo-desc:focus{outline:none;border-color:var(--coral);background:#fff}
@@ -2321,7 +2336,8 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
     <div class="up-body">
       <!-- 사진별 설명·상품태그 (글 수정 → 위쪽 사진을 누르면 열림) -->
       <div class="sec" id="writeImagesSec">
-        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="sl-t">사진 · 설명 · 상품 태그</span> <span class="hint">사진 편집으로 모자이크·자르기·회전 · 휴지통으로 삭제 · 아래에서 추가</span></div>
+        <div class="sec-label"><svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="sl-t">사진 · 설명 · 상품 태그</span> <span class="hint">사진 편집으로 모자이크·자르기·회전 · 휴지통으로 삭제</span></div>
+        <button type="button" class="fa-btn ei-add-top" onclick="document.getElementById('editAddPhoto').click()">＋ 사진 추가</button>
         <div id="writeImages"></div>
         <input type="file" id="editAddPhoto" accept="image/*" multiple hidden>
         <button type="button" class="fa-btn" onclick="document.getElementById('editAddPhoto').click()">＋ 사진 추가</button>
@@ -3992,7 +4008,9 @@ function deletePost(){
   })();
 }
 function renderEditImages(){
-  const box=$('#writeImages');if(!box)return;box.innerHTML='';
+  const box=$('#writeImages');if(!box)return;
+  const scroller=box.closest('.up-body'), keepTop=scroller?scroller.scrollTop:0;   // 다시 그려도 보던 자리 그대로
+  box.innerHTML='';
   const ci=coverIndexOf(_editImages);
   _editImages.forEach((im,idx)=>{
     const spotsHtml=im.spots.map((s,si)=>`
@@ -4065,6 +4083,7 @@ function renderEditImages(){
     _editImages[+e.target.dataset.i].spots[+e.target.dataset.s].mall=e.target.value.trim();}));
   box.querySelectorAll('.espot-del').forEach(b=>b.onclick=()=>{_editImages[+b.dataset.i].spots.splice(+b.dataset.s,1);renderEditImages();});
   renderWritePhotoStrip();   // 위쪽 사진 줄도 함께 갱신
+  if(scroller) scroller.scrollTop=keepTop;
   box.querySelectorAll('.addspot2').forEach(b=>b.onclick=()=>{
     const im=_editImages[+b.dataset.i]; const n=im.spots.length;
     im.spots.push({x:35+(n%4)*12, y:35+(Math.floor(n/4)%3)*14, name:'',mall:'',url:''}); // 새 동그라미가 겹치지 않게 살짝 어긋나게
@@ -4133,6 +4152,13 @@ async function openEditImage(idx){
     }
     renderEditImages(); toast('사진을 수정했어요'); return true; } });
 }
+/* 수정 화면: 방금 옮기거나 추가한 사진 카드로 화면을 맞추고 잠깐 강조 */
+function editFocusCard(idx, block){
+  const card=document.querySelector(`#writeImages .photo-card[data-i="${idx}"]`); if(!card)return;
+  try{ card.scrollIntoView({behavior:'smooth', block:block||'nearest'}); }catch(e){ card.scrollIntoView(); }
+  card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+  setTimeout(()=>card.classList.remove('flash'),1400);
+}
 /* 수정 화면: 사진 삭제 */
 function deleteEditImage(idx){
   if(!_editImages||idx<0||idx>=_editImages.length)return;
@@ -4145,12 +4171,12 @@ function moveEditImage(idx,dir){
   if(!_editImages)return;
   const j=idx+dir; if(idx<0||j<0||j>=_editImages.length)return;
   const t=_editImages[idx]; _editImages[idx]=_editImages[j]; _editImages[j]=t; // 자리 바꾸기
-  renderEditImages();
+  renderEditImages(); editFocusCard(j);   // 옮긴 사진이 보이게
 }
 function moveEditImageTop(idx){
   if(!_editImages||idx<=0||idx>=_editImages.length)return;
   const t=_editImages.splice(idx,1)[0]; _editImages.unshift(t); // 맨 앞으로
-  renderEditImages(); toast('맨 앞으로 옮겼어요');
+  renderEditImages(); editFocusCard(0,'start'); toast('맨 앞으로 옮겼어요');
 }
 // 수정 화면: 현재 사진과 아래 사진을 가로로 나란히 콜라주(하나로 합치기)
 async function mergeEditCollage(idx){
@@ -4217,6 +4243,10 @@ async function addEditPhotos(fileList){
     _editImages.push({img:am.img, raw:am.raw, boxes:am.boxes, desc:'', spots:[]});   // 원본+모자이크 위치도 보관 → 사진 편집에서 지우거나 고칠 수 있게
   }
   renderEditImages();
+  // 맨 밑에 추가된 사진이 바로 보이게 (사진 편집 창이면 그 카드로, 글 수정 화면이면 사진 줄 끝으로)
+  const ov=$('#editPhotosOverlay');
+  if(ov && ov.classList.contains('on')) setTimeout(()=>editFocusCard(_editImages.length-1,'center'),60);
+  else { const st=$('#writePhotoStrip'); if(st) setTimeout(()=>{ st.scrollLeft=st.scrollWidth; },60); }
   toast('사진을 추가했어요. 얼굴을 더 가리려면 사진을 눌러 수정하세요.');
 }
 async function saveEdit(){
@@ -7079,6 +7109,7 @@ function movePhoto(ph,dir){
   photos.splice(i,1);photos.splice(j,0,ph);
   const list=$('#photoList');photos.forEach(p=>list.appendChild(p.el)); // 같은 DOM 노드를 옮겨 상태 유지
   updatePhotoOrder();
+  try{ ph.el.scrollIntoView({behavior:'smooth',block:'nearest'}); }catch(e){}   // 옮긴 사진이 보이게
 }
 function movePhotoTop(ph){
   const i=photos.indexOf(ph); if(i<=0)return;         // 이미 맨 앞이면 그대로
