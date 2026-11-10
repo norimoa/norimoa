@@ -558,6 +558,11 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .reply-input{display:flex;gap:8px;margin-top:6px}
   .reply-input input{flex:1;border:1px solid #e7dcd6;border-radius:16px;padding:8px 12px;font-size:12.5px;background:#fafafb;font-family:inherit}
   .reply-input button{border:none;background:var(--coral);color:#fff;border-radius:14px;padding:8px 12px;font-size:12px;font-weight:700}
+  /* 좁은 화면: 입력칸이 줄어들고 '등록' 버튼은 한 줄 그대로 (글자가 '등/록'으로 꺾이거나 카드 밖으로 안 나가게) */
+  .cmt-row .cb{flex:1 1 auto;min-width:0}
+  .reply-input{min-width:0}
+  .reply-input input{min-width:0;width:100%}
+  .reply-input button{flex:0 0 auto;white-space:nowrap}
 
   /* ---------- 오늘의 이슈 ---------- */
   .ai-tag{background:#c04a6e;color:#fff;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:8px;margin-left:2px}
