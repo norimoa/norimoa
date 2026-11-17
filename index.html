@@ -8289,7 +8289,15 @@ function flowDiagramFromData(type,nodes,interactive,opts){
       +`<image href="${esc(curl)}" x="${cx-cR}" y="${cy-cR}" width="${cR*2}" height="${cR*2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${uid}_c)"/>`
       +`<circle cx="${cx}" cy="${cy}" r="${cR}" class="fd-ring${isCur(center)?' fd-self':''}"/>`
       +labelAt(center,cx,cy+cR+cGap,false); acc(cx,cy,cR,center,true,cR+cGap); }
-    else { centerMark=`<circle cx="${cx}" cy="${cy}" r="${cR}" class="fd-center${isCur(center)?' fd-self':''}"/><text x="${cx}" y="${cy+4}" class="fd-clabel" text-anchor="middle">${esc(_flowTrunc(center.title,6))}</text>`; acc(cx,cy,cR,center,true,cR); }
+    else {   // 사진 없이 글씨만: 가운데 원을 키우고 제목 전체를 줄바꿈해서 주변 제목보다 크게
+      const nR=big?118:46, fs=big?24:17, lh=fs*1.25;
+      const per=Math.max(2, Math.floor(2*nR*0.8/fs));
+      const all=_wrapLabel(String(center.title||'').replace(/^#/,''), per);
+      const ls=all.slice(0,4); if(all.length>4) ls[3]=_flowTrunc(ls[3],Math.max(1,per-1))+'…';   // 네 줄을 넘으면 …로 줄임
+      const y0=cy-(ls.length-1)*lh/2+fs*0.35;
+      const tsp=ls.map((t,k)=>`<tspan x="${cx}" y="${y0+k*lh}">${esc(t)}</tspan>`).join('');
+      centerMark=`<circle cx="${cx}" cy="${cy}" r="${nR}" class="fd-center${isCur(center)?' fd-self':''}"/><text class="fd-clabel" style="font-size:${fs}px" text-anchor="middle">${tsp}</text>`;
+      acc(cx,cy,nR,center,true,nR); }
     const centerG=`<g${clickAttr(center)}>${centerMark}</g>`;
     const pad=big?18:8, vbX=minX-pad, vbY=minY-pad, vbW=(maxX-minX)+2*pad, vbH=(maxY-minY)+2*pad;
     return `<div class="flow-diagram"><svg viewBox="${vbX} ${vbY} ${vbW} ${vbH}" class="${svgCls}" preserveAspectRatio="xMidYMid meet">${lines}${pts}${centerG}</svg></div>`;
