@@ -8304,7 +8304,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
       +`<circle cx="${cx}" cy="${cy}" r="${cR}" class="fd-ring${isCur(center)?' fd-self':''}"/>`
       +labelAt(center,cx,cy+cR+cGap,false); acc(cx,cy,cR,center,true,cR+cGap); }
     else {   // 사진 없이 글씨만: 가운데 원을 키우고 제목 전체를 줄바꿈해서 주변 제목보다 크게
-      const nR=big?140:46, fs=big?24:17, lh=fs*1.25;
+      const nR=big?104:46, fs=big?24:17, lh=fs*1.25;
       const per=Math.max(2, Math.floor(2*nR*0.8/fs));
       const all=_wrapLabel(String(center.title||'').replace(/^#/,''), per);
       const ls=all.slice(0,4); if(all.length>4) ls[3]=_flowTrunc(ls[3],Math.max(1,per-1))+'…';   // 네 줄을 넘으면 …로 줄임
