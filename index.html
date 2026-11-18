@@ -1232,9 +1232,6 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .help-pop::before{content:'';position:absolute;left:15px;top:-7px;width:12px;height:12px;background:#fff;border-left:1px solid #eadfd8;border-top:1px solid #eadfd8;transform:rotate(45deg)}
   .ph-cats{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
   .age-chip{display:inline-flex;align-items:center;background:#fbeee6;color:#9a5b3e;border:1px solid #f0d4c0;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700}
-.fl-list-title{font-size:14px;font-weight:700;margin:2px 0 6px;color:var(--ink)}
-  .fl-list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:#5a4a42}
-  .flow-list-card{cursor:pointer}
   .cat-chip{display:inline-flex;align-items:center;background:var(--line);color:var(--ink);border:1px solid #e2dcd6;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700}   /* 크림색 + 검정 글씨 */
   .cat-chip .cc-par{font-weight:600;color:var(--sub)}
   .cat-chip .cc-sep{color:var(--sub);opacity:.85;margin:0 5px;font-weight:400}
@@ -8326,7 +8323,7 @@ function folderFlow(posts){ for(const p of (posts||[])){ const f=parseFlow(p.des
 /* 폴더 안의 모든 놀이흐름(원글마다 하나씩) */
 /* 이 글의 사진만으로 만든 흐름인지 (다른 놀이를 가리키는 점이 없음) */
 function isPhotoOnlyFlow(flow){ const ns=(flow&&flow.nodes)||[]; return ns.length>0 && ns.every(n=>n&&n.photoIdx!=null); }
-function folderFlows(posts){ const out=[]; for(const p of (posts||[])){ const f=parseFlow(p.desc||'').flow; if(f&&f.type&&(f.nodes||[]).length) out.push({flow:f, host:p}); } return out; }
+function folderFlows(posts){ const out=[]; for(const p of (posts||[])){ const f=parseFlow(p.desc||'').flow; if(f&&f.type&&(f.nodes||[]).length && !isPhotoOnlyFlow(f)) out.push({flow:f, host:p}); } return out; }   // 사진으로만 만든 흐름은 도식이 아니라 글 타일(대표사진)로 표시
 function coverOf(p){ try{ const im=imagesOf(p); const ci=coverIndexOf(im); return (im[ci]&&im[ci].img)||(im[0]&&im[0].img)||p.img||''; }catch(e){ return (p&&p.img)||''; } }
 function folderNodePost(n, host){ if(n.self) return host; if(n.refId) return allPosts().find(x=>postRefId(x)===n.refId)||null; return null; }
 function folderPhotoOf(n, host){
@@ -8347,16 +8344,8 @@ function fillFolderFlowOrList(posts, listFiller, dragInfo){
       const card=document.createElement('div'); card.className='folder-flow-card';
       const cnt = flows.length>1 ? ` <span class="hint" style="font-weight:500">· ${idx+1}/${flows.length}</span>` : '';
       const handle = canDrag ? `<span class="flow-drag-handle" title="드래그해서 순서 변경">↕</span>` : '';
-      if(isPhotoOnlyFlow(ff.flow)){
-        // 사진으로만 만든 흐름: 도식 대신 목록 한 줄 (누르면 그 글로 이동)
-        const steps=ff.flow.nodes.map((n,i)=>`<li>${esc(String(n.title||'').replace(/^#/,''))}</li>`).join('');
-        card.innerHTML=`<div class="flow-card flow-list-card"><div class="flow-card-h">${handle}${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${cnt}</div>
-          <div class="fl-list-title">${esc(String(ff.host.title||'놀이').replace(/^#/,''))}</div><ol class="fl-list">${steps}</ol></div>`;
-        card.addEventListener('click',e=>{ if(e.target.closest('.flow-drag-handle'))return; close_('folderOverlay'); openPost(ff.host); });
-      } else {
-        const dia=flowDiagramFromData(ff.flow.type, ff.flow.nodes, true, {big:true, host:ff.host});
-        card.innerHTML=`<div class="flow-card"><div class="flow-card-h">${handle}${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${cnt}${flowNavHint(ff.flow, ff.host, '')}</div>${dia}</div>`;
-      }
+      const dia=flowDiagramFromData(ff.flow.type, ff.flow.nodes, true, {big:true, host:ff.host});
+      card.innerHTML=`<div class="flow-card"><div class="flow-card-h">${handle}${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${cnt}${flowNavHint(ff.flow, ff.host, '')}</div>${dia}</div>`;
       if(canDrag){
         card.draggable=true;
         card.addEventListener('dragstart',e=>{_flowDragIdx=idx;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
