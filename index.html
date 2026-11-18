@@ -1232,7 +1232,10 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .help-pop::before{content:'';position:absolute;left:15px;top:-7px;width:12px;height:12px;background:#fff;border-left:1px solid #eadfd8;border-top:1px solid #eadfd8;transform:rotate(45deg)}
   .ph-cats{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
   .age-chip{display:inline-flex;align-items:center;background:#fbeee6;color:#9a5b3e;border:1px solid #f0d4c0;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700}
-.cat-chip{display:inline-flex;align-items:center;background:var(--line);color:var(--ink);border:1px solid #e2dcd6;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700}   /* 크림색 + 검정 글씨 */
+.fl-list-title{font-size:14px;font-weight:700;margin:2px 0 6px;color:var(--ink)}
+  .fl-list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:#5a4a42}
+  .flow-list-card{cursor:pointer}
+  .cat-chip{display:inline-flex;align-items:center;background:var(--line);color:var(--ink);border:1px solid #e2dcd6;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700}   /* 크림색 + 검정 글씨 */
   .cat-chip .cc-par{font-weight:600;color:var(--sub)}
   .cat-chip .cc-sep{color:var(--sub);opacity:.85;margin:0 5px;font-weight:400}
   .cat-chip .cc-it{cursor:pointer}
@@ -4159,7 +4162,7 @@ async function openEditImage(idx){
   const partImgs=partSrcs?await Promise.all(partSrcs.map(loadImgCors)):null;
   openMobileMosaic({ img:im, boxes:[], _onApply:(z)=>{
     if(!z.imgChanged && !z.boxes.length) return true;              // 바뀐 게 없으면 그대로
-    let url; try{ url=cleanPhotoDataURL({img:z.img, cv:{width:z.cv.width,height:z.cv.height}, boxes:z.boxes, mosaicOn:true}, 0.9); }
+    let url; try{ url=cleanPhotoDataURL({img:z.img, cv:{width:z.cv.width,height:z.cv.height}, boxes:z.boxes, mosaicOn:true, _baked:true}, 0.9); }   // 저장된 사진은 이미 로고가 있음
     catch(e){ toast('이 사진은 저장하지 못했어요. 잠시 후 다시 시도해 주세요'); return false; }
     const cur=_editImages[idx]; if(!cur) return true;
     cur.img=url;
@@ -7304,7 +7307,7 @@ function cleanPhotoDataURL(ph, quality){
     c.imageSmoothingEnabled=false;c.drawImage(tmp,0,0,sw,sh,x,y,w,h);c.imageSmoothingEnabled=true;
     c.restore();
   });
-  drawWatermark(c, s.width, s.height);   // 무단 도용 방지 워터마크 (사진에 새겨넣기)
+  if(!ph._baked) drawWatermark(c, s.width, s.height);   // 무단 도용 방지 워터마크 (사진에 새겨넣기) — 이미 찍힌 사진은 두 번 찍지 않음
   return s.toDataURL('image/jpeg', quality||0.9);
 }
 /* 놀이모아 손글씨 워터마크 이미지 (선생님 손글씨를 그대로 사용) */
@@ -7398,9 +7401,9 @@ function renderPartCanvas(part){
   return cv;
 }
 /* 콜라주 조각 하나를 워터마크까지 넣어 개별 이미지(dataURL)로 반환 — 라이트박스에서 하나씩 크게 보기용 */
-function partDataURL(part){
+function partDataURL(part, noWm){
   const cv=renderPartCanvas(part);
-  try{ drawWatermark(cv.getContext('2d'), cv.width, cv.height); }catch(e){}
+  if(!noWm){ try{ drawWatermark(cv.getContext('2d'), cv.width, cv.height); }catch(e){} }
   return cv.toDataURL('image/jpeg',0.92);
 }
 /* 콜라주 배치: 조각마다 합친 사진 안에서 차지하는 가로 범위(0~1). compositeCollage와 같은 계산 */
@@ -8321,6 +8324,8 @@ function flowDiagramFromData(type,nodes,interactive,opts){
 /* ===== 폴더 안에 놀이흐름이 있으면 도식으로 보여주기 (점 옆에 대표사진) ===== */
 function folderFlow(posts){ for(const p of (posts||[])){ const f=parseFlow(p.desc||'').flow; if(f&&f.type&&(f.nodes||[]).length) return {flow:f, host:p}; } return null; }
 /* 폴더 안의 모든 놀이흐름(원글마다 하나씩) */
+/* 이 글의 사진만으로 만든 흐름인지 (다른 놀이를 가리키는 점이 없음) */
+function isPhotoOnlyFlow(flow){ const ns=(flow&&flow.nodes)||[]; return ns.length>0 && ns.every(n=>n&&n.photoIdx!=null); }
 function folderFlows(posts){ const out=[]; for(const p of (posts||[])){ const f=parseFlow(p.desc||'').flow; if(f&&f.type&&(f.nodes||[]).length) out.push({flow:f, host:p}); } return out; }
 function coverOf(p){ try{ const im=imagesOf(p); const ci=coverIndexOf(im); return (im[ci]&&im[ci].img)||(im[0]&&im[0].img)||p.img||''; }catch(e){ return (p&&p.img)||''; } }
 function folderNodePost(n, host){ if(n.self) return host; if(n.refId) return allPosts().find(x=>postRefId(x)===n.refId)||null; return null; }
@@ -8340,10 +8345,18 @@ function fillFolderFlowOrList(posts, listFiller, dragInfo){
     flows.forEach((ff,idx)=>{
       if(ff.host)mem.add(postRefId(ff.host)); (ff.flow.nodes||[]).forEach(n=>{if(n.refId)mem.add(n.refId);});
       const card=document.createElement('div'); card.className='folder-flow-card';
-      const dia=flowDiagramFromData(ff.flow.type, ff.flow.nodes, true, {big:true, host:ff.host});
       const cnt = flows.length>1 ? ` <span class="hint" style="font-weight:500">· ${idx+1}/${flows.length}</span>` : '';
       const handle = canDrag ? `<span class="flow-drag-handle" title="드래그해서 순서 변경">↕</span>` : '';
-      card.innerHTML=`<div class="flow-card"><div class="flow-card-h">${handle}${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${cnt}${flowNavHint(ff.flow, ff.host, '')}</div>${dia}</div>`;
+      if(isPhotoOnlyFlow(ff.flow)){
+        // 사진으로만 만든 흐름: 도식 대신 목록 한 줄 (누르면 그 글로 이동)
+        const steps=ff.flow.nodes.map((n,i)=>`<li>${esc(String(n.title||'').replace(/^#/,''))}</li>`).join('');
+        card.innerHTML=`<div class="flow-card flow-list-card"><div class="flow-card-h">${handle}${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${cnt}</div>
+          <div class="fl-list-title">${esc(String(ff.host.title||'놀이').replace(/^#/,''))}</div><ol class="fl-list">${steps}</ol></div>`;
+        card.addEventListener('click',e=>{ if(e.target.closest('.flow-drag-handle'))return; close_('folderOverlay'); openPost(ff.host); });
+      } else {
+        const dia=flowDiagramFromData(ff.flow.type, ff.flow.nodes, true, {big:true, host:ff.host});
+        card.innerHTML=`<div class="flow-card"><div class="flow-card-h">${handle}${FLOW_ICO} <span class="fc-h-t">놀이 흐름</span>${cnt}${flowNavHint(ff.flow, ff.host, '')}</div>${dia}</div>`;
+      }
       if(canDrag){
         card.draggable=true;
         card.addEventListener('dragstart',e=>{_flowDragIdx=idx;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
@@ -9090,7 +9103,7 @@ async function publishPost(){
     env:ph.env===true,               // 환경구성 사진 여부
     spots:ph.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url})),
     // 콜라주면 조각(개별 사진)도 따로 보관 → 클릭 확대 시 하나씩 크게 보기
-    partsData:(ph.parts&&ph.parts.length>1)?ph.parts.map(partDataURL):null
+    partsData:(ph.parts&&ph.parts.length>1)?ph.parts.map(pt=>partDataURL(pt,true)):null   // 낱장에는 로고를 넣지 않음 (콜라주 전체에 한 번만)
   }));
   const coverI=coverIndexOf(photos);              // 대표사진 위치(지정 안 하면 첫 사진)
   images.forEach((im,k)=>im.cover=(k===coverI));  // 순서는 그대로 두고 대표사진만 표시
