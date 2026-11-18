@@ -1486,6 +1486,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .cg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .cg-item{background:#f5f2ee;border:1px solid #eee7e1;border-radius:12px;padding:13px 8px;font-size:13px;color:#555;font-weight:500;word-break:keep-all;overflow-wrap:anywhere}   /* 띄어쓰기에서 줄바꿈 ('찾아오는 / 체험학습'), 아주 긴 한 단어만 중간에서 */
   .cg-item:hover{background:var(--coral);color:#fff;border-color:var(--coral)}
+  .cg-item.on-browse{background:var(--coral);color:#fff;border-color:var(--coral)}
 
   .folder-more{display:none}
   @media(max-width:640px){
@@ -2644,7 +2645,7 @@ function _flushDeferred(){
 function curViewId(){ const c=document.querySelector('.view.on'); return c?c.id.replace('v-',''):'browse'; }
 function snapScreen(){
   const v=curViewId(), sn={v, y:window.scrollY||window.pageYOffset||0};
-  if(v==='browse'){ sn.filter=browseFilter; sn.trip=_tripSub; const bs=$('#brSearch'); sn.q=bs?bs.value:''; }
+  if(v==='browse'){ sn.filter=browseFilter; sn.extra=browseExtra.slice(); sn.trip=_tripSub; const bs=$('#brSearch'); sn.q=bs?bs.value:''; }
   if(v==='sub'){ sn.fa=_feedAuthor; sn.fan=_feedAuthorName; }
   if(v==='post') sn.post=_currentPost;
   if(v==='profile') sn.prof=_profileTarget;
@@ -2668,7 +2669,7 @@ function navPush(){
 function nav(v){
   if(v==='comm' && isGuest()){ go(v); return; }   // 로그인 안내만 뜨고 화면은 그대로
   const cur=curViewId(), bs=$('#brSearch');
-  const dirty=(v==='browse' && (browseFilter||_tripSub||(bs&&bs.value))) || (v==='sub' && _feedAuthor);
+  const dirty=(v==='browse' && (browseFilter||browseExtra.length||_tripSub||(bs&&bs.value))) || (v==='sub' && _feedAuthor);
   if(cur!==v || dirty) navPush();
   else _consume(_closeLayeredOverlays());
   go(v);
@@ -4923,7 +4924,8 @@ function pickTodayIssues(){
   if(issues.length<3)issues.push({icon:'🔥',label:'이번 주 인기 주제',tags:['미술','감각','신체']});
   return issues;
 }
-let _issues=[], curIssue=0, browseFilter='';
+let _issues=[], curIssue=0, browseFilter='', browseExtra=[];   // browseExtra: 함께 고른 나머지 조건(AND)
+function browseLabels(){ return [browseFilter, ...browseExtra].filter(Boolean); }
 let _tripSub='';   // 체험학습 모아보기 세부 필터 (종류 또는 지역)
 const BROWSE_PAGE=10;             // 둘러보기 피드: 한 번에 보여줄 글 개수
 let _browseShown=BROWSE_PAGE;    // 현재까지 펼친 글 개수
@@ -5363,7 +5365,7 @@ function filterByLabel(label){
   else navPush();          // 지금 화면을 기록 → 뒤로가기로 돌아올 수 있게
   go('browse');            // 둘러보기로 전환(필터·검색 초기화)
   _tripSub='';
-  browseFilter=label;      // 그 다음 클릭한 카테고리·해시태그 필터를 적용
+  browseFilter=label; browseExtra=[];   // 그 다음 클릭한 카테고리·해시태그 필터를 적용 (새로 한 개만)
   renderBrowseFeed();
 }
 function postVideo(p){ return (p && p.video) ? p.video : ''; }
@@ -5429,24 +5431,25 @@ function renderBrowseFeed(keep){
   const box=$('#browseFeed');box.innerHTML='';
   const q=($('#brSearch').value||'').trim();
   let list=(window._dbPosts||[]).concat(posts).filter(canSeePost);  // 실제 글 먼저, 그 뒤 데모 · 비공개 글 제외
-  if(browseFilter)list=list.filter(p=>matchesFilter(p,browseFilter));
-  const _tcat=tripCatOf(browseFilter);
+  const _labels=browseLabels();
+  if(_labels.length)list=list.filter(p=>_labels.every(l=>matchesFilter(p,l)));
+  const _tcat=tripCatOf(browseFilter)||_labels.map(tripCatOf).find(Boolean)||'';
   if(_tcat && _tripSub) list=list.filter(p=>tripSubMatch(p,_tcat,_tripSub));
   if(q){const forms=synForms(q); // '놀이' 접미사 무시 + 동의어(재활용=업사이클링)
     list=list.filter(p=>{const a=authorOf(p);
       const hay=dePlay(p.title+' '+p.desc+' '+(p.tags||[]).join(' ')+' '+((a&&a.name)||''));
       return forms.some(f=>f&&hay.includes(f));});}
   // 카테고리 선택·해시태그 검색 시엔 인기순(좋아요·저장·조회 많은 순)으로 정렬
-  if(browseFilter||q){ list=list.slice().sort((a,b)=>popScore(b)-popScore(a)); }
+  if(browseFilter||browseExtra.length||q){ list=list.slice().sort((a,b)=>popScore(b)-popScore(a)); }
   window._browse=list;
   const fb=$('#brFilterBar');
-  fb.innerHTML=browseFilter?`<div class="filter-chip">#${esc(noSpace(browseFilter))} <span onclick="clearBrowseFilter()">✕</span></div>`+(_tcat?tripSubBarHTML(_tcat,list.length):''):'';
+  fb.innerHTML=_labels.length?_labels.map(l=>`<div class="filter-chip">#${esc(noSpace(l))} <span onclick="removeBrowseFilter('${String(l).replace(/'/g,"\\'")}')">✕</span></div>`).join('')+(_tcat?tripSubBarHTML(_tcat,list.length):''):'';
   // 검색·필터가 켜져 있으면 추천 섹션을 숨겨 결과가 맨 위에 오게 한다
-  const searching=!!(browseFilter||q);
+  const searching=!!(browseLabels().length||q);
   ['issueSec','popularSec','brTags'].forEach(id=>{const s=$('#'+id);if(s)s.style.display=searching?'none':'';});
   if(!list.length){
-    if(_postsLoading && !(browseFilter||q)){ box.innerHTML='<div class="placeholder loading-ph"><div class="ld-spin"></div>놀이를 불러오는 중이에요…<br><span class="ld-sub">잠시만 기다려 주세요 🌿</span></div>'; return; }
-    box.innerHTML=(browseFilter||q)
+    if(_postsLoading && !(browseLabels().length||q)){ box.innerHTML='<div class="placeholder loading-ph"><div class="ld-spin"></div>놀이를 불러오는 중이에요…<br><span class="ld-sub">잠시만 기다려 주세요 🌿</span></div>'; return; }
+    box.innerHTML=(browseLabels().length||q)
     ?'<div class="placeholder"><div class="big">🔍</div>조건에 맞는 놀이가 없어요</div>'
     :'<div class="placeholder"><div class="big">🌱</div>아직 올라온 놀이가 없어요.<br>업로드에서 첫 놀이를 올려보세요!</div>';return;}
   const shown=Math.min(_browseShown, list.length);
@@ -5533,7 +5536,8 @@ async function backfillThumbs(){
   }catch(e){}
   finally{ _thumbBF=false; }
 }
-function clearBrowseFilter(){browseFilter='';_tripSub='';renderBrowseFeed();}
+function clearBrowseFilter(){browseFilter='';browseExtra=[];_tripSub='';renderBrowseFeed();}
+function removeBrowseFilter(label){ const next=browseLabels().filter(x=>x!==label); browseFilter=next[0]||''; browseExtra=next.slice(1); _tripSub=''; renderBrowseFeed(); }
 function setTripSub(v){ _tripSub=v||''; renderBrowseFeed(); }
 
 /* ---------------- 카테고리 드로어 ---------------- */
@@ -5563,7 +5567,7 @@ function renderCatDrawer(){
   if(canEditCats()) html+=`<button type="button" class="cat-admin-btn" onclick="openCatAdmin()">${ICO.edit} 카테고리 편집${isAdmin()?' (관리자)':' (미리보기)'}</button>`;
   d.groups.forEach((grp,gi)=>{
     html+=`<div class="cat-group"><div class="cgl">${groupIco(grp)} ${grp.g}</div><div class="cg-grid">`+
-      grp.items.map(it=>`<button class="cg-item${hiCat(it)}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
+      grp.items.map(it=>`<button class="cg-item${hiCat(it)}${browseLabels().includes(it)?' on-browse':''}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
       `</div></div>`;
     if(gi===0) html+=`<button type="button" class="cat-env-btn" onclick="openEnv()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성 모아보기</button><button type="button" class="cat-env-btn cat-files-btn" onclick="openFiles()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>자료 모아보기</button>`; // '놀이 주제'와 '놀이 유형' 사이
   });
@@ -5571,8 +5575,22 @@ function renderCatDrawer(){
 }
 function pickCategory(label){
   close_('catOverlay');
-  filterByLabel(label);
-  toast(`'${label}' 관련 놀이`);
+  toggleBrowseCategory(label);
+}
+/* 둘러보기 조건 추가/빼기: 같은 그룹(놀이 주제 등)은 하나만, 다른 그룹과는 함께 고를 수 있음 */
+function toggleBrowseCategory(label){
+  const cur=browseLabels(), grp=catParent(label);
+  let next, msg;
+  if(cur.includes(label)){ next=cur.filter(x=>x!==label); msg=`'${label}' 조건을 뺐어요`; }
+  else{
+    const dropped=grp? cur.filter(x=>catParent(x)===grp) : [];
+    next=cur.filter(x=>!dropped.includes(x)).concat([label]);
+    msg= dropped.length ? `'${grp}'은 하나만 고를 수 있어 '${dropped[0]}' 대신 '${label}'로 바꿨어요` : `'${label}' 조건을 더했어요`;
+  }
+  if(curViewId()!=='browse'){ navPush(); go('browse'); }
+  browseFilter=next[0]||''; browseExtra=next.slice(1); _tripSub='';
+  renderBrowseFeed();
+  toast(msg);
 }
 
 /* ===== 카테고리 편집 (관리자) ===== */
@@ -6512,9 +6530,9 @@ function go(v, rs){
   if(v==='browse'){
     const bs=$('#brSearch');
     if(rs){   // 뒤로가기 복원: 그때의 카테고리·검색 그대로 (같으면 다시 그리지 않아 스크롤 유지)
-      const q=rs.q||'', changed=browseFilter!==(rs.filter||'') || _tripSub!==(rs.trip||'') || (bs&&bs.value!==q);
-      browseFilter=rs.filter||''; _tripSub=rs.trip||''; if(bs)bs.value=q; if(changed) renderBrowse();
-    } else { browseFilter=''; _tripSub=''; if(bs)bs.value=''; renderBrowse(); }
+      const q=rs.q||'', changed=browseFilter!==(rs.filter||'') || JSON.stringify(browseExtra)!==JSON.stringify(rs.extra||[]) || _tripSub!==(rs.trip||'') || (bs&&bs.value!==q);
+      browseFilter=rs.filter||''; browseExtra=(rs.extra||[]).slice(); _tripSub=rs.trip||''; if(bs)bs.value=q; if(changed) renderBrowse();
+    } else { browseFilter=''; browseExtra=[]; _tripSub=''; if(bs)bs.value=''; renderBrowse(); }
   }
   if(v==='sub'){
     if(rs){ if((_feedAuthor||null)!==(rs.fa||null)){ _feedAuthor=rs.fa||null; _feedAuthorName=rs.fan||''; renderFeed(); } }
