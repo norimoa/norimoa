@@ -3659,7 +3659,10 @@ function renderPostPage(p){
     return `<span class="cat-chip">${head}${items}</span>`;
   }).join('');
   // 연령: 카테고리 줄 맨 끝에 칩으로 (여러 개면 칩을 나눠서, '선택 안함'은 생략)
+  // 연령 칩은 고른 순서와 관계없이 어린 연령부터 (0~2세 → 3세 → 4세 → 5세 → 혼합연령)
+  const AGE_ORDER=['0~2세','3세','4세','5세','혼합연령'];
   const ageChips=String(p.age||'').split(',').map(a=>a.trim()).filter(a=>a && a!=='선택 안함')
+    .sort((x,y)=>{ const ix=AGE_ORDER.indexOf(x), iy=AGE_ORDER.indexOf(y); return (ix<0?99:ix)-(iy<0?99:iy); })
     .map(a=>`<span class="age-chip">${esc(a)}</span>`).join('');
   const videoBlock = postVideo(p) ? `<div class="pf-item"><video class="detail-vid" src="${postVideo(p)}" controls playsinline preload="metadata"${p.img?` poster="${p.img}"`:''}></video></div>` : '';
   const photos=videoBlock + imgs.map((im,idx)=>{
