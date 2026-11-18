@@ -6600,9 +6600,11 @@ async function renderPdfPages(file){
       if(await ensureFaceApi()){const opt=new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:.35}); const dets=await faceapi.detectAllFaces(canvas,opt); found=dets.map(d=>({x:d.box.x,y:d.box.y,w:d.box.width,h:d.box.height}));}
       else if('FaceDetector' in window){const fd=new FaceDetector({fastMode:true}); const f=await fd.detect(canvas); found=f.map(o=>({x:o.boundingBox.x,y:o.boundingBox.y,w:o.boundingBox.width,h:o.boundingBox.height}));}
     }catch(e){}
-    const boxes=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
-    const baseVp=page.getViewport({scale:1});             // 실제 출력 크기(mm 환산용, 96dpi 기준)
-    pages.push({raw, boxes, wmm:baseVp.width*25.4/96, hmm:baseVp.height*25.4/96});
+    const boxesPx=found.map(b=>({x:b.x-b.w*0.08,y:b.y-b.h*0.12,w:b.w*1.16,h:b.h*1.24,on:true}));
+    // 모자이크 좌표는 '페이지 대비 비율(0~1)'로 저장: 수정 화면이 줄여서 열려도 같은 자리에 맞도록
+    const boxes=boxesPx.map(b=>({x:b.x/canvas.width,y:b.y/canvas.height,w:b.w/canvas.width,h:b.h/canvas.height,on:true}));
+    const baseVp=page.getViewport({scale:1});             // 실제 출력 크기(mm 환산용, PDF 포인트 기준)
+    pages.push({raw, boxes, wmm:baseVp.width*25.4/72, hmm:baseVp.height*25.4/72});   // PDF 단위는 포인트(1pt=1/72인치)
   }
   return pages;
 }
@@ -6612,7 +6614,8 @@ function bakePdfPage(pg){
     const im=new Image();
     im.onload=()=>{
       const cv=document.createElement('canvas'); cv.width=im.width; cv.height=im.height;
-      try{ resolve(cleanPhotoDataURL({img:im, cv, boxes:pg.boxes, mosaicOn:true}, 0.92)); }
+      const px=(pg.boxes||[]).map(b=>({x:b.x*cv.width, y:b.y*cv.height, w:b.w*cv.width, h:b.h*cv.height, on:b.on!==false, shape:b.shape}));
+      try{ resolve(cleanPhotoDataURL({img:im, cv, boxes:px, mosaicOn:true}, 0.92)); }
       catch(e){ resolve(pg.raw); }
     };
     im.onerror=()=>resolve(pg.raw);
@@ -6653,7 +6656,9 @@ function openCommPdfMosaicEdit(i){
 function commPdfEditSaveCurrentBoxes(){
   const st=_commPdfEdit; if(!st||!_ie)return;
   const a=_commAtts[st.attIdx]; if(!a)return;
-  const pg=a.pdfPages[st.pageIdx]; if(pg)pg.boxes=_ie.boxes.map(b=>({...b}));
+  const pg=a.pdfPages[st.pageIdx];
+  const W=_ie.cv.width, H=_ie.cv.height;
+  if(pg) pg.boxes=_ie.boxes.map(b=>({x:b.x/W, y:b.y/H, w:b.w/W, h:b.h/H, on:b.on!==false, shape:b.shape}));
 }
 function stepCommPdfMosaicEdit(){
   const st=_commPdfEdit; if(!st)return;
@@ -6661,7 +6666,7 @@ function stepCommPdfMosaicEdit(){
   const pages=a.pdfPages;
   const pg=pages[st.pageIdx];
   openImgEdit(pg.raw, {
-    boxes:(pg.boxes||[]).map(b=>({...b})), mosaicOn:true,
+    boxes:(pg.boxes||[]).map(b=>({...b})), boxesFrac:true, mosaicOn:true,
     title:`PDF 모자이크 수정 (${st.pageIdx+1}/${pages.length}페이지)`,
     status:'빈 곳을 드래그해 가릴 부분을 추가하거나, 모자이크를 눌러 지워보세요',
     nav:{
@@ -7643,7 +7648,9 @@ function openImgEdit(src, opts){
     if(useCors && /^https?:/i.test(src)) im.crossOrigin='anonymous';   // 저장된(원격) 사진도 캔버스에 그려 저장할 수 있게
     im.onload=()=>{
       _ie.img=im; ieFit(im);
-      _ie.boxes=(opts.boxes||[]).map(b=>({...b})); _ie.mosaicOn=opts.mosaicOn!==false; _ie.delMode=false;
+      _ie.boxes=(opts.boxes||[]).map(b=>opts.boxesFrac
+        ? {...b, x:b.x*_ie.cv.width, y:b.y*_ie.cv.height, w:b.w*_ie.cv.width, h:b.h*_ie.cv.height}
+        : {...b}); _ie.mosaicOn=opts.mosaicOn!==false; _ie.delMode=false;
       _ie.drag=null; _ie.cropMode=false; _ie.cropRect=null; _ie.cropping=false; _ie.onApply=opts.onApply||null;
       _ie.nav=opts.nav||null;
       const mz=$('#ieMz'); if(mz)mz.checked=_ie.mosaicOn;
