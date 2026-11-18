@@ -8322,7 +8322,7 @@ function flowDiagramFromData(type,nodes,interactive,opts){
 function folderFlow(posts){ for(const p of (posts||[])){ const f=parseFlow(p.desc||'').flow; if(f&&f.type&&(f.nodes||[]).length) return {flow:f, host:p}; } return null; }
 /* 폴더 안의 모든 놀이흐름(원글마다 하나씩) */
 /* 이 글의 사진만으로 만든 흐름인지 (다른 놀이를 가리키는 점이 없음) */
-function isPhotoOnlyFlow(flow){ const ns=(flow&&flow.nodes)||[]; return ns.length>0 && ns.every(n=>n&&n.photoIdx!=null); }
+function isPhotoOnlyFlow(flow){ const ns=(flow&&flow.nodes)||[]; return ns.length>0 && ns.every(n=>n && (n.photoIdx!=null || n.self)); }   // 사진 점, 또는 '이 글' 점(같은 글을 가리킴)만 있으면 사진 흐름
 function folderFlows(posts){ const out=[]; for(const p of (posts||[])){ const f=parseFlow(p.desc||'').flow; if(f&&f.type&&(f.nodes||[]).length && !isPhotoOnlyFlow(f)) out.push({flow:f, host:p}); } return out; }   // 사진으로만 만든 흐름은 도식이 아니라 글 타일(대표사진)로 표시
 function coverOf(p){ try{ const im=imagesOf(p); const ci=coverIndexOf(im); return (im[ci]&&im[ci].img)||(im[0]&&im[0].img)||p.img||''; }catch(e){ return (p&&p.img)||''; } }
 function folderNodePost(n, host){ if(n.self) return host; if(n.refId) return allPosts().find(x=>postRefId(x)===n.refId)||null; return null; }
