@@ -4983,7 +4983,7 @@ function renderBrowse(){
   renderIssues();
   const pop=$('#brPopular');pop.innerHTML='';
   if(SB){
-    const top=(window._dbPosts||[]).slice().sort((a,b)=>(b.like||0)-(a.like||0)).slice(0,6);   // 2줄 = 6장까지
+    const top=(window._dbPosts||[]).filter(p=>!isTripPost(p)).sort((a,b)=>(b.like||0)-(a.like||0)).slice(0,6);   // 2줄 = 6장까지
     if(top.length) top.forEach(p=>pop.appendChild(miniCardPost(p)));
     else pop.innerHTML = _postsLoading
       ? '<div class="empty" style="grid-column:1/-1">불러오는 중…</div>'
@@ -5028,7 +5028,7 @@ function renderIssues(){
     const byId={}; allPosts().forEach(p=>{if(p.id)byId[p.id]=p;});
     matches=(iss.postIds||[]).map(id=>byId[id]).filter(Boolean);
   }else{
-    matches=allPosts().filter(p=>{const bag=(p.tags||[]).concat(p.categories||[]);return (iss.tags||[]).some(x=>bag.includes(x));});
+    matches=allPosts().filter(p=>{ if(isTripPost(p)) return false; const bag=(p.tags||[]).concat(p.categories||[]);return (iss.tags||[]).some(x=>bag.includes(x));});
   }
   const rec=$('#brRecommend');rec.innerHTML='';
   if(matches.length){
@@ -5343,6 +5343,8 @@ function canonCat(name){
 }
 function sameCat(a,b){ return canonCat(a)===canonCat(b); }
 function tripCatOf(label){ const c=canonCat(label); return TRIP_FORMS[c]?c:''; }
+/* 현장체험학습·찾아오는 현장체험학습 글: 둘러보기 메인(피드·인기·이슈)에는 안 나오고, 그 카테고리를 눌렀을 때만 보임 */
+function isTripPost(p){ return (p.categories||[]).some(c=>tripCatOf(c)) || (p.tags||[]).some(t=>tripCatOf(t)); }
 function matchesFilter(p,label){
   if(!label)return true;
   // '현장체험학습'과 '찾아오는 체험학습'은 서로 섞이지 않게 정확히 그 카테고리 글만
@@ -5431,6 +5433,7 @@ function renderBrowseFeed(keep){
   let list=(window._dbPosts||[]).concat(posts).filter(canSeePost);  // 실제 글 먼저, 그 뒤 데모 · 비공개 글 제외
   const _labels=browseLabels();
   if(_labels.length)list=list.filter(p=>_labels.every(l=>matchesFilter(p,l)));
+  else if(!q)list=list.filter(p=>!isTripPost(p));   // 메인에는 체험학습 글 빼기 (카테고리 선택·검색 때만 보임)
   const _tcat=tripCatOf(browseFilter)||_labels.map(tripCatOf).find(Boolean)||'';
   if(_tcat && _tripSub) list=list.filter(p=>tripSubMatch(p,_tcat,_tripSub));
   if(q){const forms=synForms(q); // '놀이' 접미사 무시 + 동의어(재활용=업사이클링)
