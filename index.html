@@ -1034,6 +1034,32 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .trip-badges{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}
   .trip-badges span{font-size:12px;font-weight:700;color:#7a6a60;background:#f3ece7;border-radius:12px;padding:3px 10px}
   .tsub-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 14px}
+  /* 체험학습 전용 페이지 */
+  .trip-head{align-items:center;gap:10px}
+  .trip-head p{color:var(--sub);font-size:13.5px;margin-top:4px}
+  .trip-write-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;border:none;background:var(--coral);color:#fff;border-radius:22px;padding:11px 18px;font-size:14.5px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 12px rgba(134,115,107,.28)}
+  .trip-write-btn svg{width:17px;height:17px}
+  .trip-write-btn:hover{background:var(--coral-2)}
+  .trip-tabs{display:flex;gap:6px;background:#efe9e5;border-radius:16px;padding:5px;margin:0 0 14px}
+  .trip-tabs button{flex:1;border:none;background:none;border-radius:12px;padding:11px 6px;font-size:14.5px;font-weight:700;font-family:inherit;color:#8a7d76;cursor:pointer;white-space:nowrap}
+  .trip-tabs button.on{background:#fff;color:var(--coral-tx);box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  .trip-tabs button small{font-weight:600;font-size:12px;opacity:.75;margin-left:3px}
+  .trip-list{display:flex;flex-direction:column;gap:12px}
+  .trip-item{display:flex;gap:14px;background:#fff;border-radius:18px;box-shadow:var(--shadow);padding:13px;cursor:pointer;align-items:stretch}
+  .trip-item:hover{box-shadow:0 8px 22px rgba(0,0,0,.09)}
+  .ti-thumb{flex:0 0 112px;width:112px;height:112px;border-radius:13px;overflow:hidden;background:#f3ece7;display:flex;align-items:center;justify-content:center;color:#c9b9af}
+  .ti-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .ti-thumb svg{width:38px;height:38px}
+  .ti-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+  .ti-title{font-size:16.5px;font-weight:800;color:var(--coral-tx);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .ti-body .trip-badges{margin:0}
+  .ti-info{font-size:13px;color:#6d6d75;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .ti-info b{color:#8a7d76;font-weight:700;margin-right:3px;white-space:nowrap}
+  .ti-foot{margin-top:auto;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub)}
+  .ti-stars{color:#e8b33c;letter-spacing:1px;font-size:14px}
+  .ti-stars i{color:#e4ddd8;font-style:normal}
+  .ti-author{margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media(max-width:520px){ .ti-thumb{flex-basis:92px;width:92px;height:92px} .ti-title{font-size:15.5px} .trip-tabs button{font-size:13.5px;padding:10px 4px} .trip-write-btn{padding:10px 15px;font-size:14px} .trip-head h1{font-size:22px} }
   .tsub-chip{border:1px solid #e7dcd6;background:#fff;color:#7a6a60;border-radius:16px;padding:6px 13px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
   .tsub-chip.on{background:var(--coral);border-color:var(--coral);color:#fff}
   .tsub-sel{border:1px solid #e7dcd6;border-radius:12px;padding:8px 12px;font-size:13.5px;font-family:inherit;background:#fff;color:#444;max-width:100%}
@@ -1619,6 +1645,17 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
       <div class="main-head"><div><h1><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:6px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성</h1><p>게시판 · 교실 환경구성 사진을 모아봤어요</p></div></div>
       <div class="br-search"><span class="search-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input id="envSearch" type="search" name="nolimoa-env-search" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="주제로 검색 (예: 여름)" oninput="renderEnv()"></div>
       <div class="env-grid" id="envGrid"></div>
+    </section>
+
+    <!-- 체험학습 모아보기 (현장체험학습 · 찾아오는 현장체험학습 전용 페이지) -->
+    <section class="view" id="v-trip">
+      <div class="post-topbar"><button class="back-btn" onclick="navBack()">‹ 뒤로</button><span class="pt-mini">체험학습</span></div>
+      <div class="main-head trip-head"><div><h1><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:6px"><rect x="4" y="3" width="16" height="14" rx="3"/><path d="M4 11h16M8 21v-2M16 21v-2M4 17v2h16v-2"/><circle cx="8" cy="14" r=".7" fill="currentColor"/><circle cx="16" cy="14" r=".7" fill="currentColor"/></svg>체험학습</h1><p>선생님들이 다녀온 곳, 불러본 곳 후기를 모았어요</p></div>
+        <button type="button" class="trip-write-btn" onclick="tripWrite()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>글쓰기</button></div>
+      <div class="trip-tabs" id="tripTabs"></div>
+      <div class="br-search"><span class="search-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input id="tripSearch" type="search" name="nolimoa-trip-search" readonly onfocus="this.removeAttribute('readonly')" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="장소·업체 이름으로 검색" oninput="renderTrip()"></div>
+      <div id="tripSubBar"></div>
+      <div class="trip-list" id="tripList"></div>
     </section>
 
     <!-- 자료 모아보기 -->
@@ -2647,6 +2684,7 @@ function snapScreen(){
   const v=curViewId(), sn={v, y:window.scrollY||window.pageYOffset||0};
   if(v==='browse'){ sn.filter=browseFilter; sn.extra=browseExtra.slice(); sn.trip=_tripSub; const bs=$('#brSearch'); sn.q=bs?bs.value:''; }
   if(v==='sub'){ sn.fa=_feedAuthor; sn.fan=_feedAuthorName; }
+  if(v==='trip'){ sn.tcat=_tpCat; sn.tsub=_tpSub; const ts=$('#tripSearch'); sn.tq=ts?ts.value:''; }
   if(v==='post') sn.post=_currentPost;
   if(v==='profile') sn.prof=_profileTarget;
   return sn;
@@ -3267,6 +3305,7 @@ async function loadDbPosts(){
     };
   });
   _postsLoading=false;         // 글 도착 → '불러오는 중' 해제
+  if($('#v-trip').classList.contains('on'))renderTrip();
   try{ reconcileFolderRefs(); }catch(e){}   // 새로 불러온 글 객체로 내 폴더·저장목록 다시 연결(뒤죽박죽 방지)
   // ① 글이 준비되면 '즉시' 목록을 그린다 (집계를 기다리지 않음)
   if($('#v-browse').classList.contains('on'))renderBrowse();
@@ -5361,6 +5400,7 @@ function matchesFilter(p,label){
   return ageHit||catAliasHit||inArr(p.tags)||inArr(p.categories)||inArr(p.nuri)||hit(p.title||'');
 }
 function filterByLabel(label){
+  if(tripCatOf(label)){ openTrip(label); return; }   // 체험학습은 전용 페이지로
   if(curViewId()==='browse' && browseFilter===label && !_tripSub) _consume(_closeLayeredOverlays());
   else navPush();          // 지금 화면을 기록 → 뒤로가기로 돌아올 수 있게
   go('browse');            // 둘러보기로 전환(필터·검색 초기화)
@@ -5425,6 +5465,62 @@ function tripSubBarHTML(cat,n){
     return `<div class="tsub-bar">${chip('','전체')}${TRIP_KINDS.map(k=>chip(k,k)).join('')}${cnt}</div>`;
   }
   return `<div class="tsub-bar"><select class="tsub-sel" onchange="setTripSub(this.value)"><option value="">전체 지역</option>${regionOptionsHTML(_tripSub,true)}</select>${cnt}</div>`;
+}
+/* ===== 체험학습 전용 페이지 ===== 카테고리 목록에서 따로 빼서, 탭(현장/찾아오는)·지역/종류·검색·글쓰기를 한 화면에 */
+const TRIP_CATS=['현장체험학습','찾아오는 현장체험학습'];
+let _tpCat=TRIP_CATS[0], _tpSub='';
+function openTrip(cat){
+  const c=tripCatOf(cat)||TRIP_CATS[0];
+  if(curViewId()!=='trip') navPush(); else _consume(_closeLayeredOverlays());
+  _tpCat=c; _tpSub=''; const s=$('#tripSearch'); if(s)s.value='';
+  go('trip');
+}
+function setTripTab(c){ _tpCat=c; _tpSub=''; renderTrip(); }
+function setTpSub(v){ _tpSub=v||''; renderTrip(); }
+function tripPosts(cat){ return allPosts().filter(canSeePost).filter(p=>matchesFilter(p,cat)); }
+function tripWrite(){ openUpload(_tpCat); }   // 지금 보고 있는 탭의 카테고리가 미리 선택된 채로 글쓰기
+function renderTrip(){
+  const box=$('#tripList'); if(!box)return;
+  const tabs=$('#tripTabs');
+  if(tabs) tabs.innerHTML=TRIP_CATS.map(c=>`<button type="button" class="${c===_tpCat?'on':''}" onclick="setTripTab('${c}')">${c==='현장체험학습'?'현장체험학습':'찾아오는 체험학습'}<small>${tripPosts(c).length}</small></button>`).join('');
+  const q=(($('#tripSearch')&&$('#tripSearch').value)||'').trim();
+  let list=tripPosts(_tpCat);
+  if(_tpSub) list=list.filter(p=>tripSubMatch(p,_tpCat,_tpSub));
+  if(q){ const qn=noSpace(q.toLowerCase());
+    list=list.filter(p=>{ const v=tripValsOf(p)||{}, a=authorOf(p);
+      return noSpace([p.title,String(p.desc||'').replace(/⟦[\s\S]*?⟧/g,' '),Object.values(v).join(' '),(a&&a.name)||''].join(' ').toLowerCase()).includes(qn); }); }
+  list=list.slice().sort((a,b)=>popScore(b)-popScore(a));
+  window._tripList=list;
+  // 지역(현장) / 종류(찾아오는) 고르기
+  const sb=$('#tripSubBar');
+  if(sb){ const cnt=`<span class="tsub-n">${list.length}개</span>`;
+    if(_tpCat==='찾아오는 현장체험학습'){
+      const chip=(k,l)=>`<button type="button" class="tsub-chip${_tpSub===k?' on':''}" onclick="setTpSub('${k}')">${esc(l)}</button>`;
+      sb.innerHTML=`<div class="tsub-bar">${chip('','전체')}${TRIP_KINDS.map(k=>chip(k,k)).join('')}${cnt}</div>`;
+    } else sb.innerHTML=`<div class="tsub-bar"><select class="tsub-sel" onchange="setTpSub(this.value)"><option value="">전체 지역</option>${regionOptionsHTML(_tpSub,true)}</select>${cnt}</div>`; }
+  if(!list.length){
+    box.innerHTML = (_postsLoading && !q && !_tpSub)
+      ? '<div class="placeholder loading-ph"><div class="ld-spin"></div>불러오는 중이에요…</div>'
+      : `<div class="placeholder"><div class="big">🚌</div>${(q||_tpSub)?'조건에 맞는 글이 없어요':'아직 올라온 글이 없어요.<br>‘글쓰기’로 첫 후기를 남겨보세요!'}</div>`;
+    return; }
+  const short=(x,n)=>{ x=String(x||'').replace(/\s+/g,' ').trim(); return [...x].length>n?[...x].slice(0,n).join('')+'…':x; };
+  box.innerHTML=list.map((p,i)=>{
+    const v=tripValsOf(p)||{}, a=authorOf(p)||{};
+    const im=imagesOf(p).filter(x=>x&&x.img); const cv=im.find(x=>x.cover===true)||im[0];
+    const thumb=cv?`<img src="${cv.thumb||cv.img}" alt="" loading="lazy" decoding="async">`
+      :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+    const keys=_tpCat==='찾아오는 현장체험학습'?['업체명','비용','소요시간']:['입장료','식당 여부','주차'];
+    const info=keys.filter(k=>v[k]).map(k=>`<span><b>${esc(k)}</b>${esc(short(v[k],22))}</span>`).join(' · ');
+    const n=Math.max(0,Math.min(5,parseInt(v['추천도'],10)||0));
+    const stars=n?`<span class="ti-stars">${'★'.repeat(n)}<i>${'★'.repeat(5-n)}</i></span>`:'';
+    return `<div class="trip-item" onclick="openPost(window._tripList[${i}])">
+      <div class="ti-thumb">${thumb}</div>
+      <div class="ti-body">
+        <div class="ti-title">${esc((p.title||'').replace(/^#/,''))}</div>
+        ${tripBadgesHTML(p)}
+        ${info?`<div class="ti-info">${info}</div>`:''}
+        <div class="ti-foot">${stars}<span class="ti-author">${esc(a.name||'')}</span></div>
+      </div></div>`; }).join('');
 }
 function renderBrowseFeed(keep){
   if(!keep) _browseShown=BROWSE_PAGE;   // 검색·필터·새로고침 등에서는 처음부터 다시
@@ -5568,18 +5664,20 @@ function renderCatDrawer(){
   if(canEditCats()) html+=`<button type="button" class="cat-admin-btn" onclick="openCatAdmin()">${ICO.edit} 카테고리 편집${isAdmin()?' (관리자)':' (미리보기)'}</button>`;
   d.groups.forEach((grp,gi)=>{
     html+=`<div class="cat-group"><div class="cgl">${groupIco(grp)} ${grp.g}</div><div class="cg-grid">`+
-      grp.items.map(it=>`<button class="cg-item${hiCat(it)}${browseLabels().includes(it)?' on-browse':''}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
+      grp.items.filter(it=>!tripCatOf(it)).map(it=>`<button class="cg-item${hiCat(it)}${browseLabels().includes(it)?' on-browse':''}" onclick="pickCategory('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
       `</div></div>`;
-    if(gi===0) html+=`<button type="button" class="cat-env-btn" onclick="openEnv()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성 모아보기</button><button type="button" class="cat-env-btn cat-files-btn" onclick="openFiles()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>자료 모아보기</button>`; // '놀이 주제'와 '놀이 유형' 사이
+    if(gi===0) html+=`<button type="button" class="cat-env-btn" onclick="openEnv()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성 모아보기</button><button type="button" class="cat-env-btn cat-files-btn" onclick="openFiles()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>자료 모아보기</button><button type="button" class="cat-env-btn cat-files-btn" onclick="close_('catOverlay');openTrip()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="4" y="3" width="16" height="14" rx="3"/><path d="M4 11h16M8 21v-2M16 21v-2M4 17v2h16v-2"/></svg>체험학습 모아보기</button>`; // '놀이 주제'와 '놀이 유형' 사이
   });
   box.innerHTML=html;
 }
 function pickCategory(label){
   close_('catOverlay');
+  if(tripCatOf(label)){ openTrip(label); return; }
   toggleBrowseCategory(label);
 }
 /* 둘러보기 조건 추가/빼기: 같은 그룹(놀이 주제 등)은 하나만, 다른 그룹과는 함께 고를 수 있음 */
 function toggleBrowseCategory(label){
+  if(tripCatOf(label)){ openTrip(label); return; }
   const cur=browseLabels(), grp=catParent(label);
   let next, msg;
   if(cur.includes(label)){ next=cur.filter(x=>x!==label); msg=`'${label}' 조건을 뺐어요`; }
@@ -6211,9 +6309,9 @@ function renderSideCats(){
   box.innerHTML=d.groups.map((grp,gi)=>
     `<div class="side-cat-group"><div class="scg-label">${groupIco(grp)} ${grp.g}</div>`+
     `<div class="side-cat-items">`+
-    grp.items.map(it=>`<button class="${hiCat(it).trim()}" onclick="filterByLabel('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
+    grp.items.filter(it=>!tripCatOf(it)).map(it=>`<button class="${hiCat(it).trim()}" onclick="filterByLabel('${it.replace(/'/g,"\\'")}')">${it}</button>`).join('')+
     `</div></div>`+
-    (gi===0?`<button type="button" class="side-env-btn" onclick="openEnv()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성 모아보기</button><button type="button" class="side-env-btn side-files-btn" onclick="openFiles()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>자료 모아보기</button>`:'')  // '놀이 주제'와 '놀이 유형' 사이
+    (gi===0?`<button type="button" class="side-env-btn" onclick="openEnv()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/><rect x="6" y="12" width="5" height="5" rx="1"/><path d="M14 12h4M14 15h4"/></svg>환경구성 모아보기</button><button type="button" class="side-env-btn side-files-btn" onclick="openFiles()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>자료 모아보기</button><button type="button" class="side-env-btn side-files-btn" onclick="openTrip()"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:5px"><rect x="4" y="3" width="16" height="14" rx="3"/><path d="M4 11h16M8 21v-2M16 21v-2M4 17v2h16v-2"/></svg>체험학습 모아보기</button>`:'')  // '놀이 주제'와 '놀이 유형' 사이
   ).join('');
 }
 /* 선생님 프로필 모달 */
@@ -6559,6 +6657,7 @@ function go(v, rs){
   if(v==='comm'){ renderCommunity(); loadCommunity().then(renderCommunity); }
   if(v==='env')renderEnv();
   if(v==='files')renderFiles();
+  if(v==='trip'){ if(rs){ _tpCat=rs.tcat||TRIP_CATS[0]; _tpSub=rs.tsub||''; const ts=$('#tripSearch'); if(ts)ts.value=rs.tq||''; } renderTrip(); }
   // 새로고침 시 복원할 수 있게 현재 페이지 기억 (상세/프로필처럼 대상이 필요한 화면은 제외)
   try{ if(['browse','sub','my','comm','env','files','about','privacy','terms'].includes(v)) localStorage.setItem('nolimoa_view', v); }catch(e){}
 }
@@ -8480,7 +8579,9 @@ function renderTags(){
 
 /* 모달 열기/닫기 (1단계 사진 → 2단계 글) */
 let _skipDraftPrompt=false;
-function openUpload(){
+let _uploadPreset=null;   // 체험학습 페이지의 '글쓰기'로 열면 그 카테고리를 미리 골라둠
+function openUpload(presetCat){
+  if(!_skipDraftPrompt) _uploadPreset=(typeof presetCat==='string'&&presetCat)?presetCat:null;
   try{ ensureFaceApi(); }catch(e){}   // 사진 모자이크 준비를 배경에서 미리 시작
   // 작성 중이던 게 없고, 임시저장 글이 있으면 '이어쓸까요?' 먼저 물어보기
   if(!photos.length && !_skipDraftPrompt){
@@ -8488,6 +8589,7 @@ function openUpload(){
     if(drafts.length){ renderDraftList(drafts); open_('draftOverlay'); return; }
   }
   if(!photos.length){ resetSel(); const pb=$('#pBody'); if(pb)pb.innerHTML=''; $('#pTitle').value=''; attachments=[]; renderAttachList(); postRefs=[]; renderRefList(); _flow={type:'',nodes:[]}; _flowHost=null; _bodyTagSet=new Set(); _editPost=null; _currentDraftId=null; _draftDirty=false; _uploadVideo=null; renderVideoBox(); _postPriv=false; { const pc=$('#postPrivChk'); if(pc)pc.checked=false; } _tripVals=null; { const _ts=$('#tripSec'); if(_ts){_ts.innerHTML='';_ts.style.display='none';} } }
+  if(_uploadPreset){ if(!photos.length) sel.cat=new Set(catLabelsToKeys([_uploadPreset])); _uploadPreset=null; }
   $('#uploadOverlay').classList.add('on');
 }
 function startFreshUpload(){ close_('draftOverlay'); _skipDraftPrompt=true; openUpload(); _skipDraftPrompt=false; }
