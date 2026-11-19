@@ -8701,8 +8701,7 @@ function goWrite(){
   if(SB && !authUser){toast('로그인 후 올릴 수 있어요');closeUpload();openAuth('login');return;}
   _editPost=null; setWriteMode(false);
   renderAge();renderNuri();renderCat();renderTags();
-  // 글 내용이 있고 아직 아무것도 안 골랐으면 자동 추천
-  if(richToMarks($('#pBody')).trim() && !sel.nuri.size && !sel.cat.size && !(sel.tags&&sel.tags.length)) aiSuggestTags(true);
+  // 카테고리·태그 자동 입력은 '카테고리·태그 자동 입력' 버튼을 눌렀을 때만 (여기서 저절로 채우지 않음)
   renderWritePhotoStrip();
   renderFlowTypes(); renderFlowEditor();
   $('#uploadOverlay').classList.remove('on');
