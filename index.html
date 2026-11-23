@@ -6684,12 +6684,40 @@ let photos=[], modelReady=false, pxStrength=16;
 /* 얼굴 모자이크 라이브러리를 '필요할 때만' 불러온다 (홈 로딩 속도를 위해 처음엔 안 받음).
    사진 업로드/편집을 시작하면 그때 배경에서 받아둔다. 여러 번 불러도 한 번만 로딩됨. */
 let _faceApiLoading=null, _ssdLoading=null;
+let _facePrecise=false;   // 정확한 큰 모델(SSD)을 써도 되는 기기인지
+let _ssdOff=false;        // SSD가 이상한 결과를 내면 그 뒤로는 끔
 /* 모델 파일 위치 (앞 주소가 안 되면 다음 주소로) */
 const FACE_MODEL_BASES=['https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model',
   'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights'];
 async function _loadFaceNet(name){
   for(const b of FACE_MODEL_BASES){ try{ await faceapi.nets[name].loadFromUri(b); return true; }catch(e){} }
   return false;
+}
+/* 큰 모델(SSD)은 계산 정밀도가 낮은 기기(아이폰·아이패드, 일부 안드로이드)에서 사진 전체를 얼굴로 잘못 잡음.
+   → 그런 기기에서는 받지도 쓰지도 않고, 예전부터 잘 되던 가벼운 모델(Tiny)만 씀 */
+function _facePreciseDevice(){
+  try{
+    const ua=navigator.userAgent||'';
+    if(/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints>1)) return false;   // iOS·iPadOS
+    try{ faceapi.tf.backend(); }catch(e){}                                                               // 계산 엔진을 먼저 켜야 종류를 알 수 있음
+    if(faceapi.tf.getBackend()!=='webgl') return false;                                                      // 그래픽 가속이 없으면 너무 느림
+    return faceapi.tf.ENV.get('WEBGL_RENDER_FLOAT32_CAPABLE')===true;
+  }catch(e){ return false; }
+}
+/* 한 번에 나온 결과가 말이 되는지: 상자가 너무 많거나 사진을 거의 다 덮으면 잘못된 결과 */
+function _faceResultOk(dets, area){
+  if(dets.length>60) return false;
+  let sum=0; dets.forEach(o=>{ sum+=o.box.width*o.box.height; });
+  return sum<=area*0.85;
+}
+/* SSD 자가 점검: 아무것도 없는 빈 그림에서 얼굴이 나오면 이 기기에서는 못 씀 */
+async function _ssdSelfTest(){
+  try{
+    const c=document.createElement('canvas'); c.width=c.height=256; const x=c.getContext('2d');
+    x.fillStyle='#b9b2aa'; x.fillRect(0,0,256,256); x.fillStyle='#8f9aa3'; x.fillRect(0,150,256,106);
+    const d=await faceapi.detectAllFaces(c,new faceapi.SsdMobilenetv1Options({minConfidence:.3,maxResults:200}));
+    return d.length===0;
+  }catch(e){ return false; }
 }
 function ensureFaceApi(){
   if(_faceApiLoading) return _faceApiLoading;
@@ -6698,8 +6726,9 @@ function ensureFaceApi(){
       const s=document.createElement('script');
       s.src='https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js';
       s.onload=async ()=>{
-        // 정확한 큰 모델(SSD)은 배경에서 같이 받고, 가벼운 모델(Tiny)이 먼저 준비되면 바로 쓸 수 있게 함
-        _ssdLoading=_loadFaceNet('ssdMobilenetv1');
+        // 정확한 큰 모델(SSD)은 쓸 수 있는 기기에서만 배경으로 받고, 가벼운 모델(Tiny)이 먼저 준비되면 바로 쓸 수 있게 함
+        _facePrecise=_facePreciseDevice();
+        _ssdLoading=_facePrecise ? _loadFaceNet('ssdMobilenetv1').then(ok=>ok?_ssdSelfTest():false).catch(()=>false) : Promise.resolve(false);
         const tinyOk=await _loadFaceNet('tinyFaceDetector');
         modelReady=tinyOk || await _ssdLoading;
         resolve(modelReady);
@@ -6712,33 +6741,49 @@ function ensureFaceApi(){
 }
 
 /* 얼굴 찾기 (모든 자동 모자이크가 이 함수 하나를 씀). 결과: [{x,y,w,h}] (캔버스 픽셀 기준)
-   - 정확한 모델(SSD)과 가벼운 모델(Tiny)을 둘 다 돌려서 한쪽이 놓친 얼굴도 잡음
+   - 쓸 수 있는 기기에서는 정확한 모델(SSD)과 가벼운 모델(Tiny)을 둘 다 돌려서 한쪽이 놓친 얼굴도 잡음
+   - 아이폰 등에서는 가벼운 모델만 (예전과 같은 설정)
    - 단체 사진의 작은 얼굴은 사진을 4조각(겹치게)으로 나눠 확대해서 한 번 더 찾음
+   - 한 번에 나온 결과가 이상하면(상자가 사진을 다 덮음) 그 결과는 버림
    - 같은 얼굴이 여러 번 잡히면 하나로 합침 */
 async function detectFaces(cv){
   const W=cv.width, H=cv.height; if(!W||!H) return [];
   if(await ensureFaceApi()){
-    const ssd=_ssdLoading? await _ssdLoading : false;
+    const ssdLoaded=_ssdLoading? await _ssdLoading : false;
+    const useSsd=()=>ssdLoaded && !_ssdOff;
     const tiny=faceapi.nets.tinyFaceDetector.isLoaded;
+    const tinySize=_facePrecise?608:416;
     const all=[];
     const run=async(src,ox,oy,sx,sy,ssdConf,tinyConf)=>{
-      if(ssd){ try{ const d=await faceapi.detectAllFaces(src,new faceapi.SsdMobilenetv1Options({minConfidence:ssdConf,maxResults:200}));
-        // SSD 상자는 얼굴에 딱 붙어서(볼·이마가 삐져나옴) Tiny 크기에 맞게 조금 넓힘
-        d.forEach(o=>{ const w=o.box.width*sx, h=o.box.height*sy; all.push({x:ox+o.box.x*sx-w*.1,y:oy+o.box.y*sy-h*.06,w:w*1.2,h:h*1.12,s:o.score}); }); }catch(e){} }
-      if(tiny && tinyConf){ try{ const d=await faceapi.detectAllFaces(src,new faceapi.TinyFaceDetectorOptions({inputSize:608,scoreThreshold:tinyConf}));
-        d.forEach(o=>all.push({x:ox+o.box.x*sx,y:oy+o.box.y*sy,w:o.box.width*sx,h:o.box.height*sy,s:o.score*0.9})); }catch(e){} }
+      const area=src.width*src.height;
+      let ssdRan=false;
+      if(useSsd()){ try{ const d=await faceapi.detectAllFaces(src,new faceapi.SsdMobilenetv1Options({minConfidence:ssdConf,maxResults:200}));
+        if(_faceResultOk(d,area)){ ssdRan=true;
+          // SSD 상자는 얼굴에 딱 붙어서(볼·이마가 삐져나옴) Tiny 크기에 맞게 조금 넓힘
+          d.forEach(o=>{ const w=o.box.width*sx, h=o.box.height*sy; all.push({x:ox+o.box.x*sx-w*.1,y:oy+o.box.y*sy-h*.06,w:w*1.2,h:h*1.12,s:o.score}); }); }
+        else _ssdOff=true;   // 이 기기에서는 SSD가 엉뚱한 결과를 냄 → 끄고 Tiny로
+      }catch(e){} }
+      const tc = tinyConf || (ssdRan?0:.5);   // SSD를 못 쓴 조각은 Tiny로 대신 찾음
+      if(tiny && tc){ try{ const d=await faceapi.detectAllFaces(src,new faceapi.TinyFaceDetectorOptions({inputSize:tinySize,scoreThreshold:tc}));
+        if(_faceResultOk(d,area)) d.forEach(o=>all.push({x:ox+o.box.x*sx,y:oy+o.box.y*sy,w:o.box.width*sx,h:o.box.height*sy,s:o.score*0.9})); }catch(e){} }
     };
-    await run(cv,0,0,1,1,.3,.4);                                   // 사진 전체
+    await run(cv,0,0,1,1,.3,_facePrecise?.4:.35);                  // 사진 전체
     if(Math.max(W,H)>=600){                                      // 조각별로 확대해서 작은 얼굴 찾기
-      const tw=Math.round(W*0.6), th=Math.round(H*0.6), up=Math.min(2, 900/Math.max(tw,th));
-      const t=document.createElement('canvas'); t.width=Math.round(tw*Math.max(1,up)); t.height=Math.round(th*Math.max(1,up));
+      // 큰 모델을 쓰는 기기는 4조각, 가벼운 모델만 쓰는 기기는 더 잘게 9조각(작은 얼굴을 더 크게 보여줘야 찾음)
+      const n=useSsd()?2:3, f=n===2?0.6:0.42;
+      const tw=Math.round(W*f), th=Math.round(H*f), up=Math.max(1,Math.min(2.5, 900/Math.max(tw,th)));
+      const t=document.createElement('canvas'); t.width=Math.round(tw*up); t.height=Math.round(th*up);
       const sc=tw/t.width, tx=t.getContext('2d');
-      for(const [ox,oy] of [[0,0],[W-tw,0],[0,H-th],[W-tw,H-th]]){
+      for(let iy=0;iy<n;iy++) for(let ix=0;ix<n;ix++){
+        const ox=Math.round((W-tw)*ix/(n-1)), oy=Math.round((H-th)*iy/(n-1));
         tx.clearRect(0,0,t.width,t.height); tx.drawImage(cv,ox,oy,tw,th,0,0,t.width,t.height);
-        await run(t,ox,oy,sc,sc,.45,ssd?0:.5);
+        await run(t,ox,oy,sc,sc,.45,0);
       }
     }
-    return mergeFaceBoxes(all);
+    const out=mergeFaceBoxes(all);
+    // 마지막 안전장치: 합친 결과가 사진을 거의 다 덮으면 잘못된 인식 → 자동 모자이크를 하지 않음(직접 모자이크)
+    if(out.length>40 && out.reduce((a,b)=>a+b.w*b.h,0)>W*H*0.85) return [];
+    return out;
   }
   if('FaceDetector' in window){
     try{ const f=await new FaceDetector({fastMode:false,maxDetectedFaces:50}).detect(cv);
