@@ -869,10 +869,11 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .ei-del-btn{color:#c0433f;border-color:#eec6c6}
   .ei-del-btn:hover{background:#fbeceb}
   .espots{margin-top:8px;display:flex;flex-direction:column;gap:6px}
-  .espot{display:grid;grid-template-columns:22px 1fr 1fr 1.3fr auto;gap:6px;align-items:center}
+  .espot{display:grid;grid-template-columns:22px 1fr 1.3fr auto;gap:6px;align-items:center}
+  .espot-mall-auto{grid-column:2 / -1;font-size:11.5px;color:var(--sub);margin:-2px 0 4px 2px}
+  .espot-mall-auto b,.sf-mall-auto b{color:var(--coral-tx)}
+  .sf-mall-auto{font-size:11.5px;color:var(--sub);margin:-2px 2px 0}
   .espot input{border:1px solid #e7dcd6;border-radius:8px;padding:8px;font-size:12px;background:#fafafb;font-family:inherit;min-width:0}
-  .espot-mall-cell{display:flex;flex-direction:column;gap:4px;min-width:0}
-  .espot select,.espot-mall-cell input{border:1px solid #e7dcd6;border-radius:8px;padding:8px;font-size:12px;background:#fafafb;font-family:inherit;min-width:0}
   .spot-form select{border:1px solid #e7dcd6;border-radius:8px;padding:9px;font-size:12.5px;font-family:inherit;background:#fafafb}
   /* 환경구성 체크 (사진 우측하단) */
   .env-check{position:absolute;right:8px;bottom:8px;z-index:6;display:flex;align-items:center;gap:5px;
@@ -4082,12 +4083,9 @@ function renderEditImages(){
       <div class="espot">
         <span class="espot-no">${si+1}</span>
         <input placeholder="물품명" value="${esc(s.name||'')}" data-k="name" data-i="${idx}" data-s="${si}">
-        <div class="espot-mall-cell">
-          <select class="espot-mall" data-i="${idx}" data-s="${si}">${mallOptionsHTML(s.mall||'')}</select>
-          <input class="espot-mall-custom" data-i="${idx}" data-s="${si}" placeholder="구매처 직접 입력" value="${esc((s.mall&&!MALL_OPTIONS.includes(s.mall))?s.mall:'')}" style="${(s.mall&&!MALL_OPTIONS.includes(s.mall))?'':'display:none'}">
-        </div>
         <input placeholder="https:// 링크" value="${esc(s.url||'')}" data-k="url" data-i="${idx}" data-s="${si}">
         <button class="espot-del" data-i="${idx}" data-s="${si}">✕</button>
+        <div class="espot-mall-auto">${mallHintHTML(s.url,s.mall)}</div>
       </div>`).join('');
     const markersHtml=im.spots.map((s,si)=>`<span class="ei-marker" data-i="${idx}" data-s="${si}" style="left:${s.x==null?50:s.x}%;top:${s.y==null?50:s.y}%">${si+1}</span>`).join('');
     const card=document.createElement('div');card.className='photo-card edit-img mob-simple';card.dataset.i=idx;
@@ -4138,14 +4136,12 @@ function renderEditImages(){
   box.querySelectorAll('.ei-collage').forEach(b=>b.onclick=()=>mergeEditCollage(+b.dataset.i));
   box.querySelectorAll('.ecap').forEach(tx=>tx.addEventListener('input',e=>{_editImages[+e.target.dataset.i].desc=richToMarks(e.target);}));
   box.querySelectorAll('.espot input[data-k]').forEach(inp=>inp.addEventListener('input',e=>{
-    _editImages[+e.target.dataset.i].spots[+e.target.dataset.s][e.target.dataset.k]=e.target.value;}));
-  box.querySelectorAll('.espot-mall').forEach(selEl=>selEl.addEventListener('change',e=>{
     const sp=_editImages[+e.target.dataset.i].spots[+e.target.dataset.s];
-    const cust=e.target.closest('.espot-mall-cell').querySelector('.espot-mall-custom');
-    if(e.target.value==='__etc__'){ cust.style.display=''; sp.mall=cust.value.trim(); cust.focus(); }
-    else { cust.style.display='none'; cust.value=''; sp.mall=e.target.value; }}));
-  box.querySelectorAll('.espot-mall-custom').forEach(inp=>inp.addEventListener('input',e=>{
-    _editImages[+e.target.dataset.i].spots[+e.target.dataset.s].mall=e.target.value.trim();}));
+    if(e.target.dataset.k==='url'){   // 링크가 바뀌면 구매처도 링크 기준으로 다시 (원래 링크로 되돌리면 예전 이름 유지)
+      if(sp._url0===undefined){ sp._url0=sp.url||''; sp._mall0=sp.mall||''; }
+      sp.url=e.target.value; sp.mall=mallForSave(sp.url, sp._url0, sp._mall0);
+      const h=e.target.closest('.espot').querySelector('.espot-mall-auto'); if(h) h.innerHTML=mallHintHTML(sp.url,sp.mall);
+    } else sp[e.target.dataset.k]=e.target.value;}));
   box.querySelectorAll('.espot-del').forEach(b=>b.onclick=()=>{_editImages[+b.dataset.i].spots.splice(+b.dataset.s,1);renderEditImages();});
   renderWritePhotoStrip();   // 위쪽 사진 줄도 함께 갱신
   if(scroller) scroller.scrollTop=keepTop;
@@ -4355,7 +4351,7 @@ async function saveEdit(){
   }
   const _eci=coverIndexOf(_editImages);   // 대표사진 위치(지정 안 하면 첫 사진)
   const images=_editImages.map((im,k)=>({img:im.img,thumb:(im.thumb&&im.thumbSrc===im.img)?im.thumb:undefined,desc:(im.desc||'').trim(),env:im.env===true,cover:k===_eci,
-    spots:im.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:(s.name||'').trim(),mall:(s.mall||'').trim(),
+    spots:im.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:(s.name||'').trim(),mall:(knownMall(s.url)||s.mall||'').trim(),
       url:s.url&&!/^https?:\/\//i.test(s.url)?'https://'+s.url:(s.url||'')})),
     parts:(im.parts&&im.parts.length>1)?im.parts:undefined}));   // 콜라주 조각 URL 유지 (수정해도 낱장 안 사라지게)
   const age=sel.age, nuri=[...sel.nuri], categories=catLabels;
@@ -4888,7 +4884,7 @@ function showSpotPop(ph,s){
   const n=playsWithProduct(s).length;
   const pop=document.createElement('div');pop.className='spot-pop';
   pop.style.left=s.x+'%';pop.style.top=s.y+'%';
-  pop.innerHTML=`<b>${esc(s.name||'상품')}</b><small>${esc(s.mall||'')}</small>`+
+  pop.innerHTML=`<b>${esc(s.name||'상품')}</b><small>${esc(spotMall(s))}</small>`+
     (s.url?`<a href="${s.url}" target="_blank" rel="noopener">구매하기 ↗</a>`:`<span class="nolink">링크 준비중</span>`)+
     `<button class="pop-more">이 상품 쓴 놀이 ${n}개 ›</button>`;
   pop.onclick=e=>e.stopPropagation();
@@ -4911,7 +4907,7 @@ function openProduct(s){
   const plays=playsWithProduct(s);
   $('#prodHead').innerHTML=`
     <div class="prod-info"><div class="prod-ic">🛍️</div>
-      <div><b>${esc(s.name||'상품')}</b><small>${esc(s.mall||'쇼핑몰')}</small></div></div>
+      <div><b>${esc(s.name||'상품')}</b><small>${esc(spotMall(s)||'쇼핑몰')}</small></div></div>
     ${s.url?`<a class="prod-buy" href="${s.url}" target="_blank" rel="noopener">구매하기 ↗</a>`:'<span class="nolink">링크 준비중</span>'}`;
   $('#prodCount').textContent=plays.length;
   const g=$('#prodPlays');g.innerHTML='';
@@ -6590,7 +6586,7 @@ function productsHTML(p){
   }));
   if(!items.length)return '';
   const cards=items.map(s=>{
-    const mall=s.mall?`<span class="prod-mall">${esc(s.mall)}</span>`:'';
+    const _m=spotMall(s), mall=_m?`<span class="prod-mall">${esc(_m)}</span>`:'';
     const link=s.url?`<a class="prod-buy" href="${esc(s.url&&!/^https?:\/\//i.test(s.url)?'https://'+s.url:s.url)}" target="_blank" rel="noopener noreferrer">구매하기 ↗</a>`:'<span class="prod-nolink">링크 준비중</span>';
     return `<div class="prod-item"><div class="prod-info"><b>${esc(s.name||'상품')}</b>${mall}</div>${link}</div>`;
   }).join('');
@@ -7970,33 +7966,58 @@ function renderSpotsP(ph){
     m.addEventListener('pointerup',()=>{if(!moved)openSpotFormP(ph,i);});
     ph.layer.appendChild(m);});
 }
-/* 쇼핑몰 선택지 (드롭다운) — '선택 안 함' 기본, '기타'는 직접 작성 */
-const MALL_OPTIONS=['키드키즈몰','G마켓','오늘의 집'];
-function mallOptionsHTML(mall){
-  const preset=MALL_OPTIONS.includes(mall);
-  const etc=!!mall && !preset;
-  return `<option value="" ${!mall?'selected':''}>구매처 (선택 안 함)</option>`
-    + MALL_OPTIONS.map(m=>`<option value="${m}" ${mall===m?'selected':''}>${m}</option>`).join('')
-    + `<option value="__etc__" ${etc?'selected':''}>기타 (직접 작성)</option>`;
+/* 구매처는 따로 적지 않고, 구매 링크 주소를 보고 알아냄.
+   - 아는 쇼핑몰이면 한글 이름으로 (예: coupang.com → 쿠팡)
+   - 모르는 주소면 주소 이름 그대로 (예: abcshop.co.kr)
+   - 예전 글에 직접 적어 둔 구매처는 그대로 보여줌 */
+const MALL_BY_DOMAIN={
+  'coupang.com':'쿠팡','coupa.ng':'쿠팡',
+  'kidkids.net':'키드키즈몰','kidkidsmall.com':'키드키즈몰','kidkismall.com':'키드키즈몰',
+  'gmarket.co.kr':'G마켓','auction.co.kr':'옥션','11st.co.kr':'11번가',
+  'smartstore.naver.com':'네이버 스마트스토어','brand.naver.com':'네이버 브랜드스토어','naver.com':'네이버 쇼핑','naver.me':'네이버 쇼핑',
+  'ohou.se':'오늘의집','ohouse.com':'오늘의집',
+  'daisomall.co.kr':'다이소몰','daiso.co.kr':'다이소',
+  'ssg.com':'SSG닷컴','emart.com':'이마트','lotteon.com':'롯데온','homeplus.co.kr':'홈플러스','kurly.com':'컬리',
+  'tmon.co.kr':'티몬','wemakeprice.com':'위메프','interpark.com':'인터파크',
+  'yes24.com':'예스24','kyobobook.co.kr':'교보문고','aladin.co.kr':'알라딘',
+  'ikea.com':'이케아','aliexpress.com':'알리익스프레스','temu.com':'테무','amazon.com':'아마존',
+  'kakao.com':'카카오톡 쇼핑','10x10.co.kr':'텐바이텐','artboxmall.com':'아트박스','hottracks.co.kr':'핫트랙스',
+  'officedepot.co.kr':'오피스디포','i-screammall.co.kr':'아이스크림몰','edupang.com':'에듀팡'
+};
+function mallHost(url){
+  let u=String(url||'').trim(); if(!u) return '';
+  if(!/^https?:\/\//i.test(u)) u='https://'+u;
+  try{ return new URL(u).hostname.toLowerCase().replace(/^(www|m|mobile|mw)\./,''); }catch(e){ return ''; }
 }
+function knownMall(url){
+  const h=mallHost(url); if(!h) return '';
+  let best='', name='';
+  Object.keys(MALL_BY_DOMAIN).forEach(d=>{ if((h===d||h.endsWith('.'+d)) && d.length>best.length){ best=d; name=MALL_BY_DOMAIN[d]; } });
+  return name;
+}
+/* 화면에 보여줄 구매처: 링크로 아는 쇼핑몰 → 예전에 적어 둔 이름 → 주소 이름 */
+function spotMall(sp){ return knownMall(sp&&sp.url) || String((sp&&sp.mall)||'').trim() || mallHost(sp&&sp.url); }
+/* 저장할 구매처: 링크가 바뀌었으면 새 링크 기준으로, 안 바뀌었으면 예전 이름 유지 */
+function mallForSave(url, prevUrl, prevMall){ return knownMall(url) || (String(url||'').trim()===String(prevUrl||'').trim() ? String(prevMall||'').trim() : ''); }
+function mallHintHTML(url, mall){ const m=spotMall({url,mall}); return m?`구매처: <b>${esc(m)}</b>`:'링크를 넣으면 구매처가 자동으로 표시돼요'; }
 function openSpotFormP(ph,i){closeSpotForm();const s=ph.spots[i];
   const f=document.createElement('div');f.className='spot-form';f.id='spotForm';
   f.style.left=Math.min(55,s.x)+'%';f.style.top=s.y+'%';
-  const etc=!!s.mall && !MALL_OPTIONS.includes(s.mall);
   f.innerHTML=`<input class="sf-name" placeholder="물품 이름">
-    <select class="sf-mall">${mallOptionsHTML(s.mall||'')}</select>
-    <input class="sf-mall-custom" placeholder="구매처 직접 입력" value="${esc(etc?s.mall:'')}" style="${etc?'':'display:none'}">
     <input class="sf-url" placeholder="https:// 구매링크 붙여넣기">
+    <div class="sf-mall-auto"></div>
     <div class="sf-btns"><button class="sf-del">삭제</button><button class="sf-save">저장</button></div>`;
-  const nameEl=f.querySelector('.sf-name'), urlEl=f.querySelector('.sf-url'),
-        mallSel=f.querySelector('.sf-mall'), mallCust=f.querySelector('.sf-mall-custom');
-  nameEl.value=s.name||''; urlEl.value=s.url||'';
-  mallSel.onchange=()=>{ if(mallSel.value==='__etc__'){mallCust.style.display='';mallCust.focus();} else {mallCust.style.display='none';} };
+  const nameEl=f.querySelector('.sf-name'), urlEl=f.querySelector('.sf-url'), mallEl=f.querySelector('.sf-mall-auto');
+  const prevUrl=s.url||'', prevMall=s.mall||'';
+  nameEl.value=s.name||''; urlEl.value=prevUrl;
+  const showMall=()=>{ const u=urlEl.value.trim(); mallEl.innerHTML=mallHintHTML(u, mallForSave(u,prevUrl,prevMall)); };
+  urlEl.oninput=showMall; showMall();
   f.addEventListener('pointerdown',e=>e.stopPropagation());
   f.querySelector('.sf-save').onclick=()=>{
     s.name=nameEl.value.trim();
-    s.mall = mallSel.value==='__etc__' ? mallCust.value.trim() : (mallSel.value||'');
-    let u=urlEl.value.trim();if(u&&!/^https?:\/\//i.test(u))u='https://'+u;s.url=u;
+    let u=urlEl.value.trim();
+    s.mall=mallForSave(u,prevUrl,prevMall);   // 구매처는 링크에서 자동으로
+    if(u&&!/^https?:\/\//i.test(u))u='https://'+u;s.url=u;
     closeSpotForm();renderSpotsP(ph);toast('구매 물품 표시를 저장했어요');};
   f.querySelector('.sf-del').onclick=()=>{ph.spots.splice(i,1);closeSpotForm();renderSpotsP(ph);};
   ph.layer.appendChild(f);nameEl.focus();
@@ -8694,7 +8715,7 @@ async function saveDraft(){
   const normB=(bs,w,h)=>(bs||[]).map(b=>({fx:b.x/w, fy:b.y/h, fw:b.w/w, fh:b.h/h, shape:b.shape==='circle'?'circle':undefined, on:b.on!==false}));
   const rawURL=(img,w,h,q)=>{ const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(w)); c.height=Math.max(1,Math.round(h)); c.getContext('2d').drawImage(img,0,0,c.width,c.height); return c.toDataURL('image/jpeg',q); };
   const photoData=photos.map(ph=>{
-    const base={ desc:(ph.desc||'').trim(), env:ph.env===true, cover:ph.cover===true, spots:(ph.spots||[]).filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url})) };
+    const base={ desc:(ph.desc||'').trim(), env:ph.env===true, cover:ph.cover===true, spots:(ph.spots||[]).filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:knownMall(s.url)||s.mall||'',url:s.url})) };
     try{
       if(ph.parts && ph.parts.length>1){
         const parts=ph.parts.map(pt=>{ const z=partCanvasSize(pt.img); return {img:rawURL(pt.img,z.w,z.h,0.7), boxes:normB(pt.boxes,z.w,z.h)}; });
@@ -9314,7 +9335,7 @@ async function publishPost(){
     img:cleanPhotoDataURL(ph,0.92),  // 보라색 테두리 없이 모자이크만 적용된 이미지
     desc:(ph.desc||'').trim(),
     env:ph.env===true,               // 환경구성 사진 여부
-    spots:ph.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:s.mall,url:s.url})),
+    spots:ph.spots.filter(s=>s.name||s.url).map(s=>({x:s.x,y:s.y,name:s.name,mall:knownMall(s.url)||s.mall||'',url:s.url})),
     // 콜라주면 조각(개별 사진)도 따로 보관 → 클릭 확대 시 하나씩 크게 보기
     partsData:(ph.parts&&ph.parts.length>1)?ph.parts.map(pt=>partDataURL(pt,true)):null   // 낱장에는 로고를 넣지 않음 (콜라주 전체에 한 번만)
   }));
