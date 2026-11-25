@@ -873,6 +873,7 @@ if('serviceWorker' in navigator){addEventListener('load',function(){navigator.se
   .espot-mall-auto{grid-column:2 / -1;font-size:11.5px;color:var(--sub);margin:-2px 0 4px 2px}
   .espot-mall-auto b,.sf-mall-auto b{color:var(--coral-tx)}
   .sf-mall-auto{font-size:11.5px;color:var(--sub);margin:-2px 2px 0}
+  .sf-mall-auto:empty,.espot-mall-auto:empty{display:none}
   .espot input{border:1px solid #e7dcd6;border-radius:8px;padding:8px;font-size:12px;background:#fafafb;font-family:inherit;min-width:0}
   .spot-form select{border:1px solid #e7dcd6;border-radius:8px;padding:9px;font-size:12.5px;font-family:inherit;background:#fafafb}
   /* 환경구성 체크 (사진 우측하단) */
@@ -8010,7 +8011,7 @@ function knownMall(url){
 function spotMall(sp){ return knownMall(sp&&sp.url) || String((sp&&sp.mall)||'').trim() || mallHost(sp&&sp.url); }
 /* 저장할 구매처: 링크가 바뀌었으면 새 링크 기준으로, 안 바뀌었으면 예전 이름 유지 */
 function mallForSave(url, prevUrl, prevMall){ return knownMall(url) || (String(url||'').trim()===String(prevUrl||'').trim() ? String(prevMall||'').trim() : ''); }
-function mallHintHTML(url, mall){ const m=spotMall({url,mall}); return m?`구매처: <b>${esc(m)}</b>`:'링크를 넣으면 구매처가 자동으로 표시돼요'; }
+function mallHintHTML(url, mall){ const m=spotMall({url,mall}); return m?`구매처: <b>${esc(m)}</b>`:''; }
 function openSpotFormP(ph,i){closeSpotForm();const s=ph.spots[i];
   const f=document.createElement('div');f.className='spot-form';f.id='spotForm';
   f.style.left=Math.min(55,s.x)+'%';f.style.top=s.y+'%';
