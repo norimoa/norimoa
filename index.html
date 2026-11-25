@@ -7971,18 +7971,29 @@ function renderSpotsP(ph){
    - 모르는 주소면 주소 이름 그대로 (예: abcshop.co.kr)
    - 예전 글에 직접 적어 둔 구매처는 그대로 보여줌 */
 const MALL_BY_DOMAIN={
-  'coupang.com':'쿠팡','coupa.ng':'쿠팡',
+  // 유아교육·교구
   'kidkids.net':'키드키즈몰','kidkidsmall.com':'키드키즈몰','kidkismall.com':'키드키즈몰',
+  'i-screammall.co.kr':'아이스크림몰','edupang.com':'에듀팡','teachermall.co.kr':'티처몰','boribori.co.kr':'보리보리',
+  // 종합 쇼핑몰
+  'coupang.com':'쿠팡','coupa.ng':'쿠팡',
   'gmarket.co.kr':'G마켓','auction.co.kr':'옥션','11st.co.kr':'11번가',
-  'smartstore.naver.com':'네이버 스마트스토어','brand.naver.com':'네이버 브랜드스토어','naver.com':'네이버 쇼핑','naver.me':'네이버 쇼핑',
-  'ohou.se':'오늘의집','ohouse.com':'오늘의집',
-  'daisomall.co.kr':'다이소몰','daiso.co.kr':'다이소',
-  'ssg.com':'SSG닷컴','emart.com':'이마트','lotteon.com':'롯데온','homeplus.co.kr':'홈플러스','kurly.com':'컬리',
-  'tmon.co.kr':'티몬','wemakeprice.com':'위메프','interpark.com':'인터파크',
-  'yes24.com':'예스24','kyobobook.co.kr':'교보문고','aladin.co.kr':'알라딘',
-  'ikea.com':'이케아','aliexpress.com':'알리익스프레스','temu.com':'테무','amazon.com':'아마존',
-  'kakao.com':'카카오톡 쇼핑','10x10.co.kr':'텐바이텐','artboxmall.com':'아트박스','hottracks.co.kr':'핫트랙스',
-  'officedepot.co.kr':'오피스디포','i-screammall.co.kr':'아이스크림몰','edupang.com':'에듀팡'
+  'ssg.com':'SSG닷컴','emart.ssg.com':'이마트몰','emart.com':'이마트','shinsegaemall.ssg.com':'신세계몰',
+  'lotteon.com':'롯데온','lotteimall.com':'롯데홈쇼핑','homeplus.co.kr':'홈플러스','costco.co.kr':'코스트코','kurly.com':'컬리',
+  'tmon.co.kr':'티몬','wemakeprice.com':'위메프','interpark.com':'인터파크','akmall.com':'AK몰','elandmall.co.kr':'이랜드몰',
+  'gsshop.com':'GS샵','cjonstyle.com':'CJ온스타일','hmall.com':'현대Hmall','hyundaihmall.com':'현대Hmall','nsmall.com':'NS홈쇼핑',
+  // 네이버·카카오 (가게 주소일 때만 쇼핑으로 표시)
+  'smartstore.naver.com':'네이버 스마트스토어','brand.naver.com':'네이버 브랜드스토어','shopping.naver.com':'네이버 쇼핑',
+  'blog.naver.com':'네이버 블로그','cafe.naver.com':'네이버 카페','naver.com':'네이버','naver.me':'네이버',
+  'store.kakao.com':'카카오톡 스토어','gift.kakao.com':'카카오톡 선물하기','kakao.com':'카카오',
+  // 서점
+  'kyobobook.co.kr':'교보문고','aladin.co.kr':'알라딘','yes24.com':'예스24','ypbooks.co.kr':'영풍문고',
+  // 문구·생활·가구
+  'ohou.se':'오늘의집','ohouse.com':'오늘의집','daisomall.co.kr':'다이소몰','daiso.co.kr':'다이소',
+  'ikea.com':'이케아','hanssem.com':'한샘','10x10.co.kr':'텐바이텐','artbox.co.kr':'아트박스','artboxmall.com':'아트박스',
+  'hottracks.co.kr':'핫트랙스','officedepot.co.kr':'오피스디포','morningglory.co.kr':'모닝글로리','alpha.co.kr':'알파문구',
+  'toysrus.co.kr':'토이저러스','lego.com':'레고',
+  // 해외
+  'aliexpress.com':'알리익스프레스','temu.com':'테무','amazon.com':'아마존','amazon.co.jp':'아마존 재팬','qoo10.com':'큐텐','iherb.com':'아이허브'
 };
 function mallHost(url){
   let u=String(url||'').trim(); if(!u) return '';
