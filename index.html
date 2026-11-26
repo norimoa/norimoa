@@ -2670,6 +2670,9 @@ function likePost(i,btn){const p=window._feed[i];p.liked=!p.liked;p.like+=p.like
 /* 뒤로가기 기록: 열린 창(k:'o')과 지나온 화면(k:'n')을 history 항목과 1:1로 쌓는다.
    → 기기·브라우저·'‹ 뒤로' 버튼 모두 '진짜 직전 화면'(필터·스크롤 포함)으로 돌아감 */
 let _layers=[], _popSuppress=0, _deferPush=0;
+/* 스크롤 위치는 앱이 직접 관리(restoreScreen). 브라우저 자동 복원을 켜 두면, 창을 닫으며 기록을 한 칸 지울 때
+   이전 화면의 스크롤 위치가 새로 연 글에 적용돼 글이 아래쪽에서 열리는 문제가 생김 */
+try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }catch(e){}
 /* history.back()은 비동기라, 그 직후 pushState를 하면 새 기록이 지워짐 → 되돌아가기가 끝난 뒤에 쌓는다 */
 function _histPush(){ if(_popSuppress>0){ _deferPush++; return; } try{ history.pushState({nolimoa:_layers.length},''); }catch(e){} }
 function _pushLayer(L){ _layers.push(L); _histPush(); }
@@ -3675,6 +3678,7 @@ function openPost(p, _restore){
   }
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   $('#v-post').classList.add('on'); relocateTopbar('post'); window.scrollTo(0,0);
+  if(!_restore) requestAnimationFrame(()=>{ if(_currentPost===p && curViewId()==='post') window.scrollTo(0,0); });   // 새로 연 글은 항상 맨 위에서 시작
   document.body.classList.remove('nav-browse');
   // 주소창에 이 글의 링크 표시 (실제 저장된 글만) — replaceState라 뒤로가기 기록에는 영향 없음
   try{ history.replaceState(history.state||null, '', location.pathname + ((p.db&&p.id)?('#play='+p.id):'')); }catch(e){}
